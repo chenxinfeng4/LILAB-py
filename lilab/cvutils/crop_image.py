@@ -14,7 +14,10 @@ FilePath: \BCNete:\cxf\crop_video.py
 import sys
 import os
 from glob import glob 
-import cxfguilib as cg
+try:
+    from . import cxfguilib as cg
+except e:
+    import cxfguilib as cg
 from PIL import Image
 
 '''

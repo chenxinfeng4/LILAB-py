@@ -26,6 +26,10 @@ crop_tdur = '00:02:00'
 import sys
 import os
 from glob import glob 
+try:
+    from . import cxfguilib as cg
+except e:
+    import cxfguilib as cg
 import cv2
 import platform
 

@@ -9,9 +9,12 @@ import cv2
 import numpy as np
 import tqdm
 import sys
-import cxfguilib as cg
 from glob import glob
-
+try:
+    from . import cxfguilib as cg
+except e:
+    import cxfguilib as cg
+    
 numframe_to_extract = 200
 maxlength = 10000
 frame_dir = "outframes"
