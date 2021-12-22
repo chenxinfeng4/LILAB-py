@@ -28,18 +28,23 @@ def main(poses, landmarks, out, dump_images, setup, filenames):
     camera_params, points_3d, points_2d,\
     camera_indices, point_indices, \
     n_cameras, n_points, ids, views_and_ids = build_input(views, intrinsics, extrinsics, 
-                                                            landmarks, each=1, 
+                                                            landmarks, each=1,   #xxx
                                                             view_limit_triang=4)
     datadict = {'ids': np.array(ids).tolist(), 'points_3d': points_3d.tolist()}
     with open(out, 'w') as f:
         json.dump(datadict, f, indent=2)
 
+    each_forplot = max(1, len(ids)//200)
     if dump_images:
         setup = utils.json_read(setup)
         filenames_images = utils.json_read(filenames)
+        # get the absolute path of the 'filenames_images' file
+        parent_dir = os.path.dirname(os.path.abspath(filenames))
+        filenames_images = {key:val if os.path.isabs(val) else os.path.join(parent_dir, val) 
+                                    for key, val in filenames_images.items()}
         visualisation(setup, landmarks, filenames_images, 
                   camera_params, points_3d, 
-                  points_2d, camera_indices, each=1, path='output/custom')  
+                  points_2d, camera_indices, each=each_forplot, path='output/custom')  
 
 
 if __name__ == "__main__":
