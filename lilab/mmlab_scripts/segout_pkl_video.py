@@ -91,7 +91,7 @@ class SegVideo:
     def __getitem__(self, idx):
         img = self.v[idx]
         masks = get_masks(self.data, idx, self.width, self.height)
-        masks = dilate_masks(masks)
+        masks = dilate_masks(masks, kernel_size=30)
         focus_imgs = focus_image_by_masks(img, masks)
         return focus_imgs
 

@@ -5,6 +5,7 @@
 # 直接拖动json到EXE中
 #
 #python coco_split.py data/鼠关键点/trainval.json
+import os
 import json
 import argparse
 import funcy
@@ -34,7 +35,7 @@ def main(args):
         args_train = args.annotations.replace('trainval.json', 'train.json')
         args_test  = args.annotations.replace('trainval.json', 'val.json')
     else:
-        prefix =  os.path.splitext(args.annotations)[0] #without extension
+        prefix =  os.path.splitext(args.annotations)[0]  # without extension
         args_train = prefix+'_train.json'
         args_test = prefix+'_val.json'
         
@@ -45,8 +46,6 @@ def main(args):
         images = coco['images']
         annotations = coco['annotations']
         categories = coco['categories']
-
-        number_of_images = len(images)
 
         images_with_annotations = set(funcy.lmap(lambda a: int(a['image_id']), annotations))
 

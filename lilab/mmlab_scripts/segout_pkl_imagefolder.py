@@ -10,14 +10,10 @@ from multiprocessing import Pool
 from .segout_pkl_video import get_masks, dilate_masks, focus_image_by_masks
 import shutil
 
-class_names = ['rat_black', 'rat_white']
-class_nicknames = ['black', 'white']
 
 
 """create a class that generate the image folder """
 class SegImagefolder:
-    ratclasses = ['rat_black', 'rat_white']
-    
     def ImageCapture(self, pkl_data, pkl_datafilename):
         self.pkl_data = pkl_data
         self.pkl_datafilename = pkl_datafilename
@@ -32,6 +28,12 @@ class SegImagefolder:
         # generate the output folder 
         self.__outfolder = os.path.join(os.path.dirname(self.pkl_data), 'seg_out')
         os.makedirs(self.__outfolder, exist_ok=True)
+
+        # check the number of classes should be 1 or 2
+        self.nclass = len(self.pkl_data[0][0])
+        assert self.nclass in [1, 2], 'the number of classes should be 1 or 2'
+        self.ratclasses = ['rat'] if self.nclass==1 else ['rat_black', 'rat_white']
+        
         return self
 
     def __len__(self):
@@ -52,10 +54,13 @@ class SegImagefolder:
 
     def write(self, focus_imgs, imgfilename):
         # get the nake name of the imgfilename
-        imgNakename = os.path.splitext(os.path.basename(imgfilename))[0]
+        imgNakename,extName = os.path.splitext(os.path.basename(imgfilename))
         # write the images into the folder
         for focus_img, ratclass in zip(focus_imgs, self.ratclasses):
-            outfilename = os.path.join(self.__outfolder, '{}_{}.jpg'.format(imgNakename, ratclass))
+            if self.nclass==1:
+                outfilename = os.path.join(self.__outfolder, '{}{}'.format(imgNakename, extName))
+            else:
+                outfilename = os.path.join(self.__outfolder, '{}_{}{}'.format(imgNakename, ratclass, extName))
             mmcv.imwrite(focus_img, outfilename)
 
     def release(self):
