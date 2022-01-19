@@ -53,9 +53,6 @@ def convert_folder_to_mp4(folder, whxy, postfix=None):
     if len(filenamesList) == 0:
         print("Folder contain no AVI/MP4/MKV videos!")
         return
-        
-    # check FFMPEG exist
-    ffmpeg_path = 'ffmpeg'
 
     ffmpeg_args = ''
     if crop_tbg:
@@ -78,8 +75,8 @@ def convert_folder_to_mp4(folder, whxy, postfix=None):
             codec = 'h264_nvenc'
         outfileformat = "{}_output_"+str(postfix)+".mp4" if postfix else "{}_output.mp4"
         outfilename = outfileformat.format(filename[:-4])
-        mystr = '{} -i "{}" -vf crop={}:{}:{}:{} -r {} {} -c:v {} "{}" -y'.format(
-            ffmpeg_path, filename, whxy[0], whxy[1], whxy[2], whxy[3], fps10, ffmpeg_args, codec, outfilename)
+        mystr = 'ffmpeg -i "{}" -vf crop={}:{}:{}:{} -r {} {} -c:v {} "{}" -y'.format(
+             filename, whxy[0], whxy[1], whxy[2], whxy[3], fps10, ffmpeg_args, codec, outfilename)
         print(mystr)
         out = os.system(mystr)
 

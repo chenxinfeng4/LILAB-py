@@ -2,7 +2,6 @@
 import os
 import os.path as osp
 import argparse
-import cv2
 
 def concat(*videopaths):
     h_v_dict = {2:[2,1], 3:[2,2], 4:[2,2], 5:[3,2], 6:[3,2], 7:[3,3], 8:[3,3], 9:[3,3]}
@@ -11,7 +10,7 @@ def concat(*videopaths):
     vhlist = []
     for iv in range(v):
         for ih in range(h):
-            pos = '+'.join(['0']+['9+w0']*ih) + '_' + '+'.join(['0']+['9+h0']*iv)
+            pos = '+'.join(['0']+['8+w0']*ih) + '_' + '+'.join(['0']+['8+h0']*iv)
             vhlist.append(pos)
     vhlist = vhlist[:n_videos]
     whmatrix = '|'.join(vhlist).replace('0+','')

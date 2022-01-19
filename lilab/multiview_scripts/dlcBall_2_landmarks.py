@@ -17,6 +17,8 @@ import pandas as pd
 import numpy as np
 views = ['c-1', 'c-2', 'c-3', 'c-4', 'c-5', 'c-6']
 
+likelihood_thr = 0.2
+
 def view_link_csv(folder_csv):
     files_csv = glob.glob(os.path.join(folder_csv, '*.csv'))
     files_csv.sort()
@@ -51,7 +53,7 @@ def a2_flatten_points(df):
     return x_1v, y_1v, p_1v
     
 
-def a3_thr_points(x_1v, y_1v, p_1v, thr=0.9):
+def a3_thr_points(x_1v, y_1v, p_1v, thr=likelihood_thr):
     ids = np.arange(len(x_1v))
     idx_good = np.logical_not(np.isnan(p_1v))  & (p_1v > thr)
     px  = x_1v[idx_good]

@@ -1,6 +1,7 @@
 import glob
 import os
 from PIL import Image
+import argparse
 
 def concat(folder_1, folder_2):
     folder_out = folder_1 + '_x_' + os.path.split(folder_2)[-1]
@@ -43,6 +44,8 @@ def concat(folder_1, folder_2):
         new_im.save(os.path.join(folder_out, os.path.split(img1)[-1]))
     
 if __name__ == '__main__':
-    folder_1 = input("(1/2)The left  folder: >>")
-    folder_2 = input("(2/2)The right folder: >>")
-    concat(folder_1, folder_2)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('folder_1', type=str)
+    parser.add_argument('folder_2', type=str)
+    args = parser.parse_args()
+    concat(args.folder_1, args.folder_2)
