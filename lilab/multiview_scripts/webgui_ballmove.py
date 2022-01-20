@@ -219,13 +219,23 @@ def app(parent=None):
         pin.put_input('move_ball_path', label='The path of moving ball')
         pin.put_input('start_time', label='The start time of ball', placeholder='00:00:01')
         
-        put_button('1. crop video', on_crop_video)
-        put_button('2. deeplabcut predict ball', on_deeplabcut_predict_ball)
-        put_button('3. csv file to landmarkjson', on_csv_to_landmarkjson)
-        put_button('3.5 copy configs to this folder', on_copy_configs)
-        put_button('4. compute relative poses (robust)', on_compute_relative_poses)
-        put_button('5. concatenate relative poses', on_concatenate_relative_poses)
-        put_button('6. bundle adjustment', on_bundle_adjustment)
-        put_button('7. global landmarsk to point3d', on_global_landmarks_to_point3d)
-        put_button('8. global registration', on_global_registration)
+        put_buttons(['1. crop video',
+                     '2. deeplabcut predict ball',
+                     '3. csv file to landmarkjson',
+                     '3.5 copy configs to this folder',
+                     '4. compute relative poses (robust)',
+                     '5. concatenate relative poses',
+                     '6. bundle adjustment',
+                     '7. global landmarsk to point3d',
+                     '8. global registration'], 
+                     onclick=[
+                        on_crop_video,
+                        on_deeplabcut_predict_ball,
+                        on_csv_to_landmarkjson,
+                        on_copy_configs,
+                        on_compute_relative_poses,
+                        on_concatenate_relative_poses,
+                        on_bundle_adjustment,
+                        on_global_landmarks_to_point3d,
+                        on_global_registration])
         put_scope(scope_msg)

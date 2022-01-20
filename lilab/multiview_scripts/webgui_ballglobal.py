@@ -25,6 +25,10 @@ import mmcv
 """
 subdirname = 'ballglobal'
 scope_msg = 'ballglobal_messages'
+
+kernel_open = np.ones((5, 5), np.uint8)
+kernel_dilate = np.ones((200,300),np.uint8)
+
 def get_seconds_from_str(str):
     if ':' in str:
         h, m, s = str.split(':')
@@ -32,7 +36,7 @@ def get_seconds_from_str(str):
     else:
         return int(str)
 
-def on_extract_and_crop_images():
+def on_extract_and_crop_video():
     with use_scope(scope_msg, clear=True):    
         names = ['t_global_ball'+str(i) for i in range(1, 6)]   
         checkinputs = [pin.pin[name] for name in names]
@@ -67,6 +71,34 @@ def on_extract_and_crop_images():
         put_text('Extracting images done! Crop the images...')
         lilab.cvutils.crop_videofast.main(outdir)
 
+        put_success('Done!')
+
+def on_get_background_images():
+    outdir = osp.join(osp.dirname(pin.pin.global_ball_path), subdirname)
+    videos = sorted(glob.glob(outdir + '/*output*.mp4'))
+    with use_scope(scope_msg, clear=True):
+        put_text('Extracting background images...')
+        for i, video in enumerate(videos):
+            vid = mmcv.VideoReader(video)
+            imgs = np.array([img for img in vid])
+            imgbg = np.median(imgs, axis=0).astype(np.uint8)
+            mmcv.imwrite(imgbg, osp.join(outdir, f'bgframe_view_{i+1}.png'))
+            
+            # show the foreground
+            imgfg = imgbg.copy()
+            for i, img in enumerate(imgs):
+                mask = np.abs(img.astype(np.float32) - imgbg.astype(np.float32)) > 10
+                mask = mask[:,:,0].astype(np.uint8)
+                # open geometry and dilate for the mask using cv2
+                mask = cv2.morphologyEx(mask.astype(np.uint8), cv2.MORPH_OPEN, kernel_open)
+                mask = cv2.dilate(mask, kernel_dilate)
+                maskbin = mask.astype(bool)
+                imgfg[maskbin,:] = img[maskbin,:]
+            mmcv.imwrite(imgfg, osp.join(outdir, f'fgframe_view_{i+1}.png'))
+
+        put_image_proxy = lambda i: put_image(open(osp.join(outdir, f'bgframe_view_{i+1}.png'),'rb').read())
+        put_table([[put_image_proxy(0), put_image_proxy(1), put_image_proxy(2)],
+                   [put_image_proxy(3), put_image_proxy(4), put_image_proxy(5)]])
         put_success('Done!')
 
 
@@ -109,14 +141,22 @@ def app(parent=None):
         pin.put_input('dlc_project_ball', label='The Deeplabcut project folder')
         pin.put_input('global_ball_path', label='The global path of ball')
         put_table([
-            ['location', 'Time'],
-            ['1', pin.put_input('t_global_ball1', placeholder='00:00:01')],
-            ['2', pin.put_input('t_global_ball2', placeholder='00:00:02')],
-            ['3', pin.put_input('t_global_ball3', placeholder='00:00:03')],
-            ['4', pin.put_input('t_global_ball4', placeholder='00:00:04')],
-            ['5', pin.put_input('t_global_ball5', placeholder='00:00:05')]
+            ['Location', '1', '2', '3', '4', '5'],
+            [ 'Time',
+              pin.put_input('t_global_ball1', placeholder='00:00:01'),
+              pin.put_input('t_global_ball2', placeholder='00:00:02'),
+              pin.put_input('t_global_ball3', placeholder='00:00:03'),
+              pin.put_input('t_global_ball4', placeholder='00:00:04'),
+              pin.put_input('t_global_ball5', placeholder='00:00:05')]
         ])
-        put_button('1. extract and crop images', on_extract_and_crop_images)
-        put_button('2. deeplabcut predict ball', on_deeplabcut_predict_ball)
-        put_button('3. csv file to landmarkjson', on_csv_to_landmarkjson)
+        put_buttons(['1. extract and crop video',
+                     '1.5 get background images',
+                     '2. deeplabcut predict ball',
+                     '3. csv file to landmarkjson'], 
+                     onclick=[
+                        on_extract_and_crop_video,
+                        on_get_background_images,
+                        on_deeplabcut_predict_ball,
+                        on_csv_to_landmarkjson
+                     ])
         put_scope(scope_msg)
