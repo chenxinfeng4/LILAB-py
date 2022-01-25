@@ -52,6 +52,8 @@ def main(videopath, xylen=None):
         # find the center of imgb
         xcen = np.sum(np.sum(imgb, axis=0)/np.sum(imgb)*np.arange(imgb.shape[1]))
         ycen = np.sum(np.sum(imgb, axis=1)/np.sum(imgb)*np.arange(imgb.shape[0]))
+        if np.isnan(xcen) or np.isnan(ycen):
+            xcen = ycen = xylen/2+1
         xmin, xmax = int(xcen-xylen/2), int(xcen+xylen/2)-1
         ymin, ymax = int(ycen-xylen/2), int(ycen+xylen/2)-1
         bboxes = np.array([xmin, ymin, xmax, ymax])

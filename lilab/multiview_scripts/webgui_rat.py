@@ -10,8 +10,7 @@ import shutil
 import cv2
 import mmcv
 import PIL.Image
-from lilab.multiview_scripts.webgui_ballglobal import app as app_ballglobal
-from lilab.multiview_scripts.webgui_ballmove import app as app_ballmove
+
 # /home/liying_lab/chenxinfeng/DATA/multiview-project/ratkeypoints_11-26/mulitview
 # /home/liying_lab/chenxinfeng/DATA/multiview-project/2021-11-02-bwrat_800x600_side6/ratBblack
 
@@ -188,7 +187,7 @@ def on_matlab_to_video():
     # check all need
     isok = checkfolderexist()
     if not isok: return False
-    mat_3D_cm = osp.join(pin.pin.folderrat, 'rat_points3d_cm.mat')
+    mat_3D_cm = osp.join(pin.pin.folderrat, 'rat_points3d_cm_impute.mat')
 
     out_file = osp.join(pin.pin.folderrat, 'rat3dskeleton.mp4')
     if osp.isfile(out_file): os.remove(out_file)

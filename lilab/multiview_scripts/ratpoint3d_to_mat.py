@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#python ratpoint3d_to_mat.py rat_points3d_cm.json
+#python -m lilab.multiview_scripts.ratpoint3d_to_mat rat_points3d_cm.json
 import os
 import sys
 import json

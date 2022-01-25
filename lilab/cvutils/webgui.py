@@ -12,8 +12,11 @@ import mmcv
 import os
 from subprocess import PIPE, run
 
+# python -m lilab.cvutils.webgui
+
 def runargs_show(uimessage, args):
     # run the command, and get the stdout and stderr and returncode
+    clear(uimessage)
     result = run(args, stdout=PIPE, stderr=PIPE, universal_newlines=True)
     with use_scope(uimessage, clear=True):
         put_text(result.stdout)
@@ -24,6 +27,7 @@ def runargs_show(uimessage, args):
             put_error('Fail!')
 
 def on_crop_video(uifiletype, uiinput_path, uimessage):
+    clear(uimessage)
     input_path = pin.pin[uiinput_path]
     if pin.pin[uifiletype] == 'image':
         module = 'lilab.cvutils.crop_image'
@@ -34,16 +38,32 @@ def on_crop_video(uifiletype, uiinput_path, uimessage):
     runargs_show(uimessage, args)
     
 def on_concat_video(uifiletype, uiinput_path, uiinput_path2, uimessage):
+    clear(uimessage)
     input_path = pin.pin[uiinput_path]
-    if pin.pin[uifiletype] == 'image':
+    input_path2 = pin.pin[uiinput_path2]
+    if 'image' in pin.pin[uifiletype]:
         module = 'lilab.cvutils.concat_image'
     else:
         module = 'lilab.cvutils.concat_video'
     
-    args = ['python', '-m', module, input_path, uiinput_path2]
+    args = ['python', '-m', module, input_path, input_path2]
+    runargs_show(uimessage, args)
+
+
+def on_concat_videopro(uiinput_textarea, uimessage):
+    clear(uimessage)
+    module = 'lilab.cvutils.concat_videopro'
+    videos = pin.pin[uiinput_textarea].split()
+    checks = [osp.exists(video) for video in videos]
+    if not len(videos) or not all(checks):
+        with use_scope(uimessage, clear=True):
+            put_error('Not all videos exist!')
+        return
+    args = ['python', '-m', module] + videos
     runargs_show(uimessage, args)
 
 def on_prepare_config_load(uiinput_path, ui_scopecode, uimessage):
+    clear(uimessage)
     input_path = pin.pin[uiinput_path]
     config_path = osp.join(input_path, 'config_video.py')
     if not osp.exists(config_path):
@@ -107,10 +127,17 @@ def app():
         put_scope(names[2])
     with use_scope('concat_video'):
         cc_names = names = ['cc_filetype', 'cc_input_path1', 'cc_input_path2', 'cc_message']
-        pin.put_radio(names[0], options=['video', 'image'],value='video', inline=True)
-        pin.put_input(names[1], label = 'Input path folder [left]')
-        pin.put_input(names[2], label = 'Input path folder [right]')
-        put_button('Run', onclick=lambda:on_concat_video(*cc_names))
+        put_collapse('Concat left and right videos/images', [
+            pin.put_radio(names[0], options=['video file', 'image folder'],value='video file', inline=True),
+            pin.put_input(names[1], label = 'Input path [left]'),
+            pin.put_input(names[2], label = 'Input path [right]'),
+            put_button('Run', onclick=lambda:on_concat_video(*cc_names))
+        ], open=True)
+        put_collapse('Concat multiple videos', [
+            pin.put_textarea('cc_input_textarea', label='Multiple videos', 
+                            rows=6, code={'lineNumbers' : True}),
+            put_button('Run', onclick=lambda:on_concat_videopro('cc_input_textarea', cc_names[-1])),
+        ], open=False)
         put_scope(names[2])
 
 if __name__ == '__main__':
