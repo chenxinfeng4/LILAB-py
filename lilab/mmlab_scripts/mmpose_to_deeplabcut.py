@@ -79,7 +79,23 @@ def search_nettype_iternum(yaml_file):
     return nettype, iternum
 
 
-def main(yaml_file = 'config.yaml', pkl_file = 'video.pkl'):
+def main(yaml_file = 'config.yaml', pkl_file_or_folder = 'video.pkl'):
+    # check the file or folder of pkl_file_or_folder
+    if osp.isdir(pkl_file_or_folder):
+        folder = pkl_file_or_folder
+        pkl_files = glob.glob(folder+'/*.pkl')
+        assert len(pkl_files)>0, "There should be at least one pkl file in the folder"
+    elif osp.isfile(pkl_file_or_folder):
+        pkl_files = [pkl_file_or_folder]
+    else:
+        raise ValueError("The pkl_file_or_folder should be a folder or a pkl file")
+    
+    # loop through the pkl files
+    for pkl_file in pkl_files:
+        convert(yaml_file, pkl_file)
+
+
+def convert(yaml_file = 'config.yaml', pkl_file = 'video.pkl'):
     with open(yaml_file, 'r') as f:
         cfg = yaml.load(f, Loader=yaml.FullLoader)
     bodyparts = cfg['bodyparts']
@@ -125,6 +141,6 @@ def main(yaml_file = 'config.yaml', pkl_file = 'video.pkl'):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Convert the pkl file to the csv file')
     parser.add_argument('yaml_file', type=str, default='config.yaml', help='the yaml file')
-    parser.add_argument('pkl_file', type=str, default='video.pkl', help='the pkl file')
+    parser.add_argument('pkl_file', type=str, default='video.pkl', help='the pkl file or folder')
     args = parser.parse_args()
     main(args.yaml_file, args.pkl_file)

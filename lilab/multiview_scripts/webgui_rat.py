@@ -231,7 +231,7 @@ def app(parent=None):
                         on_dlc_to_landmarks,
                         on_landmarks_to_3D_arbunit,
                         on_landmarks_to_3D_cm,
-                        on_landmarks_to_3D_cm,
+                        on_3D_cm_to_matlab,
                         on_matlab_to_video])
         put_scope(scope_msg)
 
