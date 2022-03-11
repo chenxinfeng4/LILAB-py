@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# python -m lilab.cvutils.crop_videofast multiview_color/2022-2-24-side6-bwrat-shank3/16-39-47/
 '''
 Author: your name
 Date: 2021-09-28 14:14:27
@@ -38,6 +39,7 @@ import platform
 crop_tbg = None
 crop_tdur = None
 codec = 'h264_nvenc'
+encoder = 'h264_cuvid'
 
 def xywh2whxy(xywh, keepXeqY=True):
     if keepXeqY:
@@ -75,7 +77,7 @@ def convert_folder_to_mp4(folder, whxy_list):
     
         # convert        
 
-        ffout_list = [f'-map "[v{i}]" -y -r {fps10} -c:v {codec} {ffmpeg_args} "{filename[:-4]}_output_{i+1}.mp4"'
+        ffout_list = [f'-map "[v{i}]" -y -r {fps10} -c:v {codec} {ffmpeg_args} -b:v 2M "{filename[:-4]}_output_{i+1}.mp4"'
                 for i in range(len(whxy_list))]
         ffoutstr = ' '.join(ffout_list)
 
@@ -90,6 +92,8 @@ def main(video_foldername):
     config = cg.getfoldconfigpy(video_foldname)
     assert hasattr(config, 'crop_xywh'), 'Need [crop_xywh] in [config_video.py]'
     keepXeqY = getattr(config, 'keepXeqY', True)
+    global crop_tbg
+    global crop_tdur
     crop_tbg = getattr(config, 'crop_tbg', None)
     crop_tdur = getattr(config, 'crop_tdur', None)
     if type(config.crop_xywh[0]) != list:

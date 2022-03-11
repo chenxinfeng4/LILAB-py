@@ -10,6 +10,10 @@ import numpy as np
 import tqdm
 import sys
 from glob import glob
+try:
+    from . import cxfguilib as cg
+except Exception as e:
+    import cxfguilib as cg
 
 frame_dir = "outframes"
 
@@ -34,7 +38,7 @@ def extract(video_input, frame_seconds):
         cap.set(cv2.CAP_PROP_POS_FRAMES, int(frame_seconds * fps))
         ret, frame = cap.read()
         if not ret: continue
-        filename = os.path.join(dirname, frame_dir, 'frame' + '_{0:02}.jpg'.format(iframe))
+        filename = os.path.join(dirname, frame_dir, nakefilename + '_{0:05}.png'.format(iframe))
         cv2.imwrite(filename, frame)
         
     cap.release()
@@ -65,8 +69,7 @@ if __name__ == '__main__':
         assert False, 'Input should be FILE or FOLDER'
         
     # read config_video.py
-    import sys; sys.path.append('.')
-    import config_video as config
+    config = cg.getfoldconfigpy('.')
     frames_time = getattr(config, 'frames_time', None)
     frames_seconds = timestr_to_seconds(frames_time)
     

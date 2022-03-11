@@ -13,7 +13,7 @@ def concat(*videopaths):
             pos = '+'.join(['0']+['8+w0']*ih) + '_' + '+'.join(['0']+['8+h0']*iv)
             vhlist.append(pos)
     vhlist = vhlist[:n_videos]
-    whmatrix = '|'.join(vhlist).replace('0+','')
+    whmatrix = '|'.join(vhlist).replace('|0+','|')
     filterstr = f"xstack=inputs={n_videos}:{whmatrix}:fill=green"
 
     # input lists
@@ -23,7 +23,8 @@ def concat(*videopaths):
     output_path = osp.join(osp.dirname(videopaths[0]), "concat.mp4")        
             
     # concat the videos horizontally
-    os.system(f'ffmpeg {input_list} -filter_complex "{filterstr}" -y -c:v libx264  "{output_path}"')
+    print(f'ffmpeg {input_list} -filter_complex "{filterstr}" -y -c:v libx264 -b:v 4M "{output_path}"')
+    os.system(f'ffmpeg {input_list} -filter_complex "{filterstr}" -y -c:v h264_nvenc -b:v 4M "{output_path}"')
 
 
 if __name__ == "__main__":

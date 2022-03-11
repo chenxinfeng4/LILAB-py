@@ -90,7 +90,7 @@ def main(mat_file):
     # %% filter to smooth
     smooth_method = 'mean'
     if smooth_method == 'median':
-        mat_data_smooth = medfilt(mat_data_hybrid, kernel_size=(5,1,1))
+        mat_data_smooth = medfilt(mat_data_hybrid, kernel_size=(3,1,1))
     elif smooth_method == 'mean':
         mat_data_smooth = convolve1d(mat_data_hybrid, np.ones(3)/3, 
                                      axis=0, mode='nearest')

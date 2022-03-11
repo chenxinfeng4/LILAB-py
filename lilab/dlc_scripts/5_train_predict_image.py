@@ -79,7 +79,7 @@ deeplabcut.analyze_videos(config_path, video_preds, videotype='avi', gputouse=1,
 deeplabcut.create_video_with_all_detections(config_path, video_preds,DLCscorername='DLC_resnet50_6camera-90fpsMay28shuffle1_400000')##later version, 2.2
 
 
-
+deeplabcut.convert_detections2tracklets(config_path, [video_preds], videotype='mp4',track_method='ellipse',identity_only=True,overwrite = True)
 
   #
   ###detection to tracking

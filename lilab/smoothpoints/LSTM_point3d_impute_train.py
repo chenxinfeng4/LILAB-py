@@ -3,25 +3,24 @@ import io
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-from pandas import read_csv
 import torch
 import scipy.io as sio
 import os.path as osp
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import mean_squared_error
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from torch.utils.data import ConcatDataset
 
 # %% trainingset
-train_files = ['/home/liying_lab/chenxinfeng/DATA/multiview-project/2021-11-02-bwrat_800x600_side6/ratBlack/rat_points3d_cm.mat',
-               '/home/liying_lab/chenxinfeng/DATA/multiview-project/2021-11-02-bwrat_800x600_side6/rat/rat_points3d_cm.mat',
-               '/home/liying_lab/chenxinfeng/DATA/multiview-project/2021-11-02-bwrat_800x600_side6/15-37-42/white3d/rat_points3d_cm.mat',
-               '/home/liying_lab/chenxinfeng/DATA/multiview-project/2021-11-02-bwrat_800x600_side6/15-37-42/black3d/rat_points3d_cm.mat']
+
+train_files = ['/home/liying_lab/chenxinfeng/DATA/multiview-project/2021-11-02-bwrat_800x600_side6/rat/rat_points3d_cm.mat',
+               '/home/liying_lab/chenxinfeng/DATA/multiview-project/2021-11-02-bwrat_800x600_side6/15-37-42/white3d/rat_points3d_cm.mat']
+
+
 load_checkpoint = None
+# load_checkpoint = '/home/liying_lab/chenxinfeng/ml-project/LILAB-py/lilab/smoothpoints/model.pth'
+
 
 missing_rate = 0.2
 missing_replacevalue= -50
@@ -47,6 +46,11 @@ def root_mean_squared_error3d(y_true, y_pred, pos):
     diff = y_true[pos] - y_pred[pos]
     diff3d = diff.reshape(-1, 3)
     return np.mean(np.sqrt(np.sum(np.square(diff3d), axis=1)))
+
+def root_squared_error3d(y_true, y_pred, pos): 
+    diff = y_true[pos] - y_pred[pos]
+    diff3d = diff.reshape(-1, 3)
+    return np.sqrt(np.sum(np.square(diff3d), axis=1))
 
 np.random.seed(0)
 torch.manual_seed(0)
@@ -174,7 +178,7 @@ def create_model(load_checkpoint):
 def train_model(model, train_dataloader):
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     mse_loss = nn.MSELoss()
-    n_epochs = 200
+    n_epochs = 600
 
     for epoch in range(n_epochs):
         train_losses = []
@@ -204,8 +208,8 @@ def create_datasetloader(train_files):
     train_dataset = ConcatDataset(train_list)
     test_dataset =  ConcatDataset(test_list)
 
-    train_dataloader = DataLoader(train_dataset, batch_size=200, shuffle=True)
-    test_dataloader = DataLoader(test_dataset, batch_size=200, shuffle=False)
+    train_dataloader = DataLoader(train_dataset, batch_size=50, shuffle=True)
+    test_dataloader = DataLoader(test_dataset, batch_size=50, shuffle=False)
     return train_dataloader, test_dataloader
 
 
@@ -262,6 +266,19 @@ def main(train_files):
     testPred_rmse = root_mean_squared_error(test_dense_ground_truth, test_sparse_pred, posImpute)
     testPred_cm = root_mean_squared_error3d(test_dense_ground_truth, test_sparse_pred, posImpute)
     print('Test prediction RMSE: %.2f RMSE, %.2f cm' % (testPred_rmse, testPred_cm))
+
+    if __name__ == '__main__':
+        testPred_each_cm = root_squared_error3d(test_dense_ground_truth, test_sparse_pred, posImpute)
+        import matplotlib.pyplot as plt
+        
+        plt.figure(figsize=(8,8))
+        plt.hist(testPred_each_cm, bins=50)
+        plt.plot([testPred_cm, testPred_cm], [0, 110], 'k--')
+        plt.text(testPred_cm, 110, '%.2f cm' % testPred_cm, ha='right', va='bottom', fontsize=14)
+        plt.xlabel('Error (cm)')
+        plt.ylabel('Frequence')
+        plt.title('Imputation Error')
+        
 
     print('Self fitting')
     posFit = np.where((test_dense_ground_truth != missing_replacevalue) & (test_sparse_ground_truth != missing_replacevalue))

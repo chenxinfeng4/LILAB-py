@@ -137,10 +137,10 @@ class Labelme2coco():
                 x,y,w,h = 0,0,img.shape[1]-1,img.shape[0]-1
             else:
             # find the xmin, ymin, xmax, ymax of the imgbin
-                xmin = np.min(np.where(imgbin.any(axis=1))[0]) 
-                xmax = np.max(np.where(imgbin.any(axis=1))[0])
-                ymin = np.min(np.where(imgbin.any(axis=0))[0])
-                ymax = np.max(np.where(imgbin.any(axis=0))[0])
+                xmin = np.min(np.where(imgbin.any(axis=0))[0]) 
+                xmax = np.max(np.where(imgbin.any(axis=0))[0])
+                ymin = np.min(np.where(imgbin.any(axis=1))[0])
+                ymax = np.max(np.where(imgbin.any(axis=1))[0])
                 x,y,w,h = xmin,ymin,xmax-xmin,ymax-ymin
                 x,y,w,h = int(x),int(y),int(w),int(h)
             

@@ -12,7 +12,7 @@ import sys
 from glob import glob
 try:
     from . import cxfguilib as cg
-except e:
+except Exception as e:
     import cxfguilib as cg
     
 numframe_to_extract = 200

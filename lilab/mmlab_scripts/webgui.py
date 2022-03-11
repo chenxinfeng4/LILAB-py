@@ -13,6 +13,7 @@ import mmcv
 import os
 
 from lilab.mmlab_scripts.webgui_mmseg import app as app_mmseg
+from lilab.mmlab_scripts.webgui_mmdet import app as app_mmdet
 from lilab.mmlab_scripts.webgui_mmpose import app as app_mmpose
 from lilab.mmlab_scripts.webgui_cropvideo import app as app_cropvideo
 
@@ -29,9 +30,11 @@ def app():
     put_tabs([
         {'title': 'crop video', 'content':put_scope('crop_video')},
         {'title': 'mmseg', 'content':put_scope('mmseg')},
+        {'title': 'mmdet', 'content': put_scope('mmdet')},
         {'title': 'mmpose', 'content':put_scope('mmpose')},
     ])
     app_mmpose('mmpose')
+    app_mmdet('mmdet')
     app_cropvideo('crop_video')
     app_mmseg('mmseg')
 

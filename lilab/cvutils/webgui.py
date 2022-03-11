@@ -26,13 +26,21 @@ def runargs_show(uimessage, args):
         else:
             put_error('Fail!')
 
+def on_extract_frames(uiinput_path, uimessage):
+    clear(uimessage)
+    input_path = pin.pin[uiinput_path]
+    module = 'lilab.cvutils.extract_frames'
+
+    args = ['python', '-m', module, input_path]
+    runargs_show(uimessage, args)
+
 def on_crop_video(uifiletype, uiinput_path, uimessage):
     clear(uimessage)
     input_path = pin.pin[uiinput_path]
     if pin.pin[uifiletype] == 'image':
         module = 'lilab.cvutils.crop_image'
     else:
-        module = 'lilab.cvutils.crop_video'
+        module = 'lilab.cvutils.crop_videofast'
     
     args = ['python', '-m', module, input_path]
     runargs_show(uimessage, args)
@@ -53,7 +61,7 @@ def on_concat_video(uifiletype, uiinput_path, uiinput_path2, uimessage):
 def on_concat_videopro(uiinput_textarea, uimessage):
     clear(uimessage)
     module = 'lilab.cvutils.concat_videopro'
-    videos = pin.pin[uiinput_textarea].split()
+    videos = pin.pin[uiinput_textarea].split('\n')
     checks = [osp.exists(video) for video in videos]
     if not len(videos) or not all(checks):
         with use_scope(uimessage, clear=True):
@@ -106,6 +114,7 @@ def on_prepare_config_save(uiinput_path, ui_scopecode, uimessage):
 def app():
     put_tabs([
         {'title':'prepare config.py', 'content':put_scope('prepare_config')},
+        {'title':'extract frames', 'content':put_scope('extract_frames')},
         {'title':'crop image/video', 'content':put_scope('crop_video')}, 
         {'title':'concat image/video', 'content':put_scope('concat_video')},
         {'title':'concat seg video', 'content':put_scope('concat_seg_video')},
@@ -113,12 +122,16 @@ def app():
     with use_scope('prepare_config'):
         p_c_names = names = ['p_c_input_path','p_c_scopecode', 'p_c_message']
         pin.put_input(names[0], label='The folder')
-        print(len(names))
         put_button('check&load exist', onclick=lambda:on_prepare_config_load(*p_c_names))
         put_button('load default', onclick=lambda:on_prepare_config_default(*p_c_names))
         put_button('save', onclick=lambda:on_prepare_config_save(*p_c_names))
         put_scope(names[1])
         put_scope(names[2])
+    with use_scope('extract_frames'):
+        e_f_names = names = ['e_f_input_path', 'e_f_message']
+        pin.put_input(names[0], label='The video path folder')
+        put_button('Run', onclick=lambda:on_extract_frames(*e_f_names))
+        put_scope(names[1])
     with use_scope('crop_video'):
         c_v_names = names = ['c_v_filetype', 'c_v_input_path', 'c_v_message']
         pin.put_radio(names[0], options=['video', 'image'], value='video',inline=True)
@@ -135,7 +148,7 @@ def app():
         ], open=True)
         put_collapse('Concat multiple videos', [
             pin.put_textarea('cc_input_textarea', label='Multiple videos', 
-                            rows=6, code={'lineNumbers' : True}),
+                            rows=10, code={'lineNumbers' : True}),
             put_button('Run', onclick=lambda:on_concat_videopro('cc_input_textarea', cc_names[-1])),
         ], open=False)
         put_scope(names[2])

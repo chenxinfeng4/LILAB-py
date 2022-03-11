@@ -25,7 +25,7 @@ if __name__ == '__main__':
     imgs = data['images']
     files = [img['file_name'] for img in imgs]
 
-    file0 = files[0]
+    file0, file1 = files[0], files[-1]
     jsonfolder, jsonname = os.path.split(cocofile)
     if os.path.isfile(os.path.join(jsonfolder, file0)):
         img_prefix = jsonfolder
@@ -33,7 +33,7 @@ if __name__ == '__main__':
         currentlist = [os.path.join(jsonfolder, d) for d in os.listdir(jsonfolder)]
         currentfolder = [d for d in currentlist if os.path.isdir(d) and 'extract' not in d]
         for folder in currentfolder:
-            if os.path.isfile(os.path.join(folder, file0)):
+            if os.path.isfile(os.path.join(folder, file0)) and os.path.isfile(os.path.join(folder, file1)):
                 img_prefix = folder
                 break
         else:

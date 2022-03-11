@@ -51,7 +51,7 @@ def on_crop_video(uiinput_path, uimessage):
     clear(uimessage)
     input_path = pin.pin[uiinput_path]
     
-    module = 'lilab.cvutils.crop_video'
+    module = 'lilab.cvutils.crop_videofast'
     
     args = ['python', '-m', module, input_path]
     runargs_show(uimessage, args)
@@ -64,7 +64,7 @@ def app(parent=None):
     
     with use_scope(parent):
         c_v_names = names = ['c_v_input_path', 'c_v_message']
-        pin.put_input(names[1], label = 'Input path folder')
+        pin.put_input(names[0], label = 'Input path folder')
         put_buttons(['1.copy config', '2. Run'], 
                      onclick=[lambda: on_copyconfig(*c_v_names),
                               lambda:on_crop_video(*c_v_names)])

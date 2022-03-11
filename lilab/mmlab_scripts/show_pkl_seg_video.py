@@ -10,8 +10,10 @@ import os
 from mmdet.core.visualization.image import (EPS, Polygon, PatchCollection, plt, color_val_matplotlib)
 import argparse
 import glob
-from multiprocessing import Pool
+import multiprocessing
+from multiprocessing import Pool, Value
 
+iPool = Value('i', 0)
 
 # %% define the function to draw the mask and the bounding box
 def imshow_det_bboxes(img,
@@ -198,19 +200,21 @@ def pkl_2_video(pkl):
         video_out, fourcc, v.fps,
         (v.width, v.height))
 
-
-    for i, (label, img) in enumerate(zip(tqdm(data), v)):
+    ipool = iPool.value
+    iPool.value += 1
+    for i, (label, img) in enumerate(zip(tqdm(data, position=ipool), v)):
         bboxes, segms, labels = [], [], []
         for iclass, _ in enumerate(class_names):
+            if len(label[0][iclass])==0: continue
             bboxes.append(label[0][iclass]) #append numpy.array
             segms.extend(label[1][iclass])  #extend list
             labels.extend([iclass]*len(label[1][iclass]))
-
-        bboxes = np.concatenate(bboxes)
-        labels = np.array(labels, dtype='int')
-        masks = mask_util.decode(segms).transpose((2,0,1))
-        img    = imshow_det_bboxes(img, bboxes,labels,masks,class_nicknames, 
-                                show=False, bbox_color='white')
+        if len(bboxes):
+            bboxes = np.concatenate(bboxes)
+            labels = np.array(labels, dtype='int')
+            masks = mask_util.decode(segms).transpose((2,0,1))
+            img    = imshow_det_bboxes(img, bboxes,labels,masks,class_nicknames, 
+                                    show=False, bbox_color='white')
         img = cv2.putText(img, str(i), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
         video_writer.write(img)
 
@@ -236,6 +240,8 @@ if __name__ == '__main__':
     else:
         raise FileNotFoundError(f'{args.pkl_folder} not found')
 
-    with Pool(processes=6) as pool:
+    ncpu = multiprocessing.cpu_count()
+    maxproc = max([12, ncpu, len(pkl_files)])
+    with Pool(processes=maxproc, initargs=(tqdm.get_lock(),),initializer=tqdm.set_lock) as pool:
         pool.map(pkl_2_video, pkl_files)
     

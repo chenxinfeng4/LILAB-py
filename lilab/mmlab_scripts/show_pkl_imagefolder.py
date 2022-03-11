@@ -1,4 +1,4 @@
-# python -m lilab.mmlab_scripts.show_pkl_seg_video ./data/mmdetection/test_pkl
+# python -m lilab.mmlab_scripts.show_pkl_imagefolder ./data/mmdetection/test_pkl
 # %% load packages
 import mmcv
 import numpy as np
@@ -25,6 +25,7 @@ def imshow_det_bboxes(img,
                       win_name='',
                       show=True,
                       wait_time=0,
+                      show_bbox=True,
                       out_file=None):
     """Draw bboxes and class labels (with scores) on an image.
 
@@ -112,34 +113,35 @@ def imshow_det_bboxes(img,
     polygons = []
     color = []
     for i, (bbox, label) in enumerate(zip(bboxes, labels)):
-        bbox_int = bbox.astype(np.int32)
-        poly = [[bbox_int[0], bbox_int[1]], [bbox_int[0], bbox_int[3]],
-                [bbox_int[2], bbox_int[3]], [bbox_int[2], bbox_int[1]]]
-        np_poly = np.array(poly).reshape((4, 2))
-        polygons.append(Polygon(np_poly))
-        color.append(bbox_color)
-        label_text = class_names[
-            label] if class_names is not None else f'class {label}'
-        if len(bbox) > 4:
-            label_text += f'|{bbox[-1]:.02f}'
-        ax.text(
-            bbox_int[0],
-            bbox_int[1],
-            f'{label_text}',
-            bbox={
-                'facecolor': 'black',
-                'alpha': 0.4,
-                'pad': 0.7,
-                'edgecolor': 'none'
-            },
-            color=text_color,
-            fontsize=font_size,
-            verticalalignment='top',
-            horizontalalignment='left')
+        if show_bbox:
+            bbox_int = bbox.astype(np.int32)
+            poly = [[bbox_int[0], bbox_int[1]], [bbox_int[0], bbox_int[3]],
+                    [bbox_int[2], bbox_int[3]], [bbox_int[2], bbox_int[1]]]
+            np_poly = np.array(poly).reshape((4, 2))
+            polygons.append(Polygon(np_poly))
+            color.append(bbox_color)
+            label_text = class_names[
+                label] if class_names is not None else f'class {label}'
+            if len(bbox) > 4:
+                label_text += f'|{bbox[-1]:.02f}'
+            ax.text(
+                bbox_int[0],
+                bbox_int[1],
+                f'{label_text}',
+                bbox={
+                    'facecolor': 'black',
+                    'alpha': 0.4,
+                    'pad': 0.7,
+                    'edgecolor': 'none'
+                },
+                color=text_color,
+                fontsize=font_size,
+                verticalalignment='top',
+                horizontalalignment='left')
         if segms is not None:
             color_mask = mask_colors[labels[i]]
             mask = segms[i].astype(bool)
-            img[mask] = img[mask] * 0.5 + color_mask * 0.5
+            img[mask] = img[mask] * 0.7 + color_mask * 0.3
 
     plt.imshow(img)
 
@@ -192,7 +194,7 @@ def pkl_2_images(pkl_data, pkl_datafilename):
     for label, imgfilename in zip(tqdm(data), datafilename):
         bboxes, segms, labels = [], [], []
         for iclass, _ in enumerate(class_names):
-            if label[0][iclass]:
+            if len(label[0][iclass]):
                 bboxes.append(label[0][iclass]) #append numpy.array
                 segms.extend(label[1][iclass])  #extend list
                 labels.extend([iclass]*len(label[1][iclass]))
@@ -200,9 +202,9 @@ def pkl_2_images(pkl_data, pkl_datafilename):
         img = mmcv.imread(imgfilename)
         bboxes = np.concatenate(bboxes)
         labels = np.array(labels, dtype='int')
-        masks = mask_util.decode(segms).transpose((2,0,1))
+        masks  = mask_util.decode(segms).transpose((2,0,1))
         img    = imshow_det_bboxes(img, bboxes,labels,masks,class_nicknames, 
-                                show=False, bbox_color='white')
+                                show=False, bbox_color='white', show_bbox=False)
         # save the image
         mmcv.imwrite(img, os.path.join(folder, os.path.basename(imgfilename)))
         

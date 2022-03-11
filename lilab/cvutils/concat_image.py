@@ -1,16 +1,19 @@
+#python -m lilab.cvutils.concat_image A/ B/
 import glob
 import os
+import os.path as osp
+import tqdm
 from PIL import Image
 import argparse
 
 def concat(folder_1, folder_2):
-    folder_out = folder_1 + '_x_' + os.path.split(folder_2)[-1]
+    folder_out = osp.abspath(folder_1) + '_x_' + os.path.split(osp.abspath(folder_2))[-1]
     os.makedirs(folder_out, exist_ok=True)
 
     def globimages(folder):
         ret =   glob.glob(os.path.join(folder, '*.jpg')) + \
                 glob.glob(os.path.join(folder, '*.jpeg')) + \
-                glob.glob(os.path.join(folder, '*.jpeg'))
+                glob.glob(os.path.join(folder, '*.png'))
         return ret
 
     def commonimages(imgs1, imgs2):
@@ -27,7 +30,7 @@ def concat(folder_1, folder_2):
     imgs2 = globimages(folder_2)
     imgs1, imgs2 = commonimages(imgs1, imgs2)
 
-    for img1, img2 in zip(imgs1, imgs2):
+    for img1, img2 in zip(tqdm.tqdm(imgs1), imgs2):
         images = [Image.open(x) for x in [img1, img2]]
         widths, heights = zip(*(i.size for i in images))
 
