@@ -12,7 +12,6 @@ from lilab.smoothpoints.LSTM_base import (test_model, create_datasetloader,
                 root_mean_squared_error, root_mean_squared_error3d, root_squared_error3d)
 
 # %% trainingset
-
 train_files = ['/home/liying_lab/chenxinfeng/DATA/multiview-project/2021-11-02-bwrat_800x600_side6/rat/rat_points3d_cm.mat',
                '/home/liying_lab/chenxinfeng/DATA/multiview-project/2021-11-02-bwrat_800x600_side6/15-37-42/white3d/rat_points3d_cm.mat']
 
@@ -23,9 +22,8 @@ load_checkpoint = None
 missing_rate = 0.2
 missing_replacevalue= -50
 test_rate = 0.082
-look_back = 24
-look_forward = 0
-hidden_size = 120
+look_back = look_forward = 12
+hidden_size = 60
 batch_size = 200
 num_layers = 1
 num_keypoints = 14
@@ -43,22 +41,25 @@ class Model(nn.Module):
         super(Model, self).__init__()
         self.linerinput = nn.Linear(input_size, input_size)
         self.relu = nn.ReLU(inplace=True)
-        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, bidirectional=True)
         self.dropout = nn.Dropout(0.2)
-        self.liner = nn.Linear(hidden_size, output_size)
-        self.linertrans = nn.Linear(hidden_size, 3)
+        self.liner = nn.Linear(hidden_size * 2, output_size)
+        self.linertrans = nn.Linear(hidden_size * 2, 3)
         self.num_layers = num_layers
         self.hidden_size = hidden_size
 
     def forward(self, x):
         batchsize = x.shape[0]
         device = x.device
-        hidden = (torch.zeros(self.num_layers, batchsize, self.hidden_size, device=device),
-                  torch.zeros(self.num_layers, batchsize, self.hidden_size, device=device))
+        hidden = (torch.zeros(self.num_layers *2, batchsize, self.hidden_size, device=device),
+                  torch.zeros(self.num_layers *2, batchsize, self.hidden_size, device=device)) 
         x = self.linerinput(x)
         x = self.relu(x)
-        lstmout, hidden = self.lstm(x, hidden)
-        lastout = lstmout[:,-1,:]
+        lstmout, _ = self.lstm(x, hidden)
+        # lastout = lstmout[:,-1,:]
+        lastout1 = lstmout[:,look_back,:self.hidden_size]
+        lastout2 = lstmout[:,look_back,self.hidden_size:]
+        lastout = torch.cat([lastout1, lastout2], axis=1)
         lastout = self.dropout(lastout)
         out = self.liner(lastout)  #(features,)
         trans = self.linertrans(lastout)  #(3,)
@@ -116,6 +117,7 @@ def train_model(model, train_dataloader):
             f'model_HD{hidden_size}_BK{look_back}_FW{look_forward}_SD{n_side}_final.pth')
 
     torch.save(model.state_dict(), out_checkpoint)
+
 
 
 def main(train_files):
