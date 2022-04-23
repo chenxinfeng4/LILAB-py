@@ -114,7 +114,7 @@ def main_plot3d(matlab_white=None, matlab_black=None, outfile=None):
     plot_skeleton_aframe(None, 'black', True)
 
     # animate
-    fps = 15
+    fps = 30
     writer = animation.writers['ffmpeg'](fps=fps, metadata=dict(artist='Me'), bitrate=1800)
     ani = animation.FuncAnimation(fig,lambda i : animate(points_white, points_black, i), 
                                   len(points_white), interval=1)

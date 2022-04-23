@@ -106,6 +106,7 @@ def main(folder, config, checkpoint, num_gpus):
         queue_poolid.put(poolid)
 
     pool = ctx.Pool(processes=num_gpus)
+    # pool = Pool(processes=num_gpus)
     for video in videos:
         print('video:', video)
         pool.apply_async(compute, args=(video, queue_poolid, workerpools))

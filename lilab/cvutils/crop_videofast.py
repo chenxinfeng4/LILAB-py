@@ -73,11 +73,11 @@ def convert_folder_to_mp4(folder, whxy_list):
         cap= cv2.VideoCapture(filename)
         framespersecond= cap.get(cv2.CAP_PROP_FPS)
         cap.release()
-        fps10 = min([10, framespersecond])
+        fps30 = min([30, framespersecond])
     
         # convert        
 
-        ffout_list = [f'-map "[v{i}]" -y -r {fps10} -c:v {codec} {ffmpeg_args} -b:v 2M "{filename[:-4]}_output_{i+1}.mp4"'
+        ffout_list = [f'-map "[v{i}]" -y -r {fps30} -c:v {codec} {ffmpeg_args} -preset p6 -tune hq -b:v 2M "{filename[:-4]}_output_{i+1}.mp4"'
                 for i in range(len(whxy_list))]
         ffoutstr = ' '.join(ffout_list)
 

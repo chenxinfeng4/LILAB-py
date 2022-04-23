@@ -1,7 +1,7 @@
 import os
 import os.path as osp
 import glob
-
+import json
 
 def find_subfolderimages(dir_or_fileroot, images_name):
     # get the dir of dir_or_fileroot
@@ -29,3 +29,22 @@ def find_subfolderimages(dir_or_fileroot, images_name):
     full_images_name = [osp.join(imagefolder, image_name) for image_name in images_name]
     return full_images_name
     
+
+def find_coco_subfolderimages(coco_file):
+    with open(coco_file, 'r') as f:
+        coco = json.load(f)
+
+    image_files = set([anno_img['file_name'] for anno_img in coco['images']])
+
+    import os.path as osp
+    parentdir = osp.dirname(coco_file)
+    sub_dirs = [osp.join(parentdir, sub) for sub in os.listdir(parentdir) 
+                    if osp.isdir(osp.join(parentdir, sub))]
+
+    for sub_dir in sub_dirs:
+        sub_dir_contains = set(os.listdir(sub_dir))
+        if image_files < sub_dir_contains:
+            return sub_dir
+    else:
+        return None
+

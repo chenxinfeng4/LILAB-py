@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# python -m lilab.cvutils.crop_image xxx
 '''
 Author: your name
 Date: 2021-09-28 14:14:27

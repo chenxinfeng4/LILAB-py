@@ -1,3 +1,4 @@
+# python -m lilab.mmlab_scripts.det_metrics_imgvspkl coco_val_pred.pkl coco_val_anno
 # %%
 import mmcv
 import os
@@ -28,7 +29,8 @@ def calculate_matrics(pred_file, anno_folder):
     nomal_size = (800, 600)
     annomasks = []
     predmasks = []
-    nclass = 2
+    nclass = max([len(frame[1]) for frame in pred_mask])
+    print('nclass:', nclass)
     for anno_file, pred_mask_i in zip(tqdm.tqdm(anno_files), pred_mask):
 
         annoimg = mmcv.imread(anno_file)[:, :, 0]
@@ -63,6 +65,7 @@ def calculate_matrics(pred_file, anno_folder):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Evaluate the model')
     parser.add_argument('pred_file', type=str, default=pred_file, help='The prediction file')
-    parser.add_argument('--anno_folder', type=str, default=anno_folder, help='The annotation file')
+    parser.add_argument('anno_folder', type=str, default=anno_folder, help='The annotation file')
     args = parser.parse_args()
     calculate_matrics(args.pred_file, args.anno_folder)
+    

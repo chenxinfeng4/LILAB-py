@@ -1,3 +1,4 @@
+# python -m lilab.cvutils.coco_viewer 
 # !pyinstaller -F coco_viewer.py -i coco_viewer.ico
 # chenxinfeng
 # ------使用方法------
@@ -139,7 +140,7 @@ def draw_bboxes(draw, objects, labels, obj_categories, ignore, width, label_size
 
             if labels:
                 text = c[0]
-                font = ImageFont.truetype("arial.ttf", size=label_size)
+                font = ImageFont.truetype("/usr/share/fonts/truetype/ubuntu/Ubuntu-C.ttf", size=label_size)
 
                 tw, th = draw.textsize(text, font)
                 tx0 = b[0]
@@ -737,6 +738,25 @@ def print_info(message: str):
     logging.info(message)
 
 
+def find_coco_subfolderimages(coco_file):
+    with open(coco_file, 'r') as f:
+        coco = json.load(f)
+
+    image_files = set([anno_img['file_name'] for anno_img in coco['images']])
+
+    import os.path as osp
+    parentdir = osp.dirname(coco_file)
+    sub_dirs = [osp.join(parentdir, sub) for sub in os.listdir(parentdir) 
+                    if osp.isdir(osp.join(parentdir, sub))]
+
+    for sub_dir in sub_dirs:
+        sub_dir_contains = set(os.listdir(sub_dir))
+        if image_files < sub_dir_contains:
+            return sub_dir
+    else:
+        return None
+
+
 def main():
     print_info("Starting...")
     args = parser.parse_args()
@@ -752,10 +772,13 @@ def main():
         
     if not args.images:
         #auto search images
-        args.images = input('Input for [Image Prefix Folder] >> ')
-        if not os.path.isdir(args.images):
-            _ = input("Error: show be a FOLDER. PRESS ANY TO EXIT!")
-            return
+        args.images = find_coco_subfolderimages(args.annotations)
+        print('auto search images:', args.images)
+        if args.images is None:
+            args.images = input('Input for [Image Prefix Folder] >> ')
+            if not os.path.isdir(args.images):
+                _ = input("Error: show be a FOLDER. PRESS ANY TO EXIT!")
+                return
         
     root = tk.Tk()
     root.title("COCO Viewer")

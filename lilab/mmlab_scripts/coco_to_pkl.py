@@ -1,6 +1,8 @@
-# python -m lilab.mmlab_scripts.coco_to_semanticimage --annFile xxx.json
+# python -m lilab.mmlab_scripts.coco_to_pkl coco.json
 # %%
 from pycocotools.coco import COCO
+import pycocotools.mask as maskUtils
+import mmcv
 import numpy as np
 import cv2
 import os
@@ -11,15 +13,14 @@ annFile = '/home/liying_lab/chenxinfeng/DATA/CBNetV2/data/rats/dw_rat_800x600_03
 
 def convert(annFile):
     coco = COCO(annFile)
-    out_dir_name = osp.splitext(annFile)[0] + '_semanticLabel'
-    os.makedirs(out_dir_name, exist_ok=True)
     nclass =  len(coco.cats)
     classid_1based = sorted(list(coco.cats.keys()))
     classid_0based = {cid: i for i, cid in enumerate(classid_1based)}  # raw1: iclass=0
 
     imgIds = coco.getImgIds()
-
-    for imgId in imgIds:
+    outdata = [[[[]] * nclass,[[]] * nclass] for _ in imgIds]
+    imgfiles = [coco.loadImgs(imgId)[0]['file_name'] for imgId in imgIds]
+    for imgId, frame_out in zip(imgIds, outdata):
         img = coco.loadImgs(imgId)[0]
         annos = coco.imgToAnns[img['id']]
         heigh, width = img['height'], img['width']
@@ -37,14 +38,26 @@ def convert(annFile):
                 polygon = np.round(polygon).astype(np.int32)
                 polygons.append(polygon)
             cv2.fillPoly(canvas, polygons, (iclass+2))
+            mask = canvas == iclass+2
+            if np.sum(mask) <= 4:
+                # ignore this mask
+                frame_out[0][iclass] = []
+            else:
+                x, y, w, h = cv2.boundingRect(mask.astype(np.uint8))
+                pval = 1
+                frame_out[0][iclass] = [np.array([x, y, x+w, y+h, pval])]
 
-        # %% write image
-        nake_file_name = osp.splitext(osp.basename(img_file_name))[0]
-        out_file_name = osp.join(out_dir_name, nake_file_name + '_labelTrainIds.png')
-        cv2.imwrite(out_file_name, canvas)
+            frame_out[1][iclass] = maskUtils.encode(
+                    np.array(mask[:,:,np.newaxis], order='F', dtype=np.uint8))
+
+    # %% write file
+    datapkl = osp.join(osp.dirname(annFile), 'data.pkl')
+    datafilepkl = osp.join(osp.dirname(annFile), 'data_filename.pkl')
+    mmcv.dump(outdata, datapkl)
+    mmcv.dump(imgfiles, datafilepkl)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--annFile', type=str, default=annFile, help='coco annotation file')
+    parser.add_argument('annFile', type=str, default=annFile, help='coco annotation file')
     args = parser.parse_args()
     convert(args.annFile)

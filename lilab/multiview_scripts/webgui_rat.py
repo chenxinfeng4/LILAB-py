@@ -58,6 +58,37 @@ def on_dlc_to_landmarks():
         else:
             put_error('Fail!')
         
+def on_mmposepkl_to_landmarks():
+        # check all need
+    isok = checkfolderexist()
+    if not isok: return False
+
+    # check the csv file number
+    folderrat = pin.pin.folderrat
+    with use_scope(scope_msg, clear=True):
+        nfile = len(glob.glob(osp.join(folderrat, '*.pkl')))
+        if nfile == 0:
+            put_error('No csv file in folder')
+            isok = False
+        elif nfile != 6:
+            put_error('The number of csv file is not 6, but get {} files'.format(nfile))
+            isok = False
+    if not isok: return False
+
+    # python -m lilab.multiview_scripts.dlcBall_2_landmarks $RAT --out $PROJECT_3D/landmarks_rat_pixel.json
+    import lilab.multiview_scripts.mmposepkl_2_landmarks
+    outjson = osp.join(folderrat, 'landmarks_rat_pixel.json')
+    if osp.isfile(outjson): os.remove(outjson)
+    lilab.multiview_scripts.mmposepkl_2_landmarks.main(folderrat, outjson)
+
+    with use_scope(scope_msg, clear=True):
+        put_text('python -m lilab.multiview_scripts.mmposepkl_2_landmarks . --out ./landmarks_rat_pixel.json')
+        if osp.exists(outjson):
+            put_success('Success!')
+        else:
+            put_error('Fail!')
+
+
 def on_landmarks_to_3D_arbunit():
     # check all need
     isok = checkfolderexist()
@@ -223,12 +254,14 @@ def app(parent=None):
         pin.put_input('folderrat', label = 'The rat video folder', placeholder= '/home/rat') 
         put_scope('folderrat_check')
         put_buttons(['1. dlc to landmarks',
+                     '1. or mmpose pkl to landmarks',
                      '2. landmarks to 3D (arbitrary unit, optinal)',
                      '3. landmarks to 3D (cm unit)',
                      '4. 3D (cm unit) to matlab',
                      '5. 3D (cm unit)/matlab to video'], 
                      onclick=[
                         on_dlc_to_landmarks,
+                        on_mmposepkl_to_landmarks,
                         on_landmarks_to_3D_arbunit,
                         on_landmarks_to_3D_cm,
                         on_3D_cm_to_matlab,

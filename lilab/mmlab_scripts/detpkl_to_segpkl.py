@@ -19,6 +19,18 @@ def convert(detpkl):
 
     nclass = nclasslist[0]
 
+    canvas_zero = None
+    for frame in data:
+        for iclass in range(nclass):
+            if frame[1][iclass]:
+                shape = frame[1][iclass][0]['size']
+                canvas_zero = np.zeros(shape)
+                break
+        if canvas_zero is not None:
+            break
+    else:
+        raise ValueError('No mask found in the data!')
+    
     # %%
     outdata = copy.deepcopy(data)
     for frame, frame_out in zip(data, outdata):
@@ -38,7 +50,7 @@ def convert(detpkl):
                 pvals.append(boxp[-1])
                 classids.append(iclass)
 
-        canvas = np.zeros_like(masks[0])
+        canvas = canvas_zero.copy()
         pvals = np.array(pvals)
         masks = np.array(masks, dtype = bool)
         classids = np.array(classids)

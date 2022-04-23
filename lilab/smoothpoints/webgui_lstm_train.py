@@ -1,18 +1,11 @@
 from pywebio.input import * 
 from pywebio.output import * 
 from pywebio import pin
-from pywebio import start_server
-import numpy as np 
-import os
 import os.path as osp
-import glob
-import shutil
-import cv2
-import mmcv
-import PIL.Image
-from lilab.smoothpoints.LSTM_point3d_impute_train import main
+from lilab.smoothpoints.biLSTM_point3d_impute_train import main
 
 scope_msg = 'lstm_train_messages'
+
 
 def on_run():
     input_paths = pin.pin['cc_input_textarea'].split()

@@ -1,3 +1,4 @@
+# python -m lilab.smoothpoints.biLSTM_point3d_impute_train
 # %% imports
 import io
 import sys
@@ -12,8 +13,14 @@ from lilab.smoothpoints.LSTM_base import (test_model, create_datasetloader,
                 root_mean_squared_error, root_mean_squared_error3d, root_squared_error3d)
 
 # %% trainingset
-train_files = ['/home/liying_lab/chenxinfeng/DATA/multiview-project/2021-11-02-bwrat_800x600_side6/rat/rat_points3d_cm.mat',
-               '/home/liying_lab/chenxinfeng/DATA/multiview-project/2021-11-02-bwrat_800x600_side6/15-37-42/white3d/rat_points3d_cm.mat']
+# train_files = ['/home/liying_lab/chenxinfeng/DATA/multiview-project/2021-11-02-bwrat_800x600_side6/rat/rat_points3d_cm.mat',
+#                '/home/liying_lab/chenxinfeng/DATA/multiview-project/2021-11-02-bwrat_800x600_side6/15-37-42/white3d/rat_points3d_cm.mat']
+
+train_files = ['/home/liying_lab/chenxinfeng/DATA/multiview-project/2021-11-02-bwrat_800x600_30fps/whiteblack/15-11-45-white/rat_points3d_cm.mat',
+               #'/home/liying_lab/chenxinfeng/DATA/multiview-project/2021-11-02-bwrat_800x600_30fps/whiteblack/15-11-45-black/rat_points3d_cm.mat',
+               '/home/liying_lab/chenxinfeng/DATA/multiview-project/2021-11-02-bwrat_800x600_30fps/whiteblack/15-37-42-white/rat_points3d_cm.mat',
+               #'/home/liying_lab/chenxinfeng/DATA/multiview-project/2021-11-02-bwrat_800x600_30fps/whiteblack/15-37-42-black/rat_points3d_cm.mat'
+               ]
 
 
 load_checkpoint = None
@@ -22,13 +29,13 @@ load_checkpoint = None
 missing_rate = 0.2
 missing_replacevalue= -50
 test_rate = 0.082
-look_back = look_forward = 12
+look_back = look_forward = 36
 hidden_size = 60
-batch_size = 200
+batch_size = 600
 num_layers = 1
 num_keypoints = 14
 num_dim = 3
-n_side = 10
+n_side = 30
 n_epochs = 600
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 

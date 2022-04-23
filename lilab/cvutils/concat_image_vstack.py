@@ -1,4 +1,4 @@
-#python -m lilab.cvutils.concat_image A/ B/
+#python -m lilab.cvutils.concat_image_vstack A/ B/
 import glob
 import os
 import os.path as osp

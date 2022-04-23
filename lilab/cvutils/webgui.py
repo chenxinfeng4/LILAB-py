@@ -1,3 +1,4 @@
+# python -m lilab.cvutils.webgui
 from pywebio.input import * 
 from pywebio.output import * 
 from pywebio import pin
@@ -11,8 +12,6 @@ import cv2
 import mmcv
 import os
 from subprocess import PIPE, run
-
-# python -m lilab.cvutils.webgui
 
 def runargs_show(uimessage, args):
     # run the command, and get the stdout and stderr and returncode
@@ -154,4 +153,4 @@ def app():
         put_scope(names[2])
 
 if __name__ == '__main__':
-    start_server(app, debug=True, port='44316')
+    start_server(app, debug=True, port='44322')

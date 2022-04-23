@@ -21,10 +21,10 @@ def print_iou(ious):
     mIoU = np.mean(ious)
     AP50 = np.mean(ious >= 0.5)
     AP75 = np.mean(ious >= 0.75)
-    print('mAP: ', mAP)
-    print('AP50: ', AP50)
-    print('AP75: ', AP75)
-    print('mIoU: ', mIoU)
+    print('mAP: %.3f' % (mAP,))
+    print('AP50: %.3f' % (AP50,))
+    print('AP75: %.3f' % (AP75,))
+    print('mIoU: %.3f' % (mIoU,))
     return mAP, AP50, AP75, mIoU
 
 def summery_stat(predmasks, annomasks):

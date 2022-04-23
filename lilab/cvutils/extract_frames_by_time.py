@@ -6,10 +6,10 @@
 
 import os
 import cv2
-import numpy as np
 import tqdm
 import sys
 from glob import glob
+from typing import Union
 try:
     from . import cxfguilib as cg
 except Exception as e:
@@ -43,6 +43,30 @@ def extract(video_input, frame_seconds):
         
     cap.release()
     
+
+def extract_crop(filename: str, 
+                indexby = 'frame',
+                crop_xywh = None,
+                timestamps = None,
+                ipannel = None):
+
+    cap = cv2.VideoCapture(filename)
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    imgname = os.path.splitext(filename)[0]
+    imgpostfix = f'_output_{ipannel}' if ipannel is not None else ''
+    ret, img = cap.read()
+    for i, frame_seconds in enumerate(tqdm.tqdm(timestamps)):
+        cap.set(cv2.CAP_PROP_POS_MSEC, frame_seconds*1000)
+        ret, img = cap.read()
+        if not ret: raise Exception('read failed')
+        if crop_xywh is not None:
+            img = img[crop_xywh[1]:crop_xywh[1]+crop_xywh[3], crop_xywh[0]:crop_xywh[0]+crop_xywh[2]]
+        index = int(frame_seconds*fps) if indexby == 'frame' else i+1
+        imgfullname = f'{imgname}_{index:06d}{imgpostfix}.png'
+        cv2.imwrite(imgfullname, img)
+    cap.release()
+
+
 if __name__ == '__main__':
     n = len(sys.argv)
     if n == 1:

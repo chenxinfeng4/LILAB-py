@@ -10,7 +10,8 @@ from scipy.stats import norm
 
 from lilab.multiview_scripts.ratpoint3d_to_video import *
 from ipywidgets import interact, interactive, fixed, interact_manual
-from lilab.smoothpoints.LSTM_point3d_impute_pred import predict
+from lilab.smoothpoints.biLSTM_point3d_impute_pred import (model,
+        num_keypoints, num_dim, look_back, look_forward, predict)
 from scipy.signal import medfilt
 from scipy.ndimage import convolve1d
 
@@ -73,7 +74,8 @@ def kickout_and_hybrid(mat_data):
     print('Kickout {} points'.format(n_kickout))
 
     # %% get the imputation
-    mat_data_impute, mat_data_hybrid = predict(mat_data_kickout)
+    mat_data_impute, mat_data_hybrid = predict(model, mat_data_kickout, num_keypoints, 
+                                        num_dim, look_back, look_forward, print_rmse=False)
 
     return mat_data_hybrid
 

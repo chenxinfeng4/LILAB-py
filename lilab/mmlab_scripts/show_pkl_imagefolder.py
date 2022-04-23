@@ -1,5 +1,6 @@
 # python -m lilab.mmlab_scripts.show_pkl_imagefolder ./data/mmdetection/test_pkl
 # %% load packages
+from pickle import FALSE
 import mmcv
 import numpy as np
 import pycocotools._mask as mask_util
@@ -26,7 +27,8 @@ def imshow_det_bboxes(img,
                       show=True,
                       wait_time=0,
                       show_bbox=True,
-                      out_file=None):
+                      out_file=None,
+                      instance_mode=None):
     """Draw bboxes and class labels (with scores) on an image.
 
     Args:
@@ -78,11 +80,13 @@ def imshow_det_bboxes(img,
     if labels.shape[0] > 0:
         if mask_color is None:
             # random color
+            ncolor = 100 if instance_mode else len(class_names)+100
             np.random.seed(42)
             mask_colors = [
                 np.random.randint(0, 256, (1, 3), dtype=np.uint8)
-                for _ in range(len(class_names)+1)
+                for _ in range(ncolor)
             ]
+            mask_colors[2:4]=[]
         else:
             # specify  color
             mask_colors = [
@@ -139,7 +143,10 @@ def imshow_det_bboxes(img,
                 verticalalignment='top',
                 horizontalalignment='left')
         if segms is not None:
-            color_mask = mask_colors[labels[i]]
+            if instance_mode:
+                color_mask = mask_colors[i]
+            else:
+                color_mask = mask_colors[labels[i]]
             mask = segms[i].astype(bool)
             img[mask] = img[mask] * 0.7 + color_mask * 0.3
 
@@ -188,17 +195,19 @@ def pkl_2_images(pkl_data, pkl_datafilename):
     folder = os.path.join(os.path.dirname(pkl_datafilename), 'mask_labeded')
     os.makedirs(folder, exist_ok=True)
     
-    class_names = ['rat_black', 'rat_white']
-    class_nicknames = ['black', 'white']
+    nclass = max([len(frame[1]) for frame in data])
+
+    class_nicknames = ['rat1', 'rat2']
 
     for label, imgfilename in zip(tqdm(data), datafilename):
         bboxes, segms, labels = [], [], []
-        for iclass, _ in enumerate(class_names):
+        for iclass in range(nclass):
             if len(label[0][iclass]):
                 bboxes.append(label[0][iclass]) #append numpy.array
                 segms.extend(label[1][iclass])  #extend list
                 labels.extend([iclass]*len(label[1][iclass]))
 
+        # img = mmcv.imread(imgfilename)
         img = mmcv.imread(imgfilename)
         bboxes = np.concatenate(bboxes)
         labels = np.array(labels, dtype='int')
@@ -223,7 +232,7 @@ if __name__ == '__main__':
 
     # check the existence of the pkl folder
     if os.path.isdir(args.pkl_folder):
-        pkl_data = os.path.join(args.pkl_folder, 'data.pkl')
+        pkl_data = os.path.join(args.pkl_folder, 'data_seg.pkl')
         pkl_datafilename = os.path.join(args.pkl_folder, 'data_filename.pkl')
     else:
         raise FileNotFoundError(f'{args.pkl_folder} not found')

@@ -1,15 +1,18 @@
+# python -m lilab.mmlab_scripts.segpkl_to_video .
 import os
 import numpy as np
 import pycocotools._mask as mask_util
 import cv2
 import mmcv
-import tqdm
+from tqdm import tqdm
 import argparse
 import glob
-from multiprocessing import Pool
+import multiprocessing
+from multiprocessing import Pool, Value
 
 class_names = ['rat_black', 'rat_white']
 class_nicknames = ['black', 'white']
+iPool = Value('i', -1)
 
 def get_masks(pkl_data, idx, width, height):
     label = pkl_data[idx]    
@@ -71,8 +74,8 @@ class SegVideo:
         self.__infile =  video_path
         self.__outfile = [video_path.replace('.mp4','_blackmask.avi'), video_path.replace('.mp4','_whitemask.avi')]
         self.__outfilefinal = [video_path.replace('.mp4','_black.avi'), video_path.replace('.mp4','_white.avi')]
-        self.out1 = cv2.VideoWriter(self.__outfile[0], cv2.VideoWriter_fourcc(*'MJPG'), v.fps, (v.width, v.height))
-        self.out2 = cv2.VideoWriter(self.__outfile[1], cv2.VideoWriter_fourcc(*'MJPG'), v.fps, (v.width, v.height))
+        self.out1 = cv2.VideoWriter(self.__outfile[0], cv2.VideoWriter_fourcc(*'mp4v'), v.fps, (v.width, v.height))
+        self.out2 = cv2.VideoWriter(self.__outfile[1], cv2.VideoWriter_fourcc(*'mp4v'), v.fps, (v.width, v.height))
         return self
 
     def __len__(self):
@@ -110,8 +113,10 @@ class SegVideo:
 
 def main(pkl):
     segvideo = SegVideo().VideoCapture(pkl)
+    ipool = iPool.value
+    iPool.value += 1
     try:
-        for i in tqdm.tqdm(range(len(segvideo))):
+        for i in tqdm(range(len(segvideo)), position=ipool):
             focus_imgs = segvideo[i]
             segvideo.write(focus_imgs)
         segvideo.release()
@@ -142,5 +147,7 @@ if __name__ == '__main__':
     else:
         raise FileNotFoundError(f'{args.pkl_folder} not found')
 
-    with Pool(processes=6) as pool:
+    ncpu = multiprocessing.cpu_count()
+    maxproc = min([12, ncpu, len(pkl_files)])
+    with Pool(processes=maxproc, initargs=(tqdm.get_lock(),),initializer=tqdm.set_lock) as pool:
         pool.map(main, pkl_files)

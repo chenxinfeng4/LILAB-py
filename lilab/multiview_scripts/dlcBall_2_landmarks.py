@@ -17,7 +17,7 @@ import pandas as pd
 import numpy as np
 views = ['c-1', 'c-2', 'c-3', 'c-4', 'c-5', 'c-6']
 
-likelihood_thr = 0.2
+likelihood_thr = 0.90
 
 def view_link_csv(folder_csv):
     files_csv = glob.glob(os.path.join(folder_csv, '*.csv'))

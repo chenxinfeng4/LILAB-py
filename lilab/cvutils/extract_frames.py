@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# python -m lilab.cvutils.extract_frames xxx
 # !pyinstaller -F extract_frames.py -i mypython.ico
 # chenxinfeng
 # ------使用方法------
@@ -18,6 +19,7 @@ except Exception as e:
 numframe_to_extract = 200
 maxlength = 10000
 frame_dir = "outframes"
+frame_min_interval = 20
 
 def extract(video_input, numframe_to_extract, maxlength):
     dirname,filename=os.path.split(video_input)
@@ -26,8 +28,12 @@ def extract(video_input, numframe_to_extract, maxlength):
     os.makedirs(frame_dir, exist_ok = True)
     length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     length = min([maxlength, length-1])
-    idxframe_to_extract = set(np.random.permutation(length)[:numframe_to_extract])
+    downsample_length = length // frame_min_interval
+    idxframe_to_extract = set(np.random.permutation(downsample_length)[:numframe_to_extract]*frame_min_interval)
     idxframe_max = max(idxframe_to_extract)
+
+    # for i in tqdm.tqdm(range(10000)):
+    #     ret, frame = cap.read()
 
     for iframe in tqdm.tqdm(range(length)):
         ret, frame = cap.read()

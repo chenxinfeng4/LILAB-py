@@ -12,7 +12,9 @@ def get_subs():
             folders.append(f)
 
     files = [f[:-3] for f in files if f.endswith('.py') and not f.startswith('_')] # filter out non-py files
+    files = sorted(files)
     folders = [f+'/' for f in folders if not f.startswith('.') and not f.startswith('__')] # filter out useless folders
+    folders = sorted(folders)
     return folders+files
 
 
