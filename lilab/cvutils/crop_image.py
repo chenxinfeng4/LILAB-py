@@ -17,7 +17,7 @@ import os
 from glob import glob 
 try:
     from . import cxfguilib as cg
-except e:
+except Exception as e:
     import cxfguilib as cg
 from PIL import Image
 

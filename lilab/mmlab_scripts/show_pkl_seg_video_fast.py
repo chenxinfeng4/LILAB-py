@@ -6,11 +6,12 @@ import pycocotools._mask as mask_util
 import cv2
 from tqdm import tqdm
 import os
+import torch
 import argparse
 import glob
 import multiprocessing
 from multiprocessing import Pool, Value
-from lilab.cvutils.ffmpeg_writer import ffmpeg_writer
+import ffmpegcv
 
 
 iPool = Value('i', 0)
@@ -91,13 +92,19 @@ def imshow_det_bboxes(img,
         if segms is not None:
             segms = segms[inds, ...]
 
-    img = img.copy()
     mask_colors = default_mask_colors
     for i, (bbox, label) in enumerate(zip(bboxes, labels)):
         if segms is not None:
-            color_mask = mask_colors[labels[i]][:,::-1]
-            mask = segms[i].astype(bool)
-            img[mask] = img[mask]//2 + color_mask // 2
+            if isinstance(img, torch.Tensor):
+                color_mask = mask_colors[labels[i]][:,::-1].copy()
+                color_mask = torch.from_numpy(color_mask).to(img.device)
+                mask = segms[i]
+                img[mask] = img[mask]/2 + color_mask / 2
+            else:
+                img = img.copy()
+                color_mask = mask_colors[labels[i]][:,::-1]
+                mask = segms[i].astype(bool)
+                img[mask] = img[mask]//2 + color_mask // 2
 
     return img
 
@@ -123,8 +130,8 @@ def pkl_2_video(pkl):
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     ipool = iPool.value
     iPool.value += 1
-    video_writer = ffmpeg_writer.VideoWriter(
-        video_out, fourcc, v.fps,
+    video_writer = ffmpegcv.VideoWriterNV(
+        video_out, None, v.fps,
         (v.width, v.height),
         gpu = iPool.value)
     # for i, (label, img) in enumerate(zip(tqdm(data, position=ipool), v)):

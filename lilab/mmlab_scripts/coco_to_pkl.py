@@ -3,6 +3,7 @@
 from pycocotools.coco import COCO
 import pycocotools.mask as maskUtils
 import mmcv
+import pickle
 import numpy as np
 import cv2
 import os
@@ -51,10 +52,9 @@ def convert(annFile):
                     np.array(mask[:,:,np.newaxis], order='F', dtype=np.uint8))
 
     # %% write file
-    datapkl = osp.join(osp.dirname(annFile), 'data.pkl')
-    datafilepkl = osp.join(osp.dirname(annFile), 'data_filename.pkl')
-    mmcv.dump(outdata, datapkl)
-    mmcv.dump(imgfiles, datafilepkl)
+    outdict = {'imgfiles': imgfiles, 'segdata': outdata}
+    datapkl = osp.splitext(annFile)[0] + '.cocopkl'
+    pickle.dump(outdict, open(datapkl, 'wb'))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

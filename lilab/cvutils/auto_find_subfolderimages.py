@@ -48,3 +48,30 @@ def find_coco_subfolderimages(coco_file):
     else:
         return None
 
+
+def find_subfolderfiles(dir_or_fileroot, filestofind):
+    # get the dir of dir_or_fileroot
+    dir_or_fileroot = os.path.abspath(dir_or_fileroot)
+    assert osp.exists(dir_or_fileroot), '{} does not exist'.format(dir_or_fileroot)
+    dir_path = dir_or_fileroot if osp.isdir(dir_or_fileroot) else osp.dirname(dir_or_fileroot)
+    file_basename = [osp.basename(filestofind) for filestofind in filestofind]
+
+    # get the subfolder of dir_path
+    subfolder_list = [dir_path] + [osp.join(dir_path, subfolder) for subfolder in os.listdir(dir_path) 
+                      if osp.isdir(osp.join(dir_path, subfolder))] 
+
+    # loop through the subfolder
+    for subfolder in subfolder_list:
+        # list the file in the subfolder
+        subs = os.listdir(subfolder)
+        if file_basename[0] in subs and file_basename[1] in subs:
+            videofolder = subfolder
+            print('{} is the subfolder'.format(subfolder))
+            break
+    else:
+        raise ValueError('{} is not in subfolder'.format(dir_or_fileroot))
+
+    # get the images_name
+    file_files_name = [osp.join(videofolder, f) for f in file_basename]
+    return file_files_name
+    

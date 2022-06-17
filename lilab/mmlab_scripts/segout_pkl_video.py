@@ -37,7 +37,7 @@ def get_masks(pkl_data, idx, width, height):
     return masks
 
 """dilate the mask by 50 pixels"""
-def dilate_masks(masks, kernel_size=50):
+def dilate_masks(masks, kernel_size=49):
     out_masks = []
     for mask in masks:
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size, kernel_size))

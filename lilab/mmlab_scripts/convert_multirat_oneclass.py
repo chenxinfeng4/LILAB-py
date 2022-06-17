@@ -1,4 +1,4 @@
-# %%
+# python -m lilab.mmlab_scripts.convert_multirat_oneclass xx.json
 import json
 import os
 from pycocotools.coco import COCO

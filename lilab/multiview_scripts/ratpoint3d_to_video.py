@@ -9,6 +9,41 @@ import os.path as osp
 import argparse
 
 
+hplot_dict = defaultdict(dict)
+linkbody = np.array([[0,1],[0,2],[1,3],[2,3],[3,6],[3,8],[6,7],[4,6], [4,8],[8,9],
+                     [4,10], [4,12],[6,10],[8,12],[5,10],[10,11], [5,12], [12,13]])
+
+
+def init_3d_plot_350():
+    fig = plt.figure(figsize=(8,6), dpi=100)  # 800x600 pixels
+    fig.add_axes([0,0,1,1], projection='3d')
+    ax = fig.get_axes()[0]
+    ax.set_title('3D Posture')
+    ax.grid()
+    ax.tick_params(length=0)
+    # set the xlim and ylim of the plot
+    ax.set_xlim(-50, 300)
+    ax.set_ylim(-50, 300)
+    ax.set_zlim(0, 200)
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    ax.set_zticklabels([])
+
+    ## create a circal plane by meshgrid
+    radius = 240
+    X, Y = np.meshgrid(np.arange(-radius, radius, 2), np.arange(-radius, radius, 2))
+    X, Y = X.astype(np.float32), Y.astype(np.float32)
+    ind_in = np.sqrt(X**2 + Y**2) < radius
+    Z = np.zeros_like(X)
+    Z[np.invert(ind_in)] = np.nan
+    X_offset = 120
+    Y_offset = 120
+    ax.plot3D(X.flatten() - X_offset, Y.flatten() - Y_offset, Z.flatten(), color='#13beb8', linewidth=0.5)
+    ax.plot3D(X.T.flatten() - X_offset , Y.T.flatten() - Y_offset, Z.flatten(), color='#13beb8', linewidth=0.5)
+    ax.azim = -124
+    return fig, ax
+
+
 def init_3d_plot():
     fig = plt.figure(figsize=(8,6), dpi=100)  # 800x600 pixels
     fig.add_axes([0,0,1,1], projection='3d')

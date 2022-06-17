@@ -25,7 +25,7 @@ def concat(*videopaths):
             
     # concat the videos horizontally
     print(f'ffmpeg {input_list} -filter_complex "{filterstr}" -y -c:v libx264 -b:v 4M "{output_path}"')
-    os.system(f'ffmpeg -hwaccel cuda -hwaccel_output_format cuda {input_list} -filter_complex "{filterstr}" -y -c:v h264_nvenc  -preset p6 -tune hq  -b:v 4M "{output_path}"')
+    os.system(f'ffmpeg -hwaccel cuda  {input_list} -filter_complex "{filterstr}" -y -c:v h264_nvenc  -preset p6 -tune hq  -b:v 4M "{output_path}"')
 
 
 if __name__ == "__main__":
