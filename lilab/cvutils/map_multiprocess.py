@@ -20,7 +20,8 @@ def map(func, iterable):
     ncpu = multiprocessing.cpu_count()
     maxproc = min([npool, ncpu, len(iterable)])
     with Pool(processes=maxproc, initargs=(_tqdm.get_lock(),),initializer=_tqdm.set_lock) as pool:
-        pool.map(func, iterable)
+        poolReturn = pool.map(func, iterable)
+    return poolReturn
 
 def starmap(func, *args):
     ncpu = multiprocessing.cpu_count()

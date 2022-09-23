@@ -11,6 +11,9 @@ import pickle
 import numpy as np
 import copy
 import itertools
+import argparse
+import cv2
+import math
 warnings.filterwarnings("ignore")
 
 import matplotlib
@@ -29,7 +32,6 @@ from multiview_calib.singleview_geometry import reprojection_error
 
 logger = logging.getLogger(__name__)
 
-ballfile = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/ball/2022-04-25ball.ballpkl'
 ballcalibfile = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/ball/2022-04-25ball.calibpkl'
 
 def convert_landmarks_global_mm(landmarks_global_cm_mat):
@@ -276,8 +278,11 @@ def a3_bundle_ajustment(
         camera_indices_rav = np.vstack([camera_indices]*2).T.ravel()
         for view_idx in range(n_cameras):
             m = np.where(camera_indices_rav==view_idx)[0]
-            plt.plot(f01[m], label='{}'.format(views[view_idx]))      
-    
+            plt.plot(f01[m], label='{}'.format(views[view_idx]))
+    n_camer_coeffs = camera_params.shape[1]
+    assert n_camer_coeffs==n_dist_coeffs+10, "The number of distortion coefficients is not correct!"
+    if len(__config__["bounds_cp"])>n_camer_coeffs:
+        __config__["bounds_cp"] = __config__["bounds_cp"][:n_camer_coeffs]
     new_camera_params, new_points_3d = bundle_adjustment(camera_params, points_3d, points_2d, camera_indices, 
                                                          point_indices, n_cameras, n_points, ids, 
                                                          optimize_camera_params=__config__["optimize_camera_params"], 
@@ -457,27 +462,6 @@ def a5_global_registrate_short(zscale):
     return kargs, fun_old2new, fun_new2old, strfun_ba2global, strfun_global2ba
 
 # %%
-def get_sub_points(ids, data):
-    data = copy.deepcopy(data)
-    assert type(data)==dict
-    if 'ids' in data:
-        datac = data
-        assert len(datac)==2
-        idsnew, comm1, _ = np.intersect1d(datac['ids'], ids, True, return_indices=True)
-        datac['ids'] = idsnew
-        key = next(iter(set(datac.keys()) - {'ids'}))
-        datac[key] = np.array(datac[key])[comm1]
-
-    else:
-        for _, datac in data.items():
-            assert 'ids' in datac
-            idsnew, comm1, _ = np.intersect1d(datac['ids'], ids, True, return_indices=True)
-            datac['ids'] = idsnew
-            key = next(iter(set(datac.keys()) - {'ids'}))
-            datac[key] = np.array(datac[key])[comm1]
-    return data
-
-# %%
 
 def main_calibrate(ballfile, ba_poseinitfile=ballcalibfile):
     setup, intrinsics, landmarks_move_xy, landmarks_global_xy, landmarks_global_mm, background_img = a0_read_ballfile(ballfile)
@@ -517,10 +501,13 @@ def main_calibrate(ballfile, ba_poseinitfile=ballcalibfile):
 
     # %% save data
     b1_merge_ballfile(ballfile, ba_poses=ba_poses, ba_global_params = param)
+    print('python -m lilab.multiview_scripts_new.s4_matpkl2matcalibpkl ', 
+            ballfile.replace('.ballpkl', '.matpkl'),
+            ballfile.replace('.ballpkl', '.calibpkl'))
 
 
 if __name__ == '__main__':
-    argparser = argparse.ArgumentParser(description='Calibrate ball')
-    argparser.add_argument('ballfile', type=str, help='ball file')
-    args = argparser.parse_args()
-    main_calibrate(args.ballfile)
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument('ballfile', type=str)
+    arg = argparser.parse_args()
+    main_calibrate(arg.ballfile)

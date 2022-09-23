@@ -10,7 +10,9 @@ import os
 import signal
 from itertools import repeat
 import psutil
+import torch.multiprocessing
 
+torch.multiprocessing.set_sharing_strategy('file_system')
 ctx = mp.get_context('spawn')
 queue_cuda = Manager().Queue()       #only used once
 queue_workerpool = Manager().Queue() #hot get, hot put, the id
@@ -88,12 +90,13 @@ def workerpool_compute_map(iterable, use_cuda=True):
     #     time.sleep(0.2)
     #     pool.apply_async(_workerpool_compute, args=(arg, queue_workerpool, _workerpool))
     with ctx.Pool(processes=queue_workerpool.qsize()) as pool:
-        pool.starmap(_workerpool_compute, zip(iterable, repeat(queue_workerpool), repeat(_workerpool)))
+        poolReturn=pool.starmap(_workerpool_compute, zip(iterable, repeat(queue_workerpool), repeat(_workerpool)))
 
     pool.close()
     pool.join()
 
     print('End of pool.close()')
+    return poolReturn
 
 
 if __name__ == '__main__':

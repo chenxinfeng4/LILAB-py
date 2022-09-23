@@ -1,4 +1,4 @@
-# python -m lilab.multiview_scripts_new.s1_ballvideo2matpkl
+# python -m lilab.multiview_scripts_new.s1_ballvideo2matpkl  A.mp4
 # %%
 import argparse
 import os
@@ -49,7 +49,7 @@ def convert2matpkl(vfile):
                     'nview': len(views), 
                     'fps': vinfo.fps,
                     'vinfo': vinfo._asdict()},
-                'views_xywh': get_view_xywh(),
+                'views_xywh': pos_views,
                 'keypoints': {} }
 
     keypoints = [[] for _ in range(len(views))]
@@ -195,7 +195,7 @@ if __name__ == '__main__':
     parser.add_argument('--checkpoint', type=str, default=checkpoint)
     arg = parser.parse_args()
 
-    video_path = arg.video_path
+    video_path, config, checkpoint = arg.video_path, arg.config, arg.checkpoint
     assert osp.exists(video_path), 'video_path not exists'
     if osp.isfile(video_path):
         video_path = [video_path]
@@ -217,4 +217,6 @@ if __name__ == '__main__':
     # post_process pkl files to matpkl
     for video in video_path:
         convert2matpkl(video)
-    
+        print('python -m lilab.multiview_scripts_new.s2_matpkl2ballpkl',
+              video.replace('.mp4', '.matpkl'),
+              '--time 1 2 3 4 5')

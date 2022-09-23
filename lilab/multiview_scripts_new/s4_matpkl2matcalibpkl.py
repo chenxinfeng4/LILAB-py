@@ -53,7 +53,9 @@ def build_input_short(views, poses, landmarks):
     return p3d
 
 
-def project_points_short(views, poses, p3d, image_shape=None):
+def project_points_short(views, poses, keypoints_xyz, image_shape=None):
+    assert keypoints_xyz.shape[-1] == 3
+    p3d = keypoints_xyz.reshape((-1, 3))
     if image_shape is None:
         image_shape = (np.inf, np.inf)
     nviews = len(poses)
@@ -68,7 +70,8 @@ def project_points_short(views, poses, p3d, image_shape=None):
         p2d_tmp[~mask_inside(p2d_tmp)] = np.nan
         p2d[view] = p2d_tmp
 
-    return p2d
+    keypoints_xy = p2d.reshape((len(views), *keypoints_xyz.shape[:-1], 2))
+    return keypoints_xy
 
 
 def compare_error(keypoints_xy, keypoints_xy_ba):
@@ -137,7 +140,7 @@ def convert(matpkl, calibpkl):
     # %% save
     outpkl = osp.splitext(matpkl)[0] + '.matcalibpkl'
     pickle.dump(outdict, open(outpkl, 'wb'))
-    print(outpkl)
+    print('python -m lilab.multiview_scripts_new.s5_show_calibpkl2video', outpkl)
     return outpkl
 
 

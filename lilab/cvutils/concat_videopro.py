@@ -21,11 +21,12 @@ def concat(*videopaths):
     input_list = ' '.join([f'-i "{videopath}"' for videopath in videopaths])
 
     # output file
-    output_path = osp.join(osp.dirname(videopaths[0]), "concat.mp4")        
+    # output_path = osp.join(osp.dirname(videopaths[0]), "concat.mp4")
+    output_path = osp.splitext(osp.abspath(videopaths[0]))[0] + "_concat.mp4"
             
     # concat the videos horizontally
     print(f'ffmpeg {input_list} -filter_complex "{filterstr}" -y -c:v libx264 -b:v 4M "{output_path}"')
-    os.system(f'ffmpeg -hwaccel cuda  {input_list} -filter_complex "{filterstr}" -y -c:v h264_nvenc  -preset p6 -tune hq  -b:v 4M "{output_path}"')
+    os.system(f'ffmpeg -hwaccel cuda  {input_list} -filter_complex "{filterstr}" -y -c:v h264_nvenc  -preset p6 -tune hq  -b:v 2M "{output_path}"')
 
 
 if __name__ == "__main__":

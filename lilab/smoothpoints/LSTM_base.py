@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
+import tqdm
 import scipy.io as sio
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
@@ -160,7 +161,7 @@ def test_model(model, test_dataloader):
         outpredlist = []
         outsparselist = []
         outdenselist = []
-        for X_batch, y_batch_sparse, y_batch in test_dataloader:
+        for X_batch, y_batch_sparse, y_batch in tqdm.tqdm(test_dataloader):
             X_batch, y_batch_sparse, y_batch = X_batch.to(device), y_batch_sparse.to(device), y_batch.to(device)
             out= model(X_batch)
             outpredlist.append(out.detach().cpu().numpy())
@@ -185,8 +186,8 @@ def create_datasetloader_fromtensor(dense_tensor, num_keypoints, num_dim,
 
     dense_dataX, dense_dataY = create_samples_fast(densecopy_mat, densecopy_mat, look_back, look_forward)
     dense_dataX = np.ascontiguousarray(dense_dataX)
-    dense_dataset = CustomDataset(torch.as_tensor(dense_dataX, dtype = torch.float32),
-                                torch.as_tensor(dense_dataY, dtype = torch.float32),
+    dense_dataset = CustomDataset(torch.as_tensor(dense_dataX.copy(), dtype = torch.float32),
+                                torch.as_tensor(dense_dataY.copy(), dtype = torch.float32),
                                 look_back = look_back,
                                 augment = False)
     dense_dataloader = DataLoader(dense_dataset, batch_size=200, shuffle=False)

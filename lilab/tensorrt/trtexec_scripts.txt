@@ -1,0 +1,2 @@
+# speed test for xxxx.engine
+trtexec --loadEngine=fullmodel_end_fp16.engine

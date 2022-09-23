@@ -5,11 +5,12 @@ import numpy as np
 import ffmpegcv
 import tqdm
 import cv2
+import os.path as osp
 import argparse
 
 
 matfile = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/ball/2022-04-29_17-58-45_ball.matcalibpkl'
-
+thr = 0.50
 
 def load_mat(matfile):
     print("Loading {}".format(matfile))
@@ -17,7 +18,7 @@ def load_mat(matfile):
 
     # %%
     views_xywh = data['views_xywh']
-    thr = 0.70
+
     keypoints = data['keypoints']
     indmiss = keypoints[:, :, :, 2] < thr
     keypoints_xy = keypoints[:, :, :, :2]  # (nview, times, nkeypoints, 2)
@@ -74,6 +75,11 @@ def keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xy_baglobal, keyp
 
 def main_showvideo(matcalibpkl, gpu=0):
     keypoints_xy, keypoints_xy_ba, keypoints_xy_baglobal, keypoints_xyz_baglobal, data = load_mat(matcalibpkl)
+    # refine video path
+    vfile = data['info']['vfile']
+    if not (osp.exists(vfile) and osp.isfile(vfile)):
+        vfile = osp.split(osp.abspath(matcalibpkl))[0] + '/' + osp.split(osp.abspath(matcalibpkl))[1]
+        data['info']['vfile'] = vfile
     keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xy_baglobal, keypoints_xyz_baglobal, data, gpu)
 
 

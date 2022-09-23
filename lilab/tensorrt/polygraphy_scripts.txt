@@ -1,0 +1,44 @@
+polygraphy convert --fp-to-fp16 -o  fullmodel_end_fp16.onnx fullmodel_end.onnx 
+
+polygraphy inspect model fullmodel_end.onnx 
+polygraphy inspect model fullmodel_end_fp16.onnx 
+polygraphy inspect model fullmodel_end_fp16.onnx --show layers
+
+polygraphy run --onnxrt fullmodel_end.onnx --save-inputs inputs.json --save-outputs outputs_fp32.json
+
+polygraphy run --onnxrt fullmodel_end_fp16.onnx  --load-inputs inputs.json --load-outputs outputs_fp32.json --atol 0.001 --rtol 0.001
+
+polygraphy run --onnxrt fullmodel_end_fp16.onnx  --load-inputs inputs_gt.json --load-outputs outputs_trt.json outputs_fp32.json --atol 0.003 --rtol 0.001
+
+
+polygraphy run --onnxrt fullmodel_end_fp16.onnx  --load-inputs inputs_gt.json --validate
+polygraphy run --trt fullmodel_end.engine --load-inputs inputs_gt.json --load-outputs outputs_onnx.json
+
+polygraphy run --onnxrt fullmodel_end_fp16.onnx  --load-inputs inputs_gt.json --load-outputs outputs_onnx.json
+
+polygraphy run fullmodel_end.onnx  --onnxrt  --load-inputs inputs.json  --onnx-outputs mark all --save-outputs layerwise_golden.json
+polygraphy run fullmodel_end_fp16.onnx  --trt  --trt-outputs mark all --save-outputs layerwise_golden.json
+
+polygraphy data to-input inputs.json layerwise_golden.json -o layerwise_inputs.json
+
+
+polygraphy run fullmodel_end.onnx --trt --onnxrt
+polygraphy run fullmodel_end.onnx --trt --onnxrt --save-engine fullmodel_end.engine --atol 0.001 --rtol 0.001
+
+polygraphy run fullmodel_end_fp16.onnx --trt --onnxrt --precision-constraints prefer  --fp16  --save-engine fullmodel_end.engine_fp16  --atol 0.003
+
+polygraphy run fullmodel_end.onnx --trt --fp16 --onnxrt  --atol 0.001 --rtol 0.001 --check-error-stat median
+
+polygraphy run fullmodel_end_fp16.onnx --trt --fp16 --onnxrt  --atol 0.001 --rtol 0.001
+
+polygraphy run --onnxrt fullmodel_end.onnx --load-inputs inputs_gt.json --onnx-outputs mark all --validate
+
+
+
+polygraphy run --trt fullmodel_end.engine_fp16 --load-inputs inputs_gt.json --load-outputs outputs_onnx_fp16.json 
+
+polygraphy run needs_constraints.onnx --trt --fp16 --onnxrt --val-range x:[1,2000]
+
+polygraphy debug build fullmodel_end_fp16.onnx --fp16 --save-tactics replay.json \
+    --artifacts-dir replays --artifacts replay.json --until=10 \
+    --check polygraphy run polygraphy_debug.engine --trt --load-inputs inputs_gt.json --load-outputs outputs_onnx_fp16.json --atol 0.003
