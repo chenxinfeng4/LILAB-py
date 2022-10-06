@@ -1,4 +1,4 @@
-# python -m lilab.tensorrt.t3_engine_to_trt
+# python -m lilab.tensorrt.t3_engine_to_trt xxx.engine
 # %%
 import torch
 import tensorrt as trt

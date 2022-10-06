@@ -40,7 +40,7 @@ def plot_video(video, crop_xywh, pts2d_black, pts2d_white, iview, postfix):
     vidout.release()
 
 
-def main(kptpkl, iview, postfix, maxlen):
+def main(kptpkl, iview, postfix, maxlen=None):
     pkldata = pickle.load(open(kptpkl, 'rb'))
     video = osp.dirname(osp.abspath((kptpkl))) + '/' + osp.basename(pkldata['info']['vfile'])
     views = get_view_xywh_wrapper(len(pkldata['keypoints_xy_ba']))
