@@ -391,6 +391,7 @@ def a3_bundle_ajustment(
         points2d = points_2d[camera_indices==i]
         
         if len(points3d)==0:
+            print('In camera {} no points'.format(view))
             raise RuntimeError("All 3D points have been discarded/considered outliers.")
         
         mean_error, std_error = reprojection_error(R, t, K, dist, points3d, points2d)

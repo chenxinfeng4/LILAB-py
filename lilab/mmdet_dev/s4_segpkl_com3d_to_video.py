@@ -10,6 +10,7 @@ from tqdm import tqdm
 import glob
 import lilab.cvutils.map_multiprocess_cuda as mmap_cuda
 import itertools
+import os
 import ffmpegcv
 from lilab.multiview_scripts_dev.s6_calibpkl_predict import CalibPredict
 from lilab.mmlab_scripts.show_pkl_seg_video_fast import get_mask_colors
@@ -19,8 +20,9 @@ video_path = [f for f in glob.glob('/mnt/liying.cibr.ac.cn_Data_Temp/multiview-l
 from lilab.mmlab_scripts.show_pkl_seg_video_fast import default_mask_colors
 
 mask_colors = torch.Tensor(get_mask_colors())
-nclass = 2
-volsize = 160
+nclass = 1
+volsize = 260
+preview_resize = (1280, 800)
 verts = np.array([[1, 1, -1],
                     [-1, 1, -1],
                     [-1, -1, -1],
@@ -67,15 +69,17 @@ class MyWorker():
         self.id = getattr(self, 'id', 0)
         pkl_path = video_in.replace('.mp4', '.segpkl')
         mask_video = video_in.replace('.mp4', '_mask.mp4')
+        if osp.exists(mask_video): 
+            vid = ffmpegcv.VideoCaptureNV(mask_video, gpu=self.cuda, pix_fmt='rgb24')
+        else:
+            vid = ffmpegcv.VideoCaptureNV(video_in, gpu=self.cuda, pix_fmt='rgb24', resize=preview_resize)
         pkl_data = pickle.load(open(pkl_path, 'rb'))
         assert {'coms_3d', 'coms_2d'} < set(pkl_data.keys())
         views_xywh = np.array(pkl_data["views_xywh"])
-        nviews = len(views_xywh)
         coms_2d = pkl_data["coms_2d"]
         coms_3d = pkl_data["coms_3d"] 
         origin_width = np.max(views_xywh[:,0]+views_xywh[:,2])
         origin_height = np.max(views_xywh[:,1]+views_xywh[:,3])
-        vid = ffmpegcv.VideoCaptureNV(mask_video, gpu=self.cuda, pix_fmt='rgb24')
         scale_wh = vid.width/origin_width, vid.height/origin_height
 
         calibPredict = CalibPredict(pkl_data)

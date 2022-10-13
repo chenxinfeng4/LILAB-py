@@ -1,16 +1,10 @@
+# conda activate mmdet
 # python -m lilab.outlier_refine.s1_pot_player_errorframe /A/B/C
 # %%
-from PIL import Image, ImageTk
-import base64
-from aip import AipOcr
-import io
 import glob
 import os.path as osp
 import json
 import tqdm
-import pytesseract
-import cv2
-import numpy as np
 import argparse
 from lilab.mmocr.s1_ocr_readnum import MyOCR
 

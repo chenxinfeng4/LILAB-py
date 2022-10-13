@@ -18,11 +18,12 @@ import ffmpegcv
 from ffmpegcv.video_info import get_info
 from torch2trt import TRTModule
 import itertools
-from lilab.mmpose_dev.a2_convert_mmpose2trt import findcheckpoint_trt
+from lilab.mmpose_dev.a2_convert_mmpose2engine import findcheckpoint_trt
 from lilab.cameras_setup import get_view_xywh_wrapper
 
 config_dict = {6:'/home/liying_lab/chenxinfeng/DATA/mmpose/hrnet_w32_coco_ball_512x512.py',
           10:'/home/liying_lab/chenxinfeng/DATA/mmpose/res50_coco_ball_512x512.py',
+          9:'/home/liying_lab/chenxinfeng/DATA/mmpose/res50_coco_ball_512x320.py',
           4: '/home/liying_lab/chenxinfeng/DATA/mmpose/res50_coco_ball_512x512_ZJF.py'}
 
 num_gpus = min([torch.cuda.device_count(), 4])
@@ -164,7 +165,7 @@ class MyWorker:
     def compute(self, args):
         with torch.cuda.device(self.cuda):
             trt_model = TRTModule()
-            trt_model.load_state_dict(torch.load(self.checkpoint))
+            trt_model.load_from_engine(self.checkpoint)
 
         model = self.pose_model
         dataset_info = self.dataset_info
@@ -184,7 +185,7 @@ class MyWorker:
         for data in tqdm.tqdm(dataset,position=int(self.id), 
                               desc='worker[{}]'.format(self.id)):
             batch_img = torch.unsqueeze(data['img'], dim=0) #BxCxHxW
-            batch_img = batch_img.to(device).half() #380fps
+            batch_img = batch_img.to(device).float()  #380fps
             batch_img_metas = [data['img_metas'].data]
             with torch.cuda.device(self.cuda):
                 heatmap = trt_model(batch_img)

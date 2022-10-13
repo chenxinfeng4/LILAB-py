@@ -7,7 +7,6 @@ import pickle
 import pycocotools.mask as maskUtils
 import torch
 from torch.utils.data import DataLoader, Dataset
-import torchvision
 import numpy as np
 import cv2
 
@@ -32,6 +31,60 @@ class CanvasReaderPannel(object):
         if not ret: return []
         outpannels = [frame[y:y+h, x:x+w] for x, y, w, h in self.view_xywh]
         return outpannels
+
+
+class CanvasReaderPannel(object):
+    # set property 'iframe' is the self.vid.iframe
+    @property
+    def iframe(self):
+        return self.vid.iframe
+
+    @property
+    def count(self):
+        return self.vid.count
+
+    @property
+    def fps(self):
+        return self.vid.fps
+
+    def __len__(self):
+        return self.vid.count
+
+    def release(self):
+        return self.vid.release()
+
+    def __init__(self, video_path, segment_path=None, gpu=0, dilate=True):
+        if segment_path is None:
+            segment_path = video_path.replace('.mp4', '.segpkl')
+        if isinstance(segment_path, dict):
+            pkl_data = segment_path
+        else:
+            pkl_data = pickle.load(open(segment_path, 'rb'))
+        views_xywh = pkl_data['views_xywh']
+        if len(views_xywh)==6:
+            vid = ffmpegcv.VideoReaderNV(video_path,
+                                            gpu = gpu,
+                                            pix_fmt='nv12',
+                                            crop_xywh=[0,0,800*3,600*2])
+        elif len(views_xywh) in (4, 9, 10):
+            vid = ffmpegcv.VideoReaderNV(video_path,
+                                            gpu = gpu,
+                                            pix_fmt='nv12')
+        else:
+            raise NotImplementedError
+        
+        self.vid = vid
+        self.views_xywh = views_xywh
+        self.nview = len(views_xywh)
+        self.pkl_data = pkl_data
+        self.nclass = 1
+
+    def read(self):
+        ret, frame = self.vid.read_gray()
+        if not ret: return []
+        frame = frame.copy()
+        imgpannels = [frame[y:y+h, x:x+w] for x, y, w, h in self.views_xywh]
+        return ret, [imgpannels]
 
 
 class CanvasReaderPannelMask(object):
@@ -70,12 +123,12 @@ class CanvasReaderPannelMask(object):
                                             gpu = gpu,
                                             pix_fmt='nv12',
                                             crop_xywh=[0,0,800*3,600*2])
-            mask_container_size = (2, 3, 600, 800)
+            h_w = (600, 800)
         elif len(views_xywh)==10:
             vid = ffmpegcv.VideoReaderNV(video_path,
                                             gpu = gpu,
                                             pix_fmt='nv12')
-            mask_container_size = (4, 3, 800, 1280)
+            h_w = (800, 1280)
         else:
             raise NotImplementedError
         
@@ -84,9 +137,8 @@ class CanvasReaderPannelMask(object):
         self.nview = len(views_xywh)
         self.pkl_data = pkl_data
         self.nclass = 2
-        self.h_w = mask_container_size[-2:]
+        self.h_w = h_w
         self.dilate = dilate
-
         dataset = MaskDataset(pkl_data,self.dilate,self.h_w,self.nclass,self.nview)
         dataloader = DataLoader(dataset, batch_size=None, num_workers=5)
         self.dataloader_iter = iter(dataloader)

@@ -1,4 +1,4 @@
-# python -m lilab.mmpose.a2_convert_mmpose2trt
+# python -m lilab.mmpose_dev.a2_convert_mmpose2engine XXX.config
 # It's for top-down version of the network
 import numpy as np
 import torch
@@ -12,7 +12,7 @@ import argparse
 config = '/home/liying_lab/chenxinfeng/DATA/mmpose/res50_coco_ball_512x512_ZJF.py'
 checkpoint = None
 
-def findcheckpoint_trt(config, trtnake='latest.trt'):
+def findcheckpoint_trt(config, trtnake='latest.engine'):
     """Find the latest checkpoint of the model."""
     basedir = osp.dirname(config)
     basenakename = osp.splitext(osp.basename(config))[0]
@@ -55,7 +55,7 @@ def _convert_batchnorm(module):
 
 def convert(config, checkpoint):
     cfg = Config.fromfile(config, checkpoint)
-    output = osp.splitext(checkpoint)[0] + '.trt'
+    output = osp.splitext(checkpoint)[0] + '.engine'
     image_size = cfg.data_cfg.image_size
     if isinstance(image_size, int):
         image_size = (image_size, image_size)
@@ -72,14 +72,14 @@ def convert(config, checkpoint):
     model = _convert_batchnorm(model)
     model.forward = model.forward_dummy
     with torch.cuda.device(0):
-        model = model.eval().cuda().half()
-        one_img = torch.randn(input_shape).cuda().half()
+        model = model.eval().cuda()
+        one_img = torch.randn(input_shape).cuda()
         out = model(one_img)
-        trt_model = torch2trt(model, [one_img])
+        trt_model = torch2trt(model, [one_img], fp16_mode=True)
         out2 = trt_model(one_img)
 
     print('Saving TRT model to: {}'.format(osp.basename(output)))
-    torch.save(trt_model.state_dict(), output)
+    trt_model.save_to_engine(output)
 
 
 if __name__ == '__main__':

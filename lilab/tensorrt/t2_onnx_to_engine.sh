@@ -9,7 +9,8 @@ polygraphy run fullmodel_end.onnx --trt --onnxrt \
 
 
 # Transform onnx to engine as fp16 without freezing
-trtexec --onnx=fullmodel_end.onnx --saveEngine=fullmodel_end_fp16.engine \
+MODEL="latest.full"
+trtexec --onnx=${MODEL}.onnx --saveEngine=${MODEL}_fp16.engine \
     --timingCacheFile=.cache.txt \
     --explicitBatch --fp16 --workspace=2048
 

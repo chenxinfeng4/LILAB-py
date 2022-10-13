@@ -7,6 +7,7 @@ import cv2
 from lilab.cameras_setup import get_ballglobal_cm
 
 second_based = True
+pthr = 0.4
 matfile = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/ball/2022-04-29_17-58-45_ball.matpkl'
 
 
@@ -24,7 +25,7 @@ def load_mat(matfile):
 
 
 def split_keypoint(keypoint, fps, global_time):
-    pthr = 0.71
+
     keypoint_p = keypoint[...,2]
     keypoint_xy = keypoint[...,:2]  # VIEWxTIMExXY
     keypoint_xy[keypoint_p < pthr] = np.nan
@@ -71,6 +72,8 @@ def convert(matfile, global_time):
         from lilab.cameras_setup import get_json_1280x800x10 as get_json
     elif len(views_xywh) == 4:
         from lilab.cameras_setup import get_json_1280x800x4 as get_json
+    elif len(views_xywh) == 9:
+        from lilab.cameras_setup import get_json_1280x800x9 as get_json
     else:
         raise ValueError("Only 6 or 10 views are supported")
     setup_json, intrinsics_json = get_json()

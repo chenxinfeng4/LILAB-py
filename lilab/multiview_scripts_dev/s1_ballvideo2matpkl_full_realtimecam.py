@@ -9,20 +9,21 @@ from mmpose.apis import init_pose_model
 import ffmpegcv
 from torch2trt import TRTModule
 import cv2
-from lilab.mmpose_dev.a2_convert_mmpose2trt import findcheckpoint_trt
+import os
+from lilab.mmpose_dev.a2_convert_mmpose2engine import findcheckpoint_trt
 from lilab.cameras_setup import get_view_xywh_wrapper
 import itertools
 from lilab.multiview_scripts_dev.s6_calibpkl_predict import CalibPredict
-
+from torch2trt.torch2trt import torch_dtype_from_trt
 
 config_dict = {6:'/home/liying_lab/chenxinfeng/DATA/mmpose/hrnet_w32_coco_ball_512x512.py',
           10:'/home/liying_lab/chenxinfeng/DATA/mmpose/res50_coco_ball_512x512.py',
           4: r"E:\mmpose\res50_coco_ball_512x320_ZJF.py"}
 
-pos_views = []
 preview_resize = (1280, 800)
-# camsize = [2560, 1600]
-camsize = (3840, 2400)
+camsize_dict = {4: (1280*2, 800*2),
+                9: (1280*3, 800*3),
+                10:(1280*3, 800*4)}
 
 
 def box2cs(box, image_size):
@@ -142,12 +143,14 @@ class DataSet():
         while True:
             ret, img = self.vid.read_gray()
             if not ret: raise StopIteration
-            img_preview = cv2.resize(img, preview_resize, interpolation=cv2.INTER_NEAREST)
-            if img_preview.ndim==2:
-                img_preview = cv2.cvtColor(img_preview, cv2.COLOR_GRAY2BGR)
-            elif img_preview.shape[-1]==1:
-                img_preview = np.ascontiguousarray(np.repeat(img_preview, 3, axis=-1))
-            # img_preview = np.zeros((preview_resize[1],preview_resize[0],3), dtype=np.uint8)
+
+            # img_preview = cv2.resize(img, preview_resize, interpolation=cv2.INTER_NEAREST)
+            # if img_preview.ndim==2:
+            #     img_preview = cv2.cvtColor(img_preview, cv2.COLOR_GRAY2BGR)
+            # elif img_preview.shape[-1]==1:
+            #     img_preview = np.ascontiguousarray(np.repeat(img_preview, 3, axis=-1))
+
+            img_preview = np.zeros((preview_resize[1],preview_resize[0],3), dtype=np.uint8)
             # img_preview = img.ravel()[self.coord_preview_HWC_idx_ravel]
             img_NCHW = img.ravel()[self.coord_NCHW_idx_ravel]
             # img_N1HW = img.ravel()[self.coord_N1HW_idx_ravel]
@@ -156,7 +159,7 @@ class DataSet():
 
 
 class MyWorker:
-    def __init__(self, config, checkpoint, ballcalib):
+    def __init__(self, config, video_file, checkpoint, ballcalib, views_xywh):
         super().__init__()
         self.id = getattr(self, 'id', 0)
         self.cuda = getattr(self, 'cuda', 0)
@@ -165,25 +168,32 @@ class MyWorker:
         self.pose_model = pose_model
         self.checkpoint = checkpoint
         self.calibobj = CalibPredict(ballcalib) if ballcalib else None
-
-    def compute(self, args):
-        cfg = self.pose_model.cfg
-        vid = ffmpegcv.VideoCaptureCAM("OBS Virtual Camera", 
-            camsize=camsize, pix_fmt='nv12')
-        # vid = ffmpegcv.VideoCaptureNV(r"F:\ball2.mp4", pix_fmt='nv12')
-        # vid = ffmpegcv.VideoCaptureNV(r"E:\ball_9pannel.mp4", pix_fmt='nv12')
-        print(vid.width, vid.height)
+        camsize = camsize_dict[len(views_xywh)]
+        if video_file is None:
+            vid = ffmpegcv.VideoCaptureCAM("OBS Virtual Camera", 
+                camsize=camsize, pix_fmt='nv12')
+        else:
+            assert os.path.exists(video_file)
+            vid = ffmpegcv.VideoCaptureNV(video_file, pix_fmt='nv12')
         assert (vid.width, vid.height) == camsize
-        dataset = DataSet(vid, cfg, pos_views)
-        dataset_iter = iter(dataset)
-        center, scale = dataset.center, dataset.scale
+        print(vid.width, vid.height)
+        self.video_file = video_file
+        self.vid = vid
+        self.views_xywh = views_xywh
+        self.camsize = camsize
+        cfg = self.pose_model.cfg
+        self.dataset = DataSet(self.vid, cfg, views_xywh)
+        self.dataset_iter = iter(self.dataset)
         print("Well setup VideoCapture")
 
+    def compute(self, args):
+        views_xywh = self.views_xywh
+        dataset, dataset_iter = self.dataset, self.dataset_iter
+        center, scale = dataset.center, dataset.scale
         count_range = range(dataset.__len__()) if hasattr(dataset, '__len__') else itertools.count()
-        pbar = tqdm.tqdm(10000, desc='loading')
+        pbar = tqdm.tqdm(count_range, desc='loading')
 
         with torch.cuda.device(self.cuda):
-            from torch2trt.torch2trt import torch_dtype_from_trt
             trt_model = TRTModule()
             trt_model.load_from_engine(self.checkpoint)
             idx = trt_model.engine.get_binding_index(trt_model.input_names[0])
@@ -201,11 +211,11 @@ class MyWorker:
                 torch.cuda.current_stream().synchronize()
                 heatmap = heatmap_wait
                 if idx<=-1: continue
-                post_cpu(heatmap, center, scale, pos_views, img_preview, self.calibobj)
+                post_cpu(self.camsize, heatmap, center, scale, views_xywh, img_preview, self.calibobj)
                 img_NCHW, img_preview = img_NCHW_next, img_preview_next
 
             heatmap = mid_gpu(trt_model, img_NCHW)
-            post_cpu(heatmap, center, scale, pos_views, img_preview, self.calibobj)
+            post_cpu(self.camsize, heatmap, center, scale, views_xywh, img_preview, self.calibobj)
 
 
 def pre_cpu(dataset_iter):
@@ -219,13 +229,13 @@ def mid_gpu(trt_model, img_NCHW, input_dtype):
     return heatmap
 
 
-def post_cpu(heatmap, center, scale, pos_views, img_preview, calibobj):
+def post_cpu(camsize, heatmap, center, scale, views_xywh, img_preview, calibobj):
     N, K, H, W = heatmap.shape
     preds, maxvals = get_max_preds_gpu(heatmap)
     preds = transform_preds(
                 preds, center, scale, [W, H], use_udp=False)
     kpt_data = np.concatenate((preds, maxvals), axis=-1) #(N, xyp)
-    show_kpt_data(camsize, kpt_data, pos_views, img_preview, calibobj)
+    show_kpt_data(camsize, kpt_data, views_xywh, img_preview, calibobj)
 
 
 def show_kpt_data(orisize, keypoints_xyp, views_xywh, img_preview, calibobj):
@@ -279,12 +289,13 @@ def show_kpt_data(orisize, keypoints_xyp, views_xywh, img_preview, calibobj):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--pannels', type=int, default=4, help='crop views')
+    parser.add_argument('--video_file', type=str, default=None)
     parser.add_argument('--config', type=str, default=None)
     parser.add_argument('--checkpoint', type=str, default=None)
     parser.add_argument('--ballcalib', type=str, default=None)
     arg = parser.parse_args()
 
-    pos_views[:] = get_view_xywh_wrapper(arg.pannels)
+    views_xywh = get_view_xywh_wrapper(arg.pannels)
     config, checkpoint, ballcalib = arg.config, arg.checkpoint, arg.ballcalib
     if config is None:
         config = config_dict[arg.pannels]
@@ -293,5 +304,5 @@ if __name__ == '__main__':
     print("config:", config)
     print("checkpoint:", checkpoint)
 
-    worker = MyWorker(config, checkpoint, ballcalib)
+    worker = MyWorker(config, arg.video_file, checkpoint, ballcalib, views_xywh)
     worker.compute(None)

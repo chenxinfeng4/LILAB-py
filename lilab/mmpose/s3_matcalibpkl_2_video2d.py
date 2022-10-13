@@ -47,7 +47,7 @@ def main(kptpkl, iview, postfix, maxlen=None):
     crop_xywh = views[iview]
     kpt_rats_xy = pkldata['keypoints_xy_ba'][iview]
     pts2d_black = kpt_rats_xy[:, 0, :, :]
-    pts2d_white = kpt_rats_xy[:, 1, :, :]
+    pts2d_white = kpt_rats_xy[:, 1, :, :] if kpt_rats_xy.shape[1]>=2 else pts2d_black*np.nan
     if maxlen is not None and maxlen < len(pts2d_black):
         pts2d_black = pts2d_black[:maxlen]
         pts2d_white = pts2d_white[:maxlen]

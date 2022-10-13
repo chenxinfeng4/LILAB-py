@@ -1,6 +1,6 @@
 from ._get_calibinfo import (get_json_1280x800x10, 
     get_json_800x600x6, get_json_1280x800x4,
-    get_ballglobal_cm)
+    get_json_1280x800x9, get_ballglobal_cm)
 
 def get_view_hflip():
     return [0, 1, 0, 

@@ -10,7 +10,7 @@ import argparse
 
 
 matfile = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/ball/2022-04-29_17-58-45_ball.matcalibpkl'
-thr = 0.50
+thr = 0.40
 
 def load_mat(matfile):
     print("Loading {}".format(matfile))
