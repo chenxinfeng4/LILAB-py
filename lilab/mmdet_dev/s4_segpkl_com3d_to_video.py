@@ -20,8 +20,8 @@ video_path = [f for f in glob.glob('/mnt/liying.cibr.ac.cn_Data_Temp/multiview-l
 from lilab.mmlab_scripts.show_pkl_seg_video_fast import default_mask_colors
 
 mask_colors = torch.Tensor(get_mask_colors())
-nclass = 1
-volsize = 260
+nclass = 2
+volsize = 160
 preview_resize = (1280, 800)
 verts = np.array([[1, 1, -1],
                     [-1, 1, -1],
@@ -61,8 +61,8 @@ def p2d_to_canvas(p2d, views_xywh, scale_wh):
     return p2d
 
 
-# class MyWorker(mmap_cuda.Worker):
-class MyWorker():
+class MyWorker(mmap_cuda.Worker):
+# class MyWorker():
     def compute(self, args):
         video_in = args
         self.cuda = getattr(self, 'cuda', 0)
@@ -132,9 +132,9 @@ if __name__ == '__main__':
     args_iterable = video_path
     num_gpus = min([torch.cuda.device_count()*4, len(args_iterable)])
     # init the workers pool
-    # mmap_cuda.workerpool_init(range(num_gpus), MyWorker)
-    # mmap_cuda.workerpool_compute_map(args_iterable)
+    mmap_cuda.workerpool_init(range(num_gpus), MyWorker)
+    mmap_cuda.workerpool_compute_map(args_iterable)
 
-    worker = MyWorker()
-    for args in args_iterable:
-        worker.compute(args)
+    # worker = MyWorker()
+    # for args in args_iterable:
+    #     worker.compute(args)

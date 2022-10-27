@@ -59,13 +59,14 @@ class MyWorker(OldMyWorker):
                 heatmap_wait = mid_gpu(trt_model, img_NCHW, input_dtype)
                 img_NCHW_next, img_preview_next = pre_cpu(dataset_iter)
                 torch.cuda.current_stream().synchronize()
+                img_NCHW, img_preview = img_NCHW_next, img_preview_next
                 heatmap = heatmap_wait
                 if idx<=-1: continue
                 # if idx>5000: break
                 kpt3d, kpt2d = post_cpu(self.camsize, heatmap, center, scale, views_xywh, img_preview, calibobj)
                 keypoints_xyz_ba.append(kpt3d)
                 keypoints_xyp.append(kpt2d)
-                img_NCHW, img_preview = img_NCHW_next, img_preview_next
+                
 
             heatmap = mid_gpu(trt_model, img_NCHW, input_dtype)
             kpt3d, kpt2d = post_cpu(self.camsize, heatmap, center, scale, views_xywh, img_preview, calibobj)

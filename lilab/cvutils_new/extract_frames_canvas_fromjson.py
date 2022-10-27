@@ -21,8 +21,8 @@ def parser_json(json_file, dir_name=None, rat_name=None):
     for vfile in vfiles:
         full_vfile = os.path.join(dir_name, vfile)
         assert osp.exists(full_vfile), 'video_path not exists'
-        idxframes = data[vfile]
-        ready_to_extract_cv(full_vfile, idxframes, rat_name_id)
+        idxframes = [int(idxframe) for idxframe in data[vfile]]
+        ready_to_extract(full_vfile, idxframes, rat_name_id)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

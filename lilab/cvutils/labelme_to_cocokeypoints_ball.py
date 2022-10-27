@@ -75,7 +75,7 @@ class Labelme2coco():
         # self.img_id = int(os.path.basename(path).split(".json")[0])
         self.img_id = self.auto_id.query_by_name(os.path.basename(path).split(".json")[0])
         image['id'] = self.img_id
-        image['file_name'] = os.path.basename(path).replace(".json", ".png")
+        image['file_name'] = os.path.basename(path).replace(".json", ".jpg")
 
         return image
 
@@ -172,7 +172,7 @@ if __name__ == '__main__':
     assert len(bodyparts) == args.join_num, "the number of join is not equal to the number of keypoints"
 
     labelme_path = args.input
-    saved_coco_path = args.input + '_trainval.json'
+    saved_coco_path = os.path.abspath(args.input) + '_trainval.json'
 
     json_list_path = glob.glob(labelme_path + "/*.json")
     print('{} for trainval'.format(len(json_list_path)))

@@ -12,8 +12,8 @@ import argparse
 # imgfile = '2022-04-26_15-06-02_bwt_wwt_7.mp4_20220509_155402.017.png'
 
 dir = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview_color/20220613-side6-addition/2022-2-24-side6-bwrat-shank3/for_label_refine20220901/white'
-# crop_xyxy = [20, 2, 250, 70]
-crop_xyxy = [0, 0, 150, 70]
+crop_xyxy = [20, 2, 250, 70]
+# crop_xyxy = [0, 0, 150, 70]
 #%% 
 def get_num(imgfile, outdir):
     img = Image.open(imgfile)

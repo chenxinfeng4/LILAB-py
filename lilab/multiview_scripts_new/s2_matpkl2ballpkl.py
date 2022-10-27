@@ -7,7 +7,7 @@ import cv2
 from lilab.cameras_setup import get_ballglobal_cm
 
 second_based = True
-pthr = 0.4
+pthr = 0.62
 matfile = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/ball/2022-04-29_17-58-45_ball.matpkl'
 
 
@@ -24,10 +24,15 @@ def load_mat(matfile):
     return keypoint, fps, vfile, views_xywh
 
 
+def auto_find_thr(pvals):
+    pthr = np.percentile(pvals.ravel(), 50) * 0.9
+    return pthr
+
 def split_keypoint(keypoint, fps, global_time):
 
     keypoint_p = keypoint[...,2]
     keypoint_xy = keypoint[...,:2]  # VIEWxTIMExXY
+    pthr = auto_find_thr(keypoint_p)
     keypoint_xy[keypoint_p < pthr] = np.nan
     move_time = global_time[-1] + 3
     if second_based:

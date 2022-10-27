@@ -23,7 +23,7 @@ from lilab.cameras_setup import get_view_xywh_wrapper
 
 config_dict = {6:'/home/liying_lab/chenxinfeng/DATA/mmpose/hrnet_w32_coco_ball_512x512.py',
           10:'/home/liying_lab/chenxinfeng/DATA/mmpose/res50_coco_ball_512x512.py',
-          9:'/home/liying_lab/chenxinfeng/DATA/mmpose/res50_coco_ball_512x320.py',
+          9:'/home/liying_lab/chenxinfeng/DATA/mmpose/res50_coco_ball_512x320_cam9.py',
           4: '/home/liying_lab/chenxinfeng/DATA/mmpose/res50_coco_ball_512x512_ZJF.py'}
 
 num_gpus = min([torch.cuda.device_count(), 4])

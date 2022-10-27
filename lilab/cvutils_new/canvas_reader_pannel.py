@@ -124,6 +124,11 @@ class CanvasReaderPannelMask(object):
                                             pix_fmt='nv12',
                                             crop_xywh=[0,0,800*3,600*2])
             h_w = (600, 800)
+        elif len(views_xywh)==9:
+            vid = ffmpegcv.VideoReaderNV(video_path,
+                                            gpu = gpu,
+                                            pix_fmt='nv12')
+            h_w = (800, 1280)
         elif len(views_xywh)==10:
             vid = ffmpegcv.VideoReaderNV(video_path,
                                             gpu = gpu,

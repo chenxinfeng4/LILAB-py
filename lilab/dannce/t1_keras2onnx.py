@@ -1,4 +1,4 @@
-# python t1_keras2onnx.py ./models/dannce_model.h5 | xargs -i python t2_onnx2trt.py "{}"
+# python -m lilab.dannce.t1_keras2onnx ./models/dannce_model.h5 | xargs -i python t2_onnx2trt.py "{}"
 import argparse
 from tensorflow.keras.models import load_model
 from dannce.engine import nets, losses, ops
@@ -6,11 +6,14 @@ import tensorflow as tf
 import onnx
 import tf2onnx
 import sys
+import os
 import os.path as osp
 modelfile = '/home/liying_lab/chenxinfeng/DATA/dannce/demo/rat14_1280x800x10_mono/DANNCE/train_results/MAX/fullmodel_weights/fullmodel_end.hdf5'
 
+batchsize = 2  #[None = Dynamic, 1|2|... = Fix shape]
 
 def main(modelfile):
+    os.environ['CUDA_VISIBLE_DEVICES'] = '-1' #use cpu to load model
     model = load_model(modelfile,
         custom_objects={
             "ops": ops,
@@ -21,8 +24,7 @@ def main(modelfile):
             "centered_euclidean_distance_3D": losses.centered_euclidean_distance_3D,
         },
     )
-    batchsize = 1
-    input_signature = [tf.TensorSpec([batchsize,64,64,64,10], tf.float32, name='input_1')] if batchsize>0 else None
+    input_signature = [tf.TensorSpec([batchsize,64,64,64,9], tf.float32, name='input_1')] if batchsize>0 else None
     onnx_model, _ = tf2onnx.convert.from_keras(model,
                     input_signature=input_signature)
     onnx_file = osp.splitext(modelfile)[0] + ('.onnx' if batchsize == 1 else f'_batch{batchsize}.onnx')

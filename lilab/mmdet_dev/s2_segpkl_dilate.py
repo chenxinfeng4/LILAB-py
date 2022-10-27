@@ -2,7 +2,6 @@
 # ls *.segpkl | xargs -n 1 -P 10 python -m lilab.mmdet.s2_segpkl_dilate
 # %%
 import argparse
-from multiprocessing import Process, Queue
 import os.path as osp
 import pickle
 import numpy as np
@@ -11,13 +10,10 @@ import torch
 import tqdm
 import glob
 import lilab.cvutils.map_multiprocess_cuda as mmap_cuda
-import itertools
-import ffmpegcv
-
 
 # %%
 def dilate(numpy_array):
-    kernel = (37, 37)
+    kernel = (21, 21) #15,27,37
     stride = 1
     # 1
     # mask = torch.from_numpy(numpy_array).cuda().float()
@@ -87,7 +83,7 @@ if __name__ == '__main__':
         assert len(segpkl_path) > 0, 'no video found'
     else:
         raise ValueError('segpkl_path is not a file or folder')
-    num_gpus = min([torch.cuda.device_count()*2, len(segpkl_path)])
+    num_gpus = min([torch.cuda.device_count()*3, len(segpkl_path)])
 
     mmap_cuda.workerpool_init(range(num_gpus), MyWorker)
     mmap_cuda.workerpool_compute_map(segpkl_path)

@@ -35,7 +35,8 @@ Parses an ONNX model, then adds precision constraints so specific layers run in 
 from polygraphy import func
 from polygraphy.backend.trt import NetworkFromOnnxPath
 import tensorrt as trt
-
+import os
+import os.path as osp
 import logging
 
 # 创建日志器对象
@@ -60,7 +61,10 @@ logger.addHandler(file_handler)
 #
 # Without constraining the subgraph (Add -> Sub) to FP32, this model may
 # produce incorrect results when run with FP16 optimziations enabled.
-parse_network_from_onnx = NetworkFromOnnxPath("/home/liying_lab/chenxinfeng/DATA/dannce/demo/rat14_1280x800x10_mono/DANNCE/train_results/MAX/fullmodel_weights/fullmodel_end.onnx")
+onnxfile = osp.join(os.getcwd(), "latest.onnx")
+assert osp.exists(onnxfile), f"File not found: {onnxfile}"
+parse_network_from_onnx = NetworkFromOnnxPath(onnxfile)
+# parse_network_from_onnx = NetworkFromOnnxPath("/home/liying_lab/chenxinfeng/DATA/dannce/demo/rat14_1280x800x10_mono/DANNCE/train_results/MAX/fullmodel_weights/fullmodel_end.onnx")
 
 
 @func.extend(parse_network_from_onnx)

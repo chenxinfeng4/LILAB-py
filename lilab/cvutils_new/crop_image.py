@@ -21,16 +21,19 @@ def convert(filename):
         views = get_view_xywh_wrapper(10)
     elif im.shape == (1440, 2560, 3):
         views = get_view_xywh_wrapper(6)
+    elif im.shape == (800*3, 1280*3, 3):
+        views = get_view_xywh_wrapper(9)
     elif im.shape == (800*2, 1280*2, 3):
         views = get_view_xywh_wrapper(4)
     else:
         raise ValueError("Unknown image shape: {}".format(im.shape))
     for postfix, crop_xywh in enumerate(views):
-        outfileformat = "{}_output_"+str(postfix)+".png"
+        outfileformat = "{}_output_"+str(postfix)+".jpg"
         outfilename = outfileformat.format(filename[:-4])
         # crop the image
         x, y, w, h = crop_xywh
         im1 = im[y:y+h, x:x+w]
+        im1 = cv2.resize(im1, None, fx=0.5, fy=0.5)
         cv2.imwrite(outfilename, im1)
 
 

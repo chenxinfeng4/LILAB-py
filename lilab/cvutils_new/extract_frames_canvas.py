@@ -1,4 +1,5 @@
 # python -m lilab.cvutils_new.extract_frames_canvas testA.mp4
+# ls *.mp4 | xargs -n 1 -P 8 python -m lilab.cvutils_new.extract_frames_canvas
 import argparse
 import os
 import cv2
@@ -10,7 +11,7 @@ import glob
 import ffmpegcv
 from lilab.mmdet_dev.canvas_reader import CanvasReader, CanvasReaderCV
 
-numframe_to_extract = 50
+numframe_to_extract = 20
 maxlength = 10000
 frame_dir = "outframes"
 frame_min_interval = 100

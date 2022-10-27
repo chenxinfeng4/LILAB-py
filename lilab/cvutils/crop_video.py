@@ -1,4 +1,4 @@
-#!/usr/bin/python
+# python -m lilab.cvutils.crop_video xxx/ --xywh 0 0 100 100
 '''
 Author: your name
 Date: 2021-09-28 14:14:27
@@ -25,18 +25,17 @@ crop_tdur = '00:02:00'
 '''
 import sys
 import os
+import os.path as osp
 from glob import glob 
-try:
-    from . import cxfguilib as cg
-except e:
-    import cxfguilib as cg
 import cv2
 import platform
+import argparse
 
 #xywh = [50,0,600,585]
 #folder = r"E:\cxf\Videos\20210601 LS RAT"
 crop_tbg = None
 crop_tdur = None
+xywh = [1280, 0, 1280, 800]
 def xywh2whxy(xywh, keepXeqY=True):
     if keepXeqY:
         maxXY = max(xywh[2:])
@@ -81,28 +80,22 @@ def convert_folder_to_mp4(folder, whxy, postfix=None):
         out = os.system(mystr)
 
 if __name__ == '__main__':
-    n = len(sys.argv)
-    if n == 1:
-        folder = cg.uigetfolder()
-        if folder == None:
-            exit()
-        else:
-            sys.argv.append(folder)
-            
-    print(sys.argv[1:])
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument('video_file', type=str, help='folder containing videos')
+    argparser.add_argument('--xywh', type=int, nargs=4, default=xywh, help='crop region')
+    args = argparser.parse_args()
 
-    video_foldname = os.path.abspath(sys.argv[1])
-    config = cg.getfoldconfigpy(video_foldname)
-    assert hasattr(config, 'crop_xywh'), 'Need [crop_xywh] in [config_video.py]'
-    keepXeqY = getattr(config, 'keepXeqY', True)
-    crop_tbg = getattr(config, 'crop_tbg', None)
-    crop_tdur = getattr(config, 'crop_tdur', None)
-    if type(config.crop_xywh[0]) == list:
-        for i, crop_xywh in enumerate(config.crop_xywh):
-            whxy = xywh2whxy(crop_xywh, keepXeqY)
-            convert_folder_to_mp4(video_foldname, whxy, i+1)
+    if osp.isdir(args.video_file):
+        video_file = glob(osp.join(args.video_file, '*.mp4'))
+        assert len(video_file) > 0, 'No mp4 file in folder'
+    elif osp.isfile(args.video_file):
+        video_file = [args.video_file]
     else:
-        whxy = xywh2whxy(config.crop_xywh, keepXeqY)
-        convert_folder_to_mp4(video_foldname, whxy)
+        raise ValueError('Invalid video file/folder')
+
+    video_foldname = os.path.dirname(video_file[0])
+
+    whxy = xywh2whxy(args.xywh, keepXeqY=False)
+    convert_folder_to_mp4(video_foldname, whxy)
     print("Succeed")
     

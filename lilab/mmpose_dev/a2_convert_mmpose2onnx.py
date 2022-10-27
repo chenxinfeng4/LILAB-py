@@ -66,8 +66,6 @@ def convert(config, checkpoint, full, dynamic):
     else:
         raise TypeError('image_size must be either int or tuple of int')
 
-    
-
     model = init_pose_model(config, checkpoint, device='cpu')
     model = _convert_batchnorm(model)
     model.forward = model.forward_dummy
@@ -81,11 +79,10 @@ def convert(config, checkpoint, full, dynamic):
         model = NormalizedModel(mean_value, std_value, model)
 
     model = model.eval()
+    input_shape = (1, 3, image_size[1], image_size[0])
     if dynamic:
-        input_shape = (1, 3, image_size[1], image_size[0])
         dynamic_axes = {'input_1': {0: 'batch_size'}, 'output_1': {0: 'batch_size'}}
     else:
-        input_shape = (9, 3, image_size[1], image_size[0])
         dynamic_axes = None
 
     dummy_input = torch.randn(input_shape, requires_grad=True)    

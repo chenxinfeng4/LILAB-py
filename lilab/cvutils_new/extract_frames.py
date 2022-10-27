@@ -59,7 +59,8 @@ def extract_iview(video_input, iview, numframe_to_extract, maxlength):
         if not ret: break
         if iframe>idxframe_max: break
         if iframe not in idxframe_to_extract: continue
-        filename = os.path.join(dirname, frame_dir, nakefilename + '_{0:06}_output_{1}.png'.format(iframe, iview))
+        frame = cv2.resize(frame, None, fx=0.5, fy=0.5)
+        filename = os.path.join(dirname, frame_dir, nakefilename + '_{0:06}_output_{1}.jpg'.format(iframe, iview))
         cv2.imwrite(filename, frame)
         
     cap.release()

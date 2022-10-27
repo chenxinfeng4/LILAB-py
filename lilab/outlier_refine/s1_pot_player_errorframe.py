@@ -24,7 +24,7 @@ def dump_json_from_dir(dir):
     for error_img, error_video in zip(tqdm.tqdm(error_imgs), error_videos):
         num = myOCR(osp.join(dir,error_img))
         if num:
-            outdict[error_video].append(num)
+            outdict[error_video].append(int(num))
         else:
             faillist.append(error_img)
 

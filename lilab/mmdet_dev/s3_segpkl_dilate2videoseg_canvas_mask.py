@@ -34,8 +34,8 @@ def get_hflips(nviews):
         raise NotImplementedError
 
 
-# class MyWorker(mmap_cuda.Worker):
-class MyWorker():
+class MyWorker(mmap_cuda.Worker):
+# class MyWorker():
     def compute(self, args):
         video_in, enable_dilate = args
         self.cuda = getattr(self, 'cuda', 0)
@@ -49,6 +49,7 @@ class MyWorker():
                                         pix_fmt='rgb24')
         for i in tqdm(range(len(vid)), position=int(self.id), 
                                         desc='worker[{}]'.format(self.id)):
+            if i>=vid.fps*60*5: break
             frame_w_mask = vid.read_canvas_mask_img()
             frame_w_mask = cv2.putText(frame_w_mask, str(i), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (255,0,0), 2)
             if frame_w_mask is None: break
@@ -76,10 +77,10 @@ if __name__ == '__main__':
 
     enable_dilate = not args.disable_dilate
     args_iterable = list(itertools.product(video_path, [enable_dilate]))
-    num_gpus = min([torch.cuda.device_count()*4, len(args_iterable)])
+    num_gpus = min([torch.cuda.device_count()*2, len(args_iterable)])
     # init the workers pool
-    # mmap_cuda.workerpool_init(range(num_gpus), MyWorker)
-    # mmap_cuda.workerpool_compute_map(args_iterable)
+    mmap_cuda.workerpool_init(range(num_gpus), MyWorker)
+    mmap_cuda.workerpool_compute_map(args_iterable)
 
     worker = MyWorker()
     for i in range(len(args_iterable)):

@@ -53,7 +53,15 @@ class CanvasReader:
             mask_container_size = (4, 3, 800, 1280)
             mask_index = {0:(0,0), 1:(0,1), 2:(0,2), 3:(1,0), 4:(1,1), 5:(1,2),
                       6:(2,0), 7:(2,1), 8:(2,2), 9:(3,0)}
+        elif len(views_xywh)==9:
+            vid = ffmpegcv.VideoReaderNV(video_path,
+                                            gpu = gpu,
+                                            pix_fmt='rgb24')
+            mask_container_size = (3, 3, 800, 1280)
+            mask_index = {0:(0,0), 1:(0,1), 2:(0,2), 3:(1,0), 4:(1,1), 5:(1,2),
+                      6:(2,0), 7:(2,1), 8:(2,2)}
         else:
+            print('len(views_xywh) must be 6, 9 or 10. But get', len(views_xywh))
             raise NotImplementedError
         
         self.cuda = f'cuda:{gpu}'
@@ -152,6 +160,10 @@ class CanvasReaderCV:
             mask_container_size = (4, 3, 800, 1280)
             mask_index = {0:(0,0), 1:(0,1), 2:(0,2), 3:(1,0), 4:(1,1), 5:(1,2),
                       6:(2,0), 7:(2,1), 8:(2,2), 9:(3,0)}
+        elif len(views_xywh)==9:
+            mask_container_size = (3, 3, 800, 1280)
+            mask_index = {0:(0,0), 1:(0,1), 2:(0,2), 3:(1,0), 4:(1,1), 5:(1,2),
+                      6:(2,0), 7:(2,1), 8:(2,2)}
         else:
             raise NotImplementedError
         
@@ -234,6 +246,15 @@ class CanvasReaderThumbnail(CanvasReader):
                                             resize=(640*3,400*4),
                                             resize_keepratio=False)
             mask_container_size = (4, 3, 400, 640)
+            scale_wh = (1280/640, 800/400)
+        elif len(self.views_xywh)==9:
+            vid = ffmpegcv.VideoReaderNV(video_path,
+                                            gpu = gpu,
+                                            pix_fmt='rgb24',
+                                            crop_xywh=[0,0,1280*3,800*3],
+                                            resize=(640*3,400*3),
+                                            resize_keepratio=False)
+            mask_container_size = (3, 3, 400, 640)
             scale_wh = (1280/640, 800/400)
         else:
             raise NotImplementedError

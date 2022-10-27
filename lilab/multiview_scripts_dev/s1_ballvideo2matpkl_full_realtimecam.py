@@ -15,6 +15,8 @@ from lilab.cameras_setup import get_view_xywh_wrapper
 import itertools
 from lilab.multiview_scripts_dev.s6_calibpkl_predict import CalibPredict
 from torch2trt.torch2trt import torch_dtype_from_trt
+from lilab.multiview_scripts_dev.comm_functions import (
+      box2cs, get_max_preds, get_max_preds_gpu, transform_preds)
 
 config_dict = {6:'/home/liying_lab/chenxinfeng/DATA/mmpose/hrnet_w32_coco_ball_512x512.py',
           10:'/home/liying_lab/chenxinfeng/DATA/mmpose/res50_coco_ball_512x512.py',
@@ -25,80 +27,11 @@ camsize_dict = {4: (1280*2, 800*2),
                 9: (1280*3, 800*3),
                 10:(1280*3, 800*4)}
 
-
-def box2cs(box, image_size):
-    """Encode bbox(x,y,w,h) into (center, scale) without padding.
-
-    Returns:
-        tuple: A tuple containing center and scale.
-    """
-    x, y, w, h = box[:4]
-    aspect_ratio = 1. * image_size[0] / image_size[1]
-    center = np.zeros((2), dtype=np.float32)
-    center[0] = x + w * 0.5
-    center[1] = y + h * 0.5
-
-    if w > aspect_ratio * h:
-        h = w * 1.0 / aspect_ratio
-    elif w < aspect_ratio * h:
-        w = h * aspect_ratio
-    scale = np.array([w * 1.0 / 200.0, h * 1.0 / 200.0], dtype=np.float32)
-    return center, scale
-    
-
-def get_max_preds(heatmaps:np.ndarray):
-    assert isinstance(heatmaps,
-                      np.ndarray), ('heatmaps should be numpy.ndarray')
-    assert heatmaps.ndim == 4, 'batch_images should be 4-ndim'
-
-    N, K, _, W = heatmaps.shape
-    heatmaps_reshaped = heatmaps.reshape((N, K, -1))
-    idx = np.argmax(heatmaps_reshaped, 2).reshape((N, K, 1))
-    maxvals = np.amax(heatmaps_reshaped, 2).reshape((N, K, 1))
-
-    preds = np.tile(idx, (1, 1, 2)).astype(np.float32)
-    preds[:, :, 0] = preds[:, :, 0] % W
-    preds[:, :, 1] = preds[:, :, 1] // W
-
-    preds = np.where(np.tile(maxvals, (1, 1, 2)) > 0.0, preds, -1)
-    return preds, maxvals
-
-
-def get_max_preds_gpu(heatmaps:torch.Tensor):
-    N, K, _, W = heatmaps.shape
-    heatmaps_reshaped = heatmaps.reshape((N, K, -1))
-    idx = torch.argmax(heatmaps_reshaped, 2).reshape((N, K, 1))
-    maxvals = torch.amax(heatmaps_reshaped, 2).reshape((N, K, 1))
-    idx = idx.cpu().numpy()
-    maxvals = maxvals.cpu().numpy()
-
-    preds = np.tile(idx, (1, 1, 2)).astype(np.float32)
-    preds[:, :, 0] = preds[:, :, 0] % W
-    preds[:, :, 1] = preds[:, :, 1] // W
-
-    preds = np.where(np.tile(maxvals, (1, 1, 2)) > 0.0, preds, -1)
-    return preds, maxvals
-
-
-def transform_preds(coords, center, scale, output_size, use_udp=False):
-    assert coords.shape[-1] == 2
-    assert len(center) == 2
-    assert len(scale) == 2
-    assert len(output_size) == 2
-    scale = scale * 200.0
-    output_size = np.array(output_size)
-    if use_udp:
-        preds = scale / (output_size - 1.0)
-    else:
-        scale_step = scale / output_size
-    preds = coords * scale_step + center - scale * 0.5
-    return preds
-
-
 class DataSet():
-    def __init__(self, vid, cfg, views_xywh):
+    def __init__(self, vid, cfg, views_xywh, c_channel_in=1):
         self.vid = vid
         self.views_xywh = views_xywh
+        self.c_channel_in = c_channel_in
         _, _, w, h = views_xywh[0]
 
         bbox = np.array([0, 0, w, h])
@@ -108,13 +41,13 @@ class DataSet():
         canvas_w, canvas_h = vid.width, vid.height
         desired_size = cfg.data_cfg['image_size'][::-1] #(h,w)
         chw_coord_ravel_nview = []
-        c_channel_in=1
         c_channel_out=3
         assert c_channel_in==1 or c_channel_in==3
         for crop_xywh in views_xywh:
             chw_coord_ravel_nview.append(self.cv2_resize_idx_ravel((canvas_h, canvas_w), crop_xywh, desired_size, c_channel_in, c_channel_out))
-        
         coord_NCHW_idx_ravel = np.array(chw_coord_ravel_nview)
+        
+        self.views_xywh = views_xywh
         self.desired_size = desired_size  #(h,w)
         self.coord_NCHW_idx_ravel = coord_NCHW_idx_ravel  #(N,C,H,W)
         self.coord_N1HW_idx_ravel = np.ascontiguousarray(coord_NCHW_idx_ravel[:,0:1,:,:])  #(N,1,H,W)
@@ -140,8 +73,9 @@ class DataSet():
         return chw_coord_ravel
 
     def __iter__(self):
+        vread = {1:self.vid.read_gray, 3:self.vid.read}[self.c_channel_in]
         while True:
-            ret, img = self.vid.read_gray()
+            ret, img = vread()
             if not ret: raise StopIteration
 
             # img_preview = cv2.resize(img, preview_resize, interpolation=cv2.INTER_NEAREST)
@@ -209,10 +143,11 @@ class MyWorker:
                 heatmap_wait = mid_gpu(trt_model, img_NCHW, input_dtype)
                 img_NCHW_next, img_preview_next = pre_cpu(dataset_iter)
                 torch.cuda.current_stream().synchronize()
+                img_NCHW, img_preview = img_NCHW_next, img_preview_next
                 heatmap = heatmap_wait
                 if idx<=-1: continue
                 post_cpu(self.camsize, heatmap, center, scale, views_xywh, img_preview, self.calibobj)
-                img_NCHW, img_preview = img_NCHW_next, img_preview_next
+                
 
             heatmap = mid_gpu(trt_model, img_NCHW)
             post_cpu(self.camsize, heatmap, center, scale, views_xywh, img_preview, self.calibobj)

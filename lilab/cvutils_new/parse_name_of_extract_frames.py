@@ -5,6 +5,7 @@ import os.path as osp
 import glob
 import json
 import argparse
+from collections import defaultdict
 dir = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview_color/20220613-side6-addition/2022-2-24-side6-bwrat-shank3/outframes_white/'
 
 # %%
@@ -32,6 +33,16 @@ def parsenames_indir(dir):
     imagefiles = glob.glob(osp.join(dir,'*.jpg')) + glob.glob(osp.join(dir,'*.png'))
     imagebasenames = [osp.basename(x) for x in imagefiles]
     parsednames = [parsename(imagebasename) for imagebasename in imagebasenames]
+    outdict = defaultdict(lambda: defaultdict(list))
+    for videoname, rat_id, frameid in parsednames:
+        outdict[rat_id][videoname].append(frameid)
+    for dictnext in outdict.values():
+        for listvalue in dictnext.values():
+            listvalue.sort()
+        
+    outjson = osp.join(args.dir, 'out_full.json')
+    with open(outjson, 'w') as f:
+        json.dump(outdict, f, indent=4)
     return imagebasenames, parsednames
 
 
@@ -41,6 +52,6 @@ if __name__ == '__main__':
     args = argparser.parse_args()
     imagebasenames, parsednames = parsenames_indir(args.dir)
     outdict = {'imagebasenames': imagebasenames, 'parsednames': parsednames}
-    outjson = osp.join(dir, 'out_id.json')
+    outjson = osp.join(args.dir, 'out_id.json')
     with open(outjson, 'w') as f:
         json.dump(outdict, f, indent=4)

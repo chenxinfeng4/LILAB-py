@@ -1,5 +1,5 @@
-# python -m lilab.mmdet_dev.s4_segpkl_put_com3d xxx.segpkl --calibpkl xxx.calibpkl
-# ls *.segpkl | xargs -n 1 -P 0 python -m lilab.mmdet_dev.s4_segpkl_put_com3d
+# python -m lilab.mmdet_dev.s4_segpkl_put_com3d_pro xxx.segpkl --calibpkl xxx.calibpkl
+# ls *.segpkl | xargs -n 1 -P 0 python -m lilab.mmdet_dev.s4_segpkl_put_com3d_pro
 import pickle
 import numpy as np
 import argparse
@@ -36,7 +36,7 @@ def ims_to_com2ds(ims):
 # %%
 def convert(segpkl, calibpkl):
     pkl_data = pickle.load(open(segpkl, 'rb'))
-    assert 'coms_3d' not in pkl_data
+    # assert 'coms_3d' not in pkl_data
 
     views_xywh = pkl_data['views_xywh']
     segdata = pkl_data['dilate_segdata']
@@ -44,8 +44,10 @@ def convert(segpkl, calibpkl):
 
     if len(views_xywh)==6:
         mask_original_shape = (600, 800)
+    elif len(views_xywh)==9:
+        mask_original_shape = (800, 1280)
     elif len(views_xywh)==10:
-        mask_original_shape = (800, 1200)
+        mask_original_shape = (800, 1280)
     else:
         raise NotImplementedError
 
