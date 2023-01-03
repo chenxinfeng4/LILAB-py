@@ -1,4 +1,16 @@
+# from lilab.dannce.cameraIntrinsics_OpenCV import matlab_pose_to_cv2_pose
 import numpy as np
+
+def matlab_anno_to_matlab_pose(annodata):
+    camParamsOrig = np.squeeze(annodata['camParams'])
+    keys = ['K', 'RDistort', 'TDistort', 't', 'r']
+
+    camParams = list()
+    for icam in range(camParamsOrig.shape[0]):
+        camParam = {key: camParamsOrig[icam][0][key][0] for key in keys}
+        camParam['R'] = camParam['r']
+        camParams.append(camParam)
+    return camParams
 
 def matlab_pose_to_cv2_pose(camParamsOrig):
     keys = ['K', 'RDistort', 'TDistort', 't', 'r']

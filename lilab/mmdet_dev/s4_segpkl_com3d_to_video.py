@@ -20,8 +20,8 @@ video_path = [f for f in glob.glob('/mnt/liying.cibr.ac.cn_Data_Temp/multiview-l
 from lilab.mmlab_scripts.show_pkl_seg_video_fast import default_mask_colors
 
 mask_colors = torch.Tensor(get_mask_colors())
-nclass = 2
-volsize = 160
+
+vox_size = 180
 preview_resize = (1280, 800)
 verts = np.array([[1, 1, -1],
                     [-1, 1, -1],
@@ -64,7 +64,7 @@ def p2d_to_canvas(p2d, views_xywh, scale_wh):
 class MyWorker(mmap_cuda.Worker):
 # class MyWorker():
     def compute(self, args):
-        video_in = args
+        video_in, vox_size = args
         self.cuda = getattr(self, 'cuda', 0)
         self.id = getattr(self, 'id', 0)
         pkl_path = video_in.replace('.mp4', '.segpkl')
@@ -84,7 +84,8 @@ class MyWorker(mmap_cuda.Worker):
 
         calibPredict = CalibPredict(pkl_data)
         coms_2d = p2d_to_canvas(coms_2d, views_xywh, scale_wh) # (nview, nsample, nclass, 2)
-        cube_xyz = coms_3d[None, ...] + verts[:,None,None,:]*volsize/2  # (nsample, nclass, 3), (8, 3) = (8, nsample, nclass, 3)
+        nview, nsample, nclass, _ = coms_2d.shape
+        cube_xyz = coms_3d[None, ...] + verts[:,None,None,:]*vox_size/2  # (nsample, nclass, 3) + (8, 3) = (8, nsample, nclass, 3)
         cube_xyz[:,:,:,2] = np.clip(cube_xyz[:,:,:,2], 0, None) # set z to 0 if z<0
         cube_xy = calibPredict.p3d_to_p2d(cube_xyz)    # (nview, 8, nsample, nclass, 2)
         cube_xy = p2d_to_canvas(cube_xy, views_xywh, scale_wh) # (nview, 8, nsample, nclass, 2)
@@ -117,10 +118,12 @@ class MyWorker(mmap_cuda.Worker):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('video_path', type=str, default=None, help='path to video or folder')
+    parser.add_argument('--vox_size', type=float, default=vox_size, help='voxel total box size')
     args = parser.parse_args()
 
     video_path = args.video_path
     assert osp.exists(video_path), 'video_path not exists'
+    assert args.vox_size>0, 'voxel size should >0'
     if osp.isfile(video_path):
         video_path = [video_path]
     elif osp.isdir(video_path):
@@ -129,7 +132,7 @@ if __name__ == '__main__':
     else:
         raise ValueError('video_path is not a file or folder')
 
-    args_iterable = video_path
+    args_iterable = [(v, args.vox_size) for v in video_path]
     num_gpus = min([torch.cuda.device_count()*4, len(args_iterable)])
     # init the workers pool
     mmap_cuda.workerpool_init(range(num_gpus), MyWorker)
@@ -138,3 +141,4 @@ if __name__ == '__main__':
     # worker = MyWorker()
     # for args in args_iterable:
     #     worker.compute(args)
+    

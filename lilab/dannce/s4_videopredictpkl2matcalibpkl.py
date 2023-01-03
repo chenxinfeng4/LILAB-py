@@ -2,7 +2,7 @@
 # %%
 import pickle
 import numpy as np
-from lilab.multiview_scripts_new.s4_matpkl2matcalibpkl import project_points_short
+from lilab.multiview_scripts_dev.s4_matpkl2matcalibpkl import project_points_short
 from dannce.utils_cxf.cameraIntrinsics_OpenCV import matlab_pose_to_cv2_pose
 import os.path as osp
 import scipy.io as sio

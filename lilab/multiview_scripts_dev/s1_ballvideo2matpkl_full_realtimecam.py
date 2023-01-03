@@ -133,7 +133,11 @@ class MyWorker:
             idx = trt_model.engine.get_binding_index(trt_model.input_names[0])
             input_dtype = torch_dtype_from_trt(trt_model.engine.get_binding_dtype(idx))
             input_shape = tuple(trt_model.context.get_binding_shape(idx))
-            assert input_shape==dataset.coord_NCHW_idx_ravel.shape
+            if input_shape[0]==-1:
+                assert input_shape[1:]==dataset.coord_NCHW_idx_ravel.shape[1:]
+                input_shape = dataset.coord_NCHW_idx_ravel.shape
+            else:
+                assert input_shape==dataset.coord_NCHW_idx_ravel.shape
             img_NCHW = np.zeros(input_shape)
             img_preview = np.zeros((*preview_resize,3))
             heatmap = mid_gpu(trt_model, img_NCHW, input_dtype)

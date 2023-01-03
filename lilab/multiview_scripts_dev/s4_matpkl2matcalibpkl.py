@@ -1,4 +1,4 @@
-# python -m lilab.multiview_scripts_new.s4_matpkl2matcalibpkl  xxx.matpkl xxx.calibpkl 
+# python -m lilab.multiview_scripts_dev.s4_matpkl2matcalibpkl  xxx.matpkl xxx.calibpkl 
 # %%
 import os.path as osp
 import pickle
@@ -152,7 +152,7 @@ def convert(matpkl, calibpkl):
     # %% save
     outpkl = osp.splitext(matpkl)[0] + '.matcalibpkl'
     pickle.dump(outdict, open(outpkl, 'wb'))
-    print('python -m lilab.multiview_scripts_new.s5_show_calibpkl2video', outpkl)
+    print('python -m lilab.multiview_scripts_dev.s5_show_calibpkl2video', outpkl)
     return outpkl
 
 

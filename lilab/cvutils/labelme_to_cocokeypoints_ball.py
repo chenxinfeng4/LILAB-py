@@ -1,3 +1,4 @@
+# conda activate mmdet
 # python -m lilab.cvutils.labelme_to_cocokeypoints_ball /A/B/C
 import os
 import sys

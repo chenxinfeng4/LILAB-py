@@ -33,7 +33,6 @@ def convert(filename):
         # crop the image
         x, y, w, h = crop_xywh
         im1 = im[y:y+h, x:x+w]
-        im1 = cv2.resize(im1, None, fx=0.5, fy=0.5)
         cv2.imwrite(outfilename, im1)
 
 

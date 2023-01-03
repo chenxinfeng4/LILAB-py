@@ -10,7 +10,8 @@ import argparse
 pklfile='/mnt/liying.cibr.ac.cn_Data_Temp/multiview_color/20220613-side6-addition/2022-2-24-side6-bwrat-shank3/2022-02-26_19-31-21_SHANK20_HetxHet.matcalibpkl'
 
 checkpoint='/home/liying_lab/chenxinfeng/ml-project/LILAB-py/lilab/smoothnet/checkpoint/smoothnet_ws64_cxf.pth'
-checkpoint_foot='https://download.openmmlab.com/mmpose/plugin/smoothnet/smoothnet_ws16_h36m.pth'
+checkpoint_foot='/home/liying_lab/chenxinfeng/DATA/SmoothNet/results/h36m_cxf_16b3/checkpoint.pth.tar'
+# checkpoint_foot='https://download.openmmlab.com/mmpose/plugin/smoothnet/smoothnet_ws16_h36m.pth'
 
 def main(pklfile):
     filter_cfg = dict(
@@ -67,9 +68,9 @@ def main(pklfile):
     outpklfile =  pklfile.replace('.matcalibpkl', '.smoothed_foot.matcalibpkl')
     pickle.dump(outdict, open(outpklfile, 'wb'))
     print('Saved to', outpklfile)
-    print('Generating videos...')
-    from lilab.mmpose.s3_matcalibpkl_2_video2d import main
-    main(outpklfile, 1, 'smoothed_foot')
+    # print('Generating videos...')
+    # from lilab.mmpose.s3_matcalibpkl_2_video2d import main
+    # main(outpklfile, 1, 'smoothed_foot')
 
 
 if __name__=='__main__':

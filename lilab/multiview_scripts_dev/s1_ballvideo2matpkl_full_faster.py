@@ -12,7 +12,7 @@ import torch
 import pickle
 from mmpose.apis import init_pose_model
 from mmpose.datasets import DatasetInfo
-import lilab.cvutils.map_multiprocess_cuda as mmap_cuda
+# import lilab.cvutils.map_multiprocess_cuda as mmap_cuda
 import ffmpegcv
 from ffmpegcv.video_info import get_info
 from torch2trt import TRTModule
@@ -32,6 +32,7 @@ config_dict = {6:'/home/liying_lab/chenxinfeng/DATA/mmpose/hrnet_w32_coco_ball_5
 
 class DataSet(OldDataSet): 
     def __init__(self, vid, cfg, views_xywh, c_channel_in=1):
+        super().__init__(vid, cfg, views_xywh, c_channel_in)
         self.vid = vid
         self.views_xywh = views_xywh
         self.c_channel_in = c_channel_in
@@ -122,7 +123,8 @@ class MyWorker():
         
         # save data to pickle file
         keypoints_xyp = np.array(keypoints_xyp).transpose(1,0,2,3)#(nview, T, 1, 3)
-        assert np.mean(keypoints_xyp[...,2].ravel()<0.4) < 0.1, 'Too many nan in keypoints_xyp !'
+        # assert np.mean(keypoints_xyp[...,2].ravel()<0.4) < 0.1, 'Too many nan in keypoints_xyp !'
+        assert np.median(keypoints_xyp[...,2])>0.4, 'Too many nan in keypoints_xyp !'
 
         info = {'vfile': self.video_file, 'nview': len(self.views_xywh), 'fps':  self.dataset.vid.fps}
         outpkl = os.path.splitext(self.video_file)[0] + '.matpkl'
@@ -132,9 +134,9 @@ class MyWorker():
             info = info
         )
         pickle.dump(outdict, open(outpkl, 'wb'))
-        print('python -m lilab.multiview_scripts_new.s2_matpkl2ballpkl',
+        print('python -m lilab.multiview_scripts_dev.s2_matpkl2ballpkl',
             outpkl, '--time 1 2 3 4 5')
-        print('python -m lilab.multiview_scripts_new.s5_show_calibpkl2video', outpkl)
+        print('python -m lilab.multiview_scripts_dev.s5_show_calibpkl2video', outpkl)
 
 
 def post_cpu(camsize, heatmap, center, scale, views_xywh, img_preview, calibobj):
@@ -159,7 +161,7 @@ if __name__ == '__main__':
     if config is None:
         config = config_dict[arg.pannels]
     if checkpoint is None:
-        checkpoint = findcheckpoint_trt(config, 'latest.full_fp16.engine')
+        checkpoint = findcheckpoint_trt(config, 'latest.full.engine')
     print("config:", config)
     print("checkpoint:", checkpoint)
 

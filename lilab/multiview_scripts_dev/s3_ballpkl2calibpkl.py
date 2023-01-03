@@ -1,4 +1,4 @@
-# python -m lilab.multiview_scripts_new.s3_ballpkl2calibpkl a-b-l.ballpkl
+# python -m lilab.multiview_scripts_dev.s3_ballpkl2calibpkl a-b-l.ballpkl
 # %%
 import argparse
 import matplotlib
@@ -502,7 +502,7 @@ def main_calibrate(ballfile, ba_poseinitfile=ballcalibfile):
 
     # %% save data
     b1_merge_ballfile(ballfile, ba_poses=ba_poses, ba_global_params = param)
-    print('python -m lilab.multiview_scripts_new.s4_matpkl2matcalibpkl ', 
+    print('python -m lilab.multiview_scripts_dev.s4_matpkl2matcalibpkl ', 
             ballfile.replace('.ballpkl', '.matpkl'),
             ballfile.replace('.ballpkl', '.calibpkl'))
 

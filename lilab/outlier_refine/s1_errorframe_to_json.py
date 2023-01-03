@@ -23,6 +23,19 @@ def get_num(img):
     return videoname, frameid
 
 
+def get_numB(img):
+    dirname = osp.dirname(osp.abspath(img))
+    basename = osp.basename(osp.abspath(img))
+    nakename, ext = osp.splitext(basename)
+    ind = nakename.rfind('_')
+    vname = nakename[:ind]
+    frameid = nakename[ind+1:]
+    assert frameid.isdigit()
+    frameid = int(frameid)
+    videoname = vname + '.mp4'
+    return videoname, frameid
+
+
 # %%
 dir = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/picked/'
 
@@ -32,7 +45,7 @@ def extract_json(dir):
 
     outdict = collections.defaultdict(list)
     for error_img in tqdm.tqdm(error_imgs):
-        videoname, frameid = get_num(error_img)
+        videoname, frameid = get_numB(error_img)
         outdict[videoname].append(frameid)
 
     outjson = osp.join(dir, 'out.json')

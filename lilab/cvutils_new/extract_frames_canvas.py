@@ -28,13 +28,14 @@ def extract(video_input, numframe_to_extract, maxlength):
     ready_to_extract(video_input, idxframe_to_extract)
 
 
-def ready_to_extract(video_input, idxframe_to_extract, rat_name_id=None):
+def ready_to_extract(video_input, idxframe_to_extract, rat_name_id=None, outdirname=None):
     idxframe_max = max(idxframe_to_extract)
     dirname,filename=os.path.split(video_input)
     nakefilename = os.path.splitext(filename)[0]
-    os.makedirs(os.path.join(dirname, frame_dir), exist_ok = True)
+    if outdirname is None: outdirname=os.path.join(dirname, frame_dir)
+    os.makedirs(outdirname, exist_ok = True)
     cap = CanvasReader(video_input)
-    length = idxframe_max
+    length = idxframe_max+1
     rat_name_ids = [rat_name_id] if rat_name_id is not None else range(len(classnames))
     for iframe in tqdm.tqdm(range(length)):
         ret, frame = cap.read()
@@ -46,7 +47,7 @@ def ready_to_extract(video_input, idxframe_to_extract, rat_name_id=None):
         for iclass in rat_name_ids:
             classname = classnames[iclass]
             frame_out = frame_iclass[iclass]
-            filename = os.path.join(dirname, frame_dir, nakefilename + '_{}_{:06}.jpg'.format(classname, iframe))
+            filename = os.path.join(outdirname, nakefilename + '_{}_{:06}.jpg'.format(classname, iframe))
             cv2.imwrite(filename, frame_out, [int(cv2.IMWRITE_JPEG_QUALITY),100])
     cap.release()
     

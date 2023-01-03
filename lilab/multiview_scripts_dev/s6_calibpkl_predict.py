@@ -26,7 +26,7 @@ class CalibPredict:
             calib = calibfile
         else:
             raise NotImplementedError
-        assert {'ba_poses'} < set(calib.keys()), 'calib file is not correct'
+        assert {'ba_poses'} <= set(calib.keys()), 'calib file is not correct'
         self.poses = calib['ba_poses']
         self.image_shape = list(calib['intrinsics'].values())[0]['image_shape'] if 'intrinsics' in calib else None #HxW
         self.views = sorted(list(calib['ba_poses'].keys()))

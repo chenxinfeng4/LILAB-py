@@ -1,4 +1,4 @@
-# python -m lilab.outlier_refine.s0_errorframe_separate_by_keyboard 
+# python -m lilab.outlier_refine.s0_errorframe_separate_by_keyboard DIR
 # %%
 import cv2
 import os
