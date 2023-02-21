@@ -142,11 +142,11 @@ def convert(matpkl, calibpkl):
     outdict = {'setup': calib['setup'],
             'intrinsics': calib['intrinsics'],
             'ba_poses': calib['ba_poses'],
-            'ba_global_params': calib['ba_global_params'],
             'keypoints_xyz_ba': keypoints_xyz_ba,
             'keypoints_xy_ba': keypoints_xy_ba,
             'keypoints_xyz_baglobal': keypoints_xyz_baglobal}
-
+    if 'ba_global_params' in calib:
+        outdict['ba_global_params'] = calib['ba_global_params']
     outdict.update(mat)
 
     # %% save

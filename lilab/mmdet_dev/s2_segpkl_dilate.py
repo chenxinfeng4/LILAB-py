@@ -9,12 +9,15 @@ import pycocotools._mask as mask_util
 import torch
 import tqdm
 import glob
+import cv2
 import lilab.cvutils.map_multiprocess_cuda as mmap_cuda
 
+kernel_size = (21, 21)
 # %%
 def dilate(numpy_array):
-    kernel = (21, 21) #15,27,37
+    kernel = kernel_size #15,27,37
     stride = 1
+    numpy_array = numpy_array.transpose((2,0,1)) 
     # 1
     # mask = torch.from_numpy(numpy_array).cuda().float()
     # padding = (kernel[0]//2, kernel[1]//2)
@@ -29,6 +32,13 @@ def dilate(numpy_array):
     out_array = mask_dilate.type(torch.uint8).cpu().numpy().T
     return out_array
 
+kernel_np = np.ones(kernel_size, np.uint8)
+
+
+def dilate_cv(numpy_array):
+    out_array = cv2.dilate(numpy_array, kernel_np, iterations=1)
+    return out_array[...,None] #H,W,1
+
 
 def b_pipeline(q1):
     while True:
@@ -42,7 +52,9 @@ def b_pipeline(q1):
 def convert(segpkl, idx=0):
     origin = pickle.load(open(segpkl, 'rb'))
     data = origin['segdata']
-    dataout = pickle.load(open(segpkl, 'rb'))['segdata']
+    nview, nframe, nclass = len(data), len(data[0]), len(data[0][0])
+    dataout = [[[[None,None] for _ in range(nclass)] for _ in range(nframe)] for _ in range(nview)]
+
     pbar = tqdm.tqdm(total=len(data)*len(data[0])*2, position=idx)
     for iview in range(len(data)):
         for label, labelout in zip(data[iview], dataout[iview]):
@@ -50,9 +62,9 @@ def convert(segpkl, idx=0):
             for iclass in range(len(seg)):
                 pbar.update(1)
                 if len(seg[iclass])==0: continue
-                mask = mask_util.decode(seg[iclass]).transpose((2,0,1)) #1xHxW
-                mask_dilate = dilate(mask) #HxWx1
-                segout[iclass] = mask_util.encode(mask_dilate)
+                mask = mask_util.decode(seg[iclass])#HxWx1
+                mask_dilate = dilate_cv(mask) #HxWx1
+                segout[iclass] = mask_util.encode(np.asfortranarray(mask_dilate))
 
     # save  file
     origin['dilate_segdata'] = dataout

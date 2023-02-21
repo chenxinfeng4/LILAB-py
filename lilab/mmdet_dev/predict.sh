@@ -1,37 +1,41 @@
-# vfile=/mnt/ftp.rat/multiview_9/SHANK3HETxWT/2022-10-10/2022-10-10_14-15-16FbHETxwwt
-vfile=/home/liying_lab/chenxinfeng/ftp.image_ZYQ/multiview_large/animal_only/20221125/2022-11-25_19-55-41_female_est_rat1
+# %% single file
+vfile=/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/crop9/tmp
 
-python -m lilab.mmdet_dev.s1_mmdet_videos2pkl_trt $vfile.mp4 --pannels 9
+config=/home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_bwrat_816x512_cam9_oldrat.py
+python -m lilab.mmdet_dev.s1_mmdet_videos2pkl_trt $vfile.mp4 --pannels 9 --config $config
+
 ls $vfile*.pkl | xargs -n 1 -P 0 python -m lilab.mmdet_dev.s2_detpkl_to_segpkl
 python -m lilab.mmdet_dev.s2_segpkl_merge $vfile.mp4
 python -m lilab.mmdet_dev.s2_segpkl_dilate "$vfile.segpkl"
-python -m lilab.mmdet_dev.s3_segpkl_dilate2videoseg_canvas_mask "$vfile.mp4"
-python -m lilab.mmdet_dev.s3_segpkl_dilate2videoseg_canvas_mask "$vfile.mp4" --disable-dilate
+rm $vfile*.pkl
+python -m lilab.mmdet_dev.s3_segpkl_dilate2videoseg_canvas_mask "$vfile.mp4"  --maxlen 9000
+python -m lilab.mmdet_dev.s3_segpkl_dilate2videoseg_canvas_mask "$vfile.mp4" --disable-dilate  --maxlen 9000
 
+ball=/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/crop9/2022-04-25ball_crop9.calibpkl
+python -m lilab.mmdet_dev.s4_segpkl_put_com3d_pro "$vfile.segpkl" --calibpkl "$ball"
 
-vfile=tmp_video/2022-06-16_16-56-23bkoxwko
-ball=ball/2022-06-23ball.calibpkl
-ball=/home/liying_lab/chenxinfeng/ftp.image_ZYQ/multiview_large/animal_only/20221124/2022-11-24_16-36-57ball.calibpkl
-python -m lilab.mmdet_dev.s4_segpkl_put_com3d_pro "$vfiles.segpkl" --calibpkl "$ball"
-python -m lilab.mmdet_dev.s4_segpkl_com3d_to_video "$vfile.mp4"  --vox_size 190
+#process (optional)
+python -m lilab.mmdet_dev.s4_segpkl_com3d_to_video "$vfile.mp4"  --vox_size 170
 
 
 # %% batch
-vdir=/home/liying_lab/chenxinfeng/ftp.image_ZYQ/multiview_large/animal_only/20221126
-python -m lilab.mmdet_dev.s1_mmdet_videos2pkl_trt $vdir --pannels 9
-ls $vdir/*.pkl | xargs -n 1 -P 0 python -m lilab.mmdet_dev.s2_detpkl_to_segpkl
-ls $vdir/*.mp4 | xargs -n 1 -P 0 python -m lilab.mmdet_dev.s2_segpkl_merge
+vdir=/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/VPAxWT/left
+config=/home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_bwrat_816x512_cam9_oldrat.py
+python -m lilab.mmdet_dev.s1_mmdet_videos2pkl_trt $vdir --pannels 9 --config $config
+ls $vdir/*.pkl | xargs -n 1 -P 50 python -m lilab.mmdet_dev.s2_detpkl_to_segpkl
+ls $vdir/*.mp4 | xargs -n 1 -P 10 python -m lilab.mmdet_dev.s2_segpkl_merge
 rm $vdir/*.pkl
 python -m lilab.mmdet_dev.s2_segpkl_dilate $vdir
-python -m lilab.mmdet_dev.s3_segpkl_dilate2videoseg_canvas_mask $vdir
+python -m lilab.mmdet_dev.s3_segpkl_dilate2videoseg_canvas_mask $vdir --maxlen 9000
 
-vdir=/home/liying_lab/chenxinfeng/ftp.image_ZYQ/multiview_large/animal_only/20221126
-ball=$vdir/2022-11-24_19-11-47ball.calibpkl
-ls $vdir/*.segpkl | xargs -n 1 -I {} -P 0 python -m lilab.mmdet_dev.s4_segpkl_put_com3d_pro {} --calibpkl "$ball"
+ball=$vdir/ball/2022-04-25ball_crop9.calibpkl
 
-#processor A
-ls $vdir/*.segpkl | sed 's/.segpkl/.mp4/' | xargs -n 1 -P 0 python -m lilab.mmdet_dev.s4_segpkl_com3d_to_video --vox_size 190
-#processor B
+ball=/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/TPH2KOxWT/ball/2022-06-13ball_crop9.calibpkl
+ls $vdir/*.segpkl | xargs -n 1 -I {} -P 4 python -m lilab.mmdet_dev.s4_segpkl_put_com3d_pro {} --calibpkl "$ball"
+
+#processor A (optional)
+ls $vdir/*.segpkl | sed 's/.segpkl/.mp4/' | xargs -n 1 -P 0 python -m lilab.mmdet_dev.s4_segpkl_com3d_to_video --vox_size 170
+#processor B (optional)
 ls $vdir/*.segpkl | sed 's/.segpkl/.mp4/' | grep 'F_' | xargs -n 1 -P 0 python -m lilab.mmdet_dev.s4_segpkl_com3d_to_video --vox_size 150
 ls $vdir/*.segpkl | sed 's/.segpkl/.mp4/' | grep 'M_' | xargs -n 1 -P 0 python -m lilab.mmdet_dev.s4_segpkl_com3d_to_video --vox_size 170
 ls $vdir/*.segpkl | sed 's/.segpkl/.mp4/' | grep 'M_' | xargs -n 1 -P 0 python -m lilab.mmdet_dev.s4_segpkl_com3d_to_video --vox_size 190

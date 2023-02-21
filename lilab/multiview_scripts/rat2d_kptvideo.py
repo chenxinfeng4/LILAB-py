@@ -28,8 +28,10 @@ def cv_triangle(image, point_centor, size, color):
 def cv_plot_skeleton_aframe(aframe, point2d_aframe, name):
     # colors
     aframe = aframe.copy()
-    identitycolor = [0, 78, 130] if name=='white' else [97, 0, 15]
-    colors = [[255,0,0],  [255, 0, 255], [255, 0, 255], identitycolor, [255, 255, 0], [0, 255, 0]] + [identitycolor]*8
+    # identitycolor = [97, 0, 15] if name=='white' else [0, 78, 130]  #RGB
+    # identitycolor = [97, 0, 15] if name=='white' else [0, 78, 130]  #RGB
+    identitycolor = [96, 30, 31] if name=='white' else [36, 173, 243]  #RGB #[96, 30, 31] 白鼠,[235, 219, 119]金色黑鼠
+    colors = [[255,0,0],  [255, 0, 255], [255, 0, 255], identitycolor, [255,255,0], [0, 255, 0]] + [identitycolor]*8
     colors = np.array(colors, dtype=np.uint8)[:,::-1].tolist() # BGR to RGB
     for marker_type, color, point2d in zip(marker_types, colors, point2d_aframe):
         if np.any(np.isnan(point2d)): continue

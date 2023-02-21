@@ -34,7 +34,7 @@ def main(pklfile):
         indnext = np.unravel_index(np.argmax(Hnext, axis=None), Hnext.shape)
         vpeaknext = Hnext[indnext[0], indnext[1]]
 
-        if vpeak / vpeaknext < 5: continue
+        if vpeak / vpeaknext < 5: continue   
         x_range = xedges[[ind[0]-1,ind[0]+2]]
         y_range = yedges[[ind[1]-1,ind[1]+2]]
         ind_outlier =  ((trace[:,0]> x_range[0]) & (trace[:,0]<x_range[1]) &

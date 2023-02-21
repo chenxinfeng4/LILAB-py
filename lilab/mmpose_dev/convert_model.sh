@@ -9,7 +9,8 @@ trtexec --onnx=work_dirs/res50_coco_com2d_512x320_ZJF/latest.full.onnx \
 --minShapes=input_1:1x3x320x512 --maxShapes=input_1:10x3x320x512
 
 
-## Set variable
+## Set variable 
+# ball 文件
 cd /home/liying_lab/chenxinfeng/DATA/mmpose
 mfile='res50_coco_ball_512x320_cam9.py'
 mfile_nake=${mfile%.*}

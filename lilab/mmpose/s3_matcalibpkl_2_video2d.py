@@ -8,13 +8,15 @@ import argparse
 import cv2
 from lilab.multiview_scripts.rat2d_kptvideo import cv_plot_skeleton_aframe
 from lilab.cameras_setup import get_view_xywh_wrapper
+from lilab.paralleltool.gpuquery import get_gpu
 
 pkl_file = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/clips/2022-04-25_15-44-04_bwt_wwt_00time_0.kptpkl'
 
 iview = 0
-gpu = 0
+ngpu = 4
+
 def plot_video(video, crop_xywh, pts2d_black, pts2d_white, iview, postfix):
-    gpu = np.random.randint(0, 4)
+    gpu, s = get_gpu()
     vid = ffmpegcv.VideoCaptureNV(video, crop_xywh=crop_xywh, gpu=gpu)
     assert len(pts2d_black) == len(pts2d_white), 'len(pts2d_black) != len(pts2d_white)'
     maxlen = len(pts2d_black)
@@ -38,6 +40,7 @@ def plot_video(video, crop_xywh, pts2d_black, pts2d_white, iview, postfix):
 
     vid.release()
     vidout.release()
+    s.release()
 
 
 def main(kptpkl, iview, postfix, maxlen=None):

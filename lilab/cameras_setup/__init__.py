@@ -8,6 +8,7 @@ def get_view_hflip():
             1, 0, 0,
             0]
 
+# from lilab.cameras_setup import get_view_xywh_wraper
 def get_view_xywh_wrapper(nviews):
     if nviews==4:
         return get_view_xywh_1280x800x4()

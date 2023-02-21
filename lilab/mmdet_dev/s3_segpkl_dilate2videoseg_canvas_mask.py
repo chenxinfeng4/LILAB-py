@@ -23,21 +23,12 @@ video_path = [f for f in glob.glob('/mnt/liying.cibr.ac.cn_Data_Temp/multiview-l
 mask_colors = torch.Tensor(get_mask_colors())
 nclass = 2
 
-def get_hflips(nviews):
-    if nviews==6:
-        return [False for _ in range(6)]
-    elif nviews==10:
-        from lilab.cameras_setup import get_view_hflip
-        return [False for _ in range(6)]
-        return get_view_hflip()
-    else:
-        raise NotImplementedError
-
 
 class MyWorker(mmap_cuda.Worker):
 # class MyWorker():
     def compute(self, args):
-        video_in, enable_dilate = args
+        video_in, enable_dilate, maxlen = args
+        if not maxlen: maxlen=9000
         self.cuda = getattr(self, 'cuda', 0)
         self.id = getattr(self, 'id', 0)
         vid = CanvasReaderThumbnail(video_in, gpu=self.cuda, dilate=enable_dilate)
@@ -47,9 +38,8 @@ class MyWorker(mmap_cuda.Worker):
                                         codec='h264', 
                                         fps=vid.fps, 
                                         pix_fmt='rgb24')
-        for i in tqdm(range(len(vid)), position=int(self.id), 
+        for i in tqdm(range(min(len(vid), maxlen)), position=int(self.id), 
                                         desc='worker[{}]'.format(self.id)):
-            if i>=vid.fps*60*5: break
             frame_w_mask = vid.read_canvas_mask_img()
             frame_w_mask = cv2.putText(frame_w_mask, str(i), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (255,0,0), 2)
             if frame_w_mask is None: break
@@ -63,6 +53,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('video_path', type=str, default=None, help='path to video or folder')
     parser.add_argument('--disable-dilate', action='store_true', help='disable dilate')
+    parser.add_argument('--maxlen', type=int, default=None, help='maxlen of the video')
     args = parser.parse_args()
 
     video_path = args.video_path
@@ -76,12 +67,13 @@ if __name__ == '__main__':
         raise ValueError('video_path is not a file or folder')
 
     enable_dilate = not args.disable_dilate
-    args_iterable = list(itertools.product(video_path, [enable_dilate]))
+    args_iterable = list(itertools.product(video_path, [enable_dilate], [args.maxlen]))
     num_gpus = min([torch.cuda.device_count()*2, len(args_iterable)])
     # init the workers pool
     mmap_cuda.workerpool_init(range(num_gpus), MyWorker)
     mmap_cuda.workerpool_compute_map(args_iterable)
 
-    worker = MyWorker()
-    for i in range(len(args_iterable)):
-        worker.compute(args_iterable[i])
+    # worker = MyWorker()
+    # for i in range(len(args_iterable)):
+    #     worker.compute(args_iterable[i])
+

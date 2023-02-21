@@ -19,13 +19,14 @@ from lilab.cameras_setup import get_view_xywh_wrapper
 import lilab.cvutils.map_multiprocess as mmap
 from lilab.mmdet_dev.s2_detpkl_to_segpkl import convert as convert_detpkl_to_segpkl
 from lilab.mmdet_dev.s2_segpkl_merge import convert as convert_segpkl_to_one
-from lilab.mmpose_dev.a2_convert_mmpose2engine import findcheckpoint_trt
+# from lilab.mmpose_dev.a2_convert_mmpose2engine import findcheckpoint_trt
 
 video_path = [f for f in glob.glob('/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/test/*.mp4')
                 if f[-4] not in '0123456789']
 
 # config = '/home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_bwrat_800x600.py'
 config = '/home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_bwrat_816x512_cam9.py'
+# config = '/home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_bwrat_816x512_cam9_oldrat.py'
 
 def prefetch_img_metas(cfg, ori_wh):
     w, h = ori_wh
@@ -53,6 +54,13 @@ def process_img(frame_resize, img_metas):
     data = {'img': [frame_cuda], 'img_metas': [[img_metas]]}
     return data
 
+def findcheckpoint_trt(config, trtnake='latest.engine'):
+    """Find the latest checkpoint of the model."""
+    basedir = osp.dirname(config)
+    basenakename = osp.splitext(osp.basename(config))[0]
+    checkpoint = osp.join(basedir, 'work_dirs', basenakename, trtnake)
+    assert osp.isfile(checkpoint), 'checkpoint not found: {}'.format(checkpoint)
+    return checkpoint
 
 class MyWorker(mmap_cuda.Worker):
 # class MyWorker():
@@ -65,9 +73,14 @@ class MyWorker(mmap_cuda.Worker):
         print("well setup worker:", self.cuda)
 
     def compute(self, args):
+        video, (iview, crop_xywh) = args
+        out_pkl = osp.splitext(video)[0] + f'_{iview}.pkl'
+        if os.path.exists(out_pkl): 
+            print("Skipping:", osp.basename(out_pkl))
+            return out_pkl
+            
         with torch.cuda.device(self.cuda), torch.no_grad():
             model = create_wrap_detector(self.checkpoint, self.config, 'cuda')
-            video, (iview, crop_xywh) = args
             img_metas = prefetch_img_metas(model.cfg, crop_xywh[2:])
             resize_wh = img_metas['pad_shape'][1::-1]
 
@@ -79,7 +92,6 @@ class MyWorker(mmap_cuda.Worker):
                                         gpu = int(self.cuda),
                                         pix_fmt='rgb24')
             outputs = []
-            out_pkl = video.replace('.mp4', f'_{iview}.pkl')
             for frame in tqdm.tqdm(vid, position=self.id, desc=f'[{self.id}]'):
                 data = process_img(frame, img_metas)
                 result = model(return_loss=False, rescale=True, **data)

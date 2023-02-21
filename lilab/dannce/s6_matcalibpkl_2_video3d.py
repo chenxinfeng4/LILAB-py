@@ -1,6 +1,8 @@
+# python -m lilab.dannce.s6_matcalibpkl_2_video3d xxx.matcalibpkl
 import numpy as np
 import matplotlib
 # matplotlib.use('TkAgg')
+import pickle
 import matplotlib.pyplot as plt
 import scipy.io
 import matplotlib.animation as animation
@@ -8,40 +10,14 @@ from collections import defaultdict
 import os.path as osp
 import argparse
 
+pklfile = '/mnt/ftp.rat/multiview_9/SHANK3HETxWT/2022-10-10/2022-10-10_14-15-16FbHETxwwt.smoothed_foot.matcalibpkl'
 
 hplot_dict = defaultdict(dict)
 linkbody = np.array([[0,1],[0,2],[1,3],[2,3],[3,6],[3,8],[6,7],[4,6], [4,8],[8,9],
                      [4,10], [4,12],[6,10],[8,12],[5,10],[10,11], [5,12], [12,13]])
 
 
-def init_3d_plot_350():
-    fig = plt.figure(figsize=(8,6), dpi=100)  # 800x600 pixels
-    fig.add_axes([0,0,1,1], projection='3d')
-    ax = fig.get_axes()[0]
-    ax.set_title('3D Posture')
-    ax.grid()
-    ax.tick_params(length=0)
-    # set the xlim and ylim of the plot
-    ax.set_xlim(-50, 300)
-    ax.set_ylim(-50, 300)
-    ax.set_zlim(0, 200)
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    ax.set_zticklabels([])
-
-    ## create a circal plane by meshgrid
-    radius = 240
-    X, Y = np.meshgrid(np.arange(-radius, radius, 2), np.arange(-radius, radius, 2))
-    X, Y = X.astype(np.float32), Y.astype(np.float32)
-    ind_in = np.sqrt(X**2 + Y**2) < radius
-    Z = np.zeros_like(X)
-    Z[np.invert(ind_in)] = np.nan
-    X_offset = 120
-    Y_offset = 120
-    ax.plot3D(X.flatten() - X_offset, Y.flatten() - Y_offset, Z.flatten(), color='#13beb8', linewidth=0.5)
-    ax.plot3D(X.T.flatten() - X_offset , Y.T.flatten() - Y_offset, Z.flatten(), color='#13beb8', linewidth=0.5)
-    ax.azim = -124
-    return fig, ax
+X_offset, Y_offset = 0, 0
 
 
 def init_3d_plot():
@@ -49,22 +25,28 @@ def init_3d_plot():
     fig.add_axes([0,0,1,1], projection='3d')
     ax = fig.get_axes()[0]
     ax.set_title('3D Posture')
-    ax.grid()
+    # ax set grid off
+    ax.grid(False)
+    # ax.grid()
     ax.tick_params(length=0)
     # set the xlim and ylim of the plot
     ax.set_xlim(-25, 25)
     ax.set_ylim(-25, 25)
-    ax.set_zlim(-2, 30)
+    ax.set_zlim(-2, 18)
     ax.set_xticklabels([])
     ax.set_yticklabels([])
     ax.set_zticklabels([])
+    # ax.set_xlabel('X')
+    # ax.set_ylabel('Y')
 
     ## create a circal plane by meshgrid
     radius = 24
     X, Y = np.meshgrid(np.arange(-radius, radius, 2), np.arange(-radius, radius, 2))
     ind_in = np.sqrt(X**2 + Y**2) < radius
-    Z = np.zeros_like(X) - 1.0
+    Z = np.zeros_like(X, dtype=np.float) + 0.2
     Z[np.invert(ind_in)] = np.nan
+    X += X_offset
+    Y += Y_offset
     ax.plot3D(X.flatten(), Y.flatten(), Z.flatten(), color='#13beb8', linewidth=0.5)
     ax.plot3D(X.T.flatten(), Y.T.flatten(), Z.flatten(), color='#13beb8', linewidth=0.5)
     ax.azim = -124
@@ -78,7 +60,7 @@ linkbody = np.array([[0,1],[0,2],[1,3],[2,3],[3,6],[3,8],[6,7],[4,6], [4,8],[8,9
 def plot_skeleton_aframe(point3d_aframe, name, createdumpy=False):
     hplots = hplot_dict[name]
     if createdumpy:
-        identitycolor = '#004e82' if name=='white' else '#61000f'
+        identitycolor = '#004e82' if name=='black' else '#61000f'
         markersize = 6
         hplots['leftbody'] = plt.plot(np.nan,np.nan, linestyle = 'None', marker='o', markeredgecolor='none', markerfacecolor=identitycolor, markersize=markersize)[0]
         hplots['rightbody'] = plt.plot(np.nan,np.nan, linestyle = 'None', marker='v', markeredgecolor='none', markerfacecolor=identitycolor, markersize=markersize+2)[0]
@@ -109,8 +91,18 @@ def plot_skeleton_aframe(point3d_aframe, name, createdumpy=False):
 
 def plot_skeleton_aframe_easy(point3d_aframe):
     init_3d_plot()
-    plot_skeleton_aframe(None, name='white', createdumpy=True)
-    plot_skeleton_aframe(point3d_aframe, name='white', createdumpy=False)
+    plot_skeleton_aframe(None, 'white', True)
+    plot_skeleton_aframe(None, 'black', True)
+    if len(point3d_aframe.shape)==3:
+        p_black = point3d_aframe[0]
+        p_white = point3d_aframe[1]
+        plot_skeleton_aframe(p_black, name='black', createdumpy=False)
+        plot_skeleton_aframe(p_white, name='white', createdumpy=False)
+    elif len(point3d_aframe.shape)==2:
+        plot_skeleton_aframe(None, name='white', createdumpy=True)
+        plot_skeleton_aframe(point3d_aframe, name='white', createdumpy=False)
+    else:
+        raise ValueError('point3d_aframe shape error')
 
 
 def animate(points_white, points_black, i):
@@ -119,28 +111,25 @@ def animate(points_white, points_black, i):
     return hplots_white + hplots_black
 
 
-def main_plot3d(matlab_white=None, matlab_black=None, outfile=None):
-    # load & check matlab data
-    if matlab_black and matlab_white:
-        points_white = scipy.io.loadmat(matlab_white)['points_3d']
-        points_black = scipy.io.loadmat(matlab_black)['points_3d']
-    elif matlab_black and not matlab_white:
-        points_black = scipy.io.loadmat(matlab_black)['points_3d']
-        points_white = points_black * np.nan
-    elif matlab_white and not matlab_black:
-        points_white = scipy.io.loadmat(matlab_white)['points_3d']
-        points_black = points_white * np.nan
+def main_polt3d_matcalibpkl(matcalibpkl, outfile=None):
+    with open(matcalibpkl, 'rb') as f:
+        matcalib = pickle.load(f)
+    points_3d =  matcalib['keypoints_xyz_ba']  #mm to cm
+    if points_3d.shape[1]==1:
+        points_white = points_3d[:,0,...]
+        points_black = points_3d[:,0,...]*np.nan
+    elif points_3d.shape[1]==2:
+        points_white = points_3d[:,0,...]
+        points_black = points_3d[:,1,...]
     else:
-        raise ValueError('None input')
-
-    if not outfile:
-        outfile = (matlab_white or matlab_black).replace('.mat', '.mp4')
-
-
+        raise ValueError('points_3d should be 1 or 2')
+    
+    if outfile is None:
+        outfile = osp.splitext(matcalibpkl)[0] + '_3d.mp4'
+    
     assert points_white.shape == points_black.shape, 'points_white and points_black should have the same shape'
     assert points_white.shape[1:] == (14, 3) , 'points should be 14parts x 3xyz'   # 14 points, 3d
     assert points_white.shape[0] > 5, 'points should be more than 5'
-
     print('Accepted samples:', points_white.shape[0])
 
     # init the figure
@@ -149,19 +138,15 @@ def main_plot3d(matlab_white=None, matlab_black=None, outfile=None):
     plot_skeleton_aframe(None, 'black', True)
 
     # animate
-    fps = 15
+    fps = 30
     writer = animation.writers['ffmpeg'](fps=fps, metadata=dict(artist='Me'), bitrate=1800)
     ani = animation.FuncAnimation(fig,lambda i : animate(points_white, points_black, i), 
                                   len(points_white), interval=1)
     ani.save(outfile, writer=writer)
-    plt.close()
     return outfile
-
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='Plot 3d skeleton')
-    argparser.add_argument('--matlab_white', type=str, help='matlab file of white person')
-    argparser.add_argument('--matlab_black', type=str, help='matlab file of black person')
+    argparser.add_argument('matcalibpkl', type=str, help='matlab file of white person')
     args = argparser.parse_args()
-    main_plot3d(args.matlab_white, args.matlab_black)
-    
+    main_polt3d_matcalibpkl(args.matcalibpkl)

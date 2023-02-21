@@ -8,7 +8,7 @@ import argparse
 import cv2
 from lilab.multiview_scripts.rat2d_kptvideo import cv_plot_skeleton_aframe
 from lilab.cameras_setup import get_view_xywh_wrapper
-from lilab.multiview_scripts_new.s4_matpkl2matcalibpkl import project_points_short
+from lilab.multiview_scripts_dev.s4_matpkl2matcalibpkl import project_points_short
 
 pkl_file = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/clips/2022-04-25_15-44-04_bwt_wwt_00time_0.kptpkl'
 

@@ -76,8 +76,9 @@ def main_showvideo(matcalibpkl, gpu=0):
     keypoints_xy, keypoints_xy_ba, keypoints_xy_baglobal, keypoints_xyz_baglobal, data = load_mat(matcalibpkl)
     # refine video path
     vfile = data['info']['vfile']
+    print('vfile', vfile)
     if not (osp.exists(vfile) and osp.isfile(vfile)):
-        vfile = osp.split(osp.abspath(matcalibpkl))[0] + '/' + osp.split(osp.abspath(matcalibpkl))[1]
+        vfile = osp.split(osp.abspath(matcalibpkl))[0] + '/' + osp.split(osp.abspath(vfile))[1]
         data['info']['vfile'] = vfile
     keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xy_baglobal, keypoints_xyz_baglobal, data, gpu)
 

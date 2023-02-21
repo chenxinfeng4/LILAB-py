@@ -3,7 +3,8 @@
 import pickle
 import argparse
 import numpy as np
-from lilab.multiview_scripts_new.s4_matpkl2matcalibpkl import project_points_short
+import os.path as osp
+from lilab.multiview_scripts_dev.s4_matpkl2matcalibpkl import project_points_short
 import scipy.io as sio
 
 black_voxpkl = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/clips/outframes2/2022-04-25_15-44-04_bwt_wwt_02time_ratblack.voxpkl'
@@ -19,6 +20,11 @@ def matlab_pose_to_cv2_pose(camParamsOrig):
         camParamsOrig = np.squeeze(camParamsOrig)
         for icam in range(len(camParamsOrig)):
             camParam = {key: camParamsOrig[icam][0][key][0] for key in keys}
+            camParam['R'] = camParam['r']
+            camParams.append(camParam)
+    elif type(camParamsOrig) is list:
+        for icam in range(len(camParamsOrig)):
+            camParam = {key: camParamsOrig[icam][key] for key in keys}
             camParam['R'] = camParam['r']
             camParams.append(camParam)
     else:
@@ -67,31 +73,20 @@ def load_pose_from_pkl(calibpkl):
     return pose
 
 
+def anno_to_pose(annofile):
+    annomat = sio.loadmat(annofile)
+    camParams = annomat['camParams']
+    poses = matlab_pose_to_cv2_pose(camParams)
+    return poses
 
+def anno_to_pose_file(annofile):
+    ba_poses = anno_to_pose(annofile)
+    outcalibfile = osp.splitext(annofile)[0] + '.calibpkl'
+    pickle.dump({'ba_poses':ba_poses}, open(outcalibfile, 'wb'))
 
-# %%
-black_mat = pickle.load(open(black_voxpkl, 'rb'))
-white_mat = pickle.load(open(white_voxpkl, 'rb'))
+    from lilab.dannce.s1_ball2mat import convert
+    convert(outcalibfile)
 
-# %%
-black_xyz_baglobal = black_mat['keypoints_xyz_baglobal']
-white_xyz_baglobal = white_mat['keypoints_xyz_baglobal']
-pose = load_pose_from_mat(calib_matfile)
-
-# %%
-keypoints_xyz_baglobal = np.concatenate((black_xyz_baglobal, white_xyz_baglobal), axis=1)
-
-views = list(pose.keys())
-landmarks_3d = keypoints_xyz_baglobal.reshape((-1, 3))
-p2d = project_points_short(views, pose, landmarks_3d)
-keypoints_xy_ba = p2d.reshape((10,) + keypoints_xyz_baglobal.shape[:-1] + (2,))
-
-# %%
-outdict = {'keypoints_xyz_baglobal': keypoints_xyz_baglobal,
-         'info': {'fps': 30, 'vfile':'/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/clips/2022-04-25_15-44-04_bwt_wwt_02time.mp4'},
-         'keypoints_xy_ba': keypoints_xy_ba,
-         'ba_poses': pose}
-
-pickle.dump(outdict, open('/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/clips/2022-04-25_15-44-04_bwt_wwt_02time.matcalibpkl', 'wb'))
+    
 
 # %%

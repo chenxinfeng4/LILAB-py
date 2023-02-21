@@ -7,6 +7,7 @@ import os.path as osp
 from scipy.spatial.distance import pdist
 import pickle
 import argparse
+from lilab.mmpose.s3_voxelpkl_2_matcalibpkl import matlab_pose_to_cv2_pose
 
 # %%
 annofile = '/home/liying_lab/chenxinfeng/DATA/dannce/data/bw_rat_1280x800x9_2022-10-10_SHANK3_voxel/anno.mat'
@@ -36,13 +37,14 @@ def convert(annofile):
     np.putmask(com3d, ~np.isnan(com3d_back), com3d_back)
     bodylength = np.sort([np.nanmax(pdist(pts3d_now)) for pts3d_now in pts3d])
     vol_size = np.percentile(bodylength, 90)
-    vol_size = np.ceil(vol_size/10 + 3) * 10
-    vol_size = 170
+    vol_size = np.ceil(vol_size/10) * 10 + 20
+    # vol_size = 170
     print('vol_size:', vol_size)
 
     # %%
     camParamsOrig = np.squeeze(annodata['camParams'])
     keys = ['K', 'RDistort', 'TDistort', 't', 'r']
+    ba_poses = matlab_pose_to_cv2_pose(camParamsOrig)
 
     camParams = list()
     for icam in range(camParamsOrig.shape[0]):
@@ -56,11 +58,15 @@ def convert(annofile):
     # %%
     outdict =  {'imageNames': imageNames,
                 'camParams': camParams,
+                'ba_poses' : ba_poses,
                 'imageSize': imageSize,
                 'data_3D': data_3D,
                 'com3d': com3d,
                 'vol_size': vol_size,
                 'camnames': camnames}
+    if 'pklbytes' in annodata.keys():
+        outdict['pklbytes'] = annodata['pklbytes']
+
     outpkl = dirname + '_anno_dannce.pkl'
     outmat = dirname + '_anno_dannce.mat'
     pickle.dump(outdict, open(outpkl, 'wb'))

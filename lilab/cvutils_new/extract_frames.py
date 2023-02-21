@@ -9,15 +9,15 @@ import sys
 import glob
 import ffmpegcv
 
-numframe_to_extract = 50
-maxlength = 30000
+numframe_to_extract = 10
+maxlength = 9000 #30000
 frame_dir = "outframes"
 frame_min_interval = 30
 
 def extract(video_input, numframe_to_extract, maxlength):
     dirname,filename=os.path.split(video_input)
     nakefilename = os.path.splitext(filename)[0]
-    cap = ffmpegcv.VideoCapture(video_input)
+    cap = ffmpegcv.VideoCaptureNV(video_input)
     os.makedirs(os.path.join(dirname, frame_dir), exist_ok = True)
     length = cap.count
     length = min([maxlength, length-1])

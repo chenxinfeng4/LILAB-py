@@ -1,4 +1,4 @@
-# python -m lilab.dannce.s2_videopredict_singlerat_com3d --pannel 4 --video_file xx.mp4 --ballcalib xxx.calib --config xx.cfg 
+# python -m lilab.dannce.s2_videopredict_singlerat_com3d --pannel 4 --video_file xx.mp4 --ballcalib xxx.calibpkl --config xx.py 
 # similar to lilab.multiview_scripts_dev.s1_ballvideo2matpkl_full_realtimecam
 """
 cd /home/liying_lab/chenxinfeng/DATA/mmpose
@@ -147,7 +147,7 @@ if __name__ == '__main__':
     if config is None:
         config = config_dict[arg.pannels]
     if checkpoint is None:
-        checkpoint = findcheckpoint_trt(config, trtnake='latest.full_fp16.engine')
+        checkpoint = findcheckpoint_trt(config, trtnake='latest.full.engine')
     assert arg.video_file, "--video_file should be set."
     assert ballcalib, "--ballcalib should be set"
     print("config:", config)
