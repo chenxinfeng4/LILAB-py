@@ -46,7 +46,7 @@ class CalibPredict:
         if image_shape is None:
             image_shape = self.image_shape
         nviews = len(self.poses)
-        p2d = np.empty((nviews, p3d_flatten.shape[0], 2)) + np.nan   # nviews_nsample_2
+        p2d = np.zeros((nviews, p3d_flatten.shape[0], 2), dtype=np.float64) + np.nan   # nviews_nsample_2
         views = self.views
         if image_shape is not None:
             mask_inside = lambda proj: np.logical_and.reduce([proj[:,0]>0, proj[:,0]<image_shape[1],

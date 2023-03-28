@@ -9,15 +9,15 @@ import sys
 import glob
 import ffmpegcv
 
-numframe_to_extract = 10
-maxlength = 9000 #30000
+numframe_to_extract = 100
+maxlength = 27000 #30000
 frame_dir = "outframes"
 frame_min_interval = 30
 
 def extract(video_input, numframe_to_extract, maxlength):
     dirname,filename=os.path.split(video_input)
     nakefilename = os.path.splitext(filename)[0]
-    cap = ffmpegcv.VideoCaptureNV(video_input)
+    cap = ffmpegcv.VideoCaptureNV(video_input, gpu=2)
     os.makedirs(os.path.join(dirname, frame_dir), exist_ok = True)
     length = cap.count
     length = min([maxlength, length-1])
@@ -70,6 +70,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Extract image')
     parser.add_argument('video_path', type=str, default=None, help='path to image or folder')
     parser.add_argument('--iview', type=int, default=None)
+    parser.add_argument('--npick', type=int, default=numframe_to_extract)
     args = parser.parse_args()
 
     video_path = args.video_path
@@ -83,13 +84,11 @@ if __name__ == '__main__':
     else:
         raise ValueError('video_path is not a file or folder')
 
-
-        
     # read config_video.py
     for video_input in video_path:
         if args.iview is None:
-            extract(video_input, numframe_to_extract, maxlength)
+            extract(video_input, args.npick, maxlength)
         else:
-            extract_iview(video_input, args.iview, numframe_to_extract, maxlength)
+            extract_iview(video_input, args.iview, args.npick, maxlength)
     
     print("Succeed")

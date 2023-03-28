@@ -5,7 +5,8 @@ import argparse
 import numpy as np
 import tqdm
 import torch
-from mmpose.apis import init_pose_model
+# from mmpose.apis import init_pose_model
+import mmcv
 import ffmpegcv
 from torch2trt import TRTModule
 import cv2
@@ -97,9 +98,6 @@ class MyWorker:
         super().__init__()
         self.id = getattr(self, 'id', 0)
         self.cuda = getattr(self, 'cuda', 0)
-        pose_model = init_pose_model(
-                        config, checkpoint=None, device='cpu')
-        self.pose_model = pose_model
         self.checkpoint = checkpoint
         self.calibobj = CalibPredict(ballcalib) if ballcalib else None
         camsize = camsize_dict[len(views_xywh)]
@@ -115,7 +113,7 @@ class MyWorker:
         self.vid = vid
         self.views_xywh = views_xywh
         self.camsize = camsize
-        cfg = self.pose_model.cfg
+        cfg = mmcv.Config.fromfile(config)
         self.dataset = DataSet(self.vid, cfg, views_xywh)
         self.dataset_iter = iter(self.dataset)
         print("Well setup VideoCapture")

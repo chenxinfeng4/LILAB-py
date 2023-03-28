@@ -1,10 +1,5 @@
-# python -m lilab.cvutils.coco_split a.json -s 0.9
-# !pyinstaller -F coco_split.py -i coco_split.ico
-# chenxinfeng
-# ------使用方法------
-# 直接拖动json到EXE中
-#
-#python -m lilab.cvutils.coco_split data/鼠关键点/trainval.json
+# conda activate deeplabcut
+# python -m lilab.cvutils.coco_split -s 0.9 A/B/C_trainval.json
 import os
 import json
 import argparse

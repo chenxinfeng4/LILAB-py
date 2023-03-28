@@ -1,13 +1,11 @@
-# !pyinstaller -F labelme_to_coco.py -i labelme_to_coco.ico
 # conda activate DEEPLABCUT
 # python -m lilab.cvutils.labelme_to_coco LABELME_DIR
+# functions:
 # 1. labelme_to_coco
 # 2. merge_multparts
 # 3. resort
 # 4. re_classid
-# chenxinfeng
-# ------使用方法------
-# 直接拖动文件夹到EXE中
+
 # %% import
 import labelme2coco
 import os
@@ -20,7 +18,8 @@ from pycocotools.coco import COCO
 
 reclassid = [{'rat_black':1, 'rat_white':2}, 
              {'rat_black':1, 'rat_white':2, 'rat_dot':3},
-             {'rat_dot':1, 'rat_white':2}]
+             {'rat_dot':1, 'rat_white':2},
+             {'rat':1}]
 
 # %% functions
 def conver_reclassid(cocojson_file, cocojson_file_out):

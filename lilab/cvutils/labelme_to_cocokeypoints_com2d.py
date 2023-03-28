@@ -1,16 +1,16 @@
 # python -m lilab.cvutils.labelme_to_cocokeypoints_ball /A/B/C
-import os
-import sys
+import argparse
+import copy
 import glob
 import json
+import os
 import shutil
-import argparse
-import numpy as np
-from tqdm import tqdm
-from labelme import utils
-import copy
+import sys
+
 import cv2
 import numpy as np
+from labelme import utils
+from tqdm import tqdm
 
 bodyparts=['com2d']
 TemplateKeypointList = [{'points':[[0,0]],'shape_type':'point'} for i in range(len(bodyparts))]
@@ -69,8 +69,7 @@ class Labelme2coco():
     def _image(self, obj, path):
         image = {}
 
-        img_x = utils.img_b64_to_arr(obj['imageData'])
-        image['height'], image['width'] = img_x.shape[:-1]
+        image['height'], image['width'] = obj['imageHeight'], obj['imageWidth']
 
         # self.img_id = int(os.path.basename(path).split(".json")[0])
         self.img_id = self.auto_id.query_by_name(os.path.basename(path).split(".json")[0])
@@ -182,4 +181,3 @@ if __name__ == '__main__':
     data_keypoints = l2c_train.to_coco(json_list_path)
 
     l2c_train.save_coco_json(data_keypoints, saved_coco_path)
-    

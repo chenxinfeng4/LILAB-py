@@ -5,9 +5,11 @@ import pickle
 import numpy as np
 import os.path as osp
 
-pklfile = '/home/liying_lab/chenxinfeng/DATA/test_ball/2022-10-13_16-35-12_ball.ballpkl'
+#pklfile = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zzc_to_ouyang/2302oxtr3dq-m/2023-02-22_15-12-37_ballnishizhen.calibpkl'
+pklfile = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zzc_to_ouyang/2302oxtr3dq-m/2023-02-22_15-12-37_ballnishizhen.calibpkl'
 
-
+#pklfile = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zzc_to_dzy/20230218_oxtr-c/2023-02-22_15-12-37_ballnishizhen.calibpkl'
+#%%
 def main(pklfile):
     with open(pklfile, 'rb') as f:
         pkldata = pickle.load(f)

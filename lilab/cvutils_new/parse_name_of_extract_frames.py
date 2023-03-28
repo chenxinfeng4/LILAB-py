@@ -40,7 +40,7 @@ def parsenames_indir(dir):
         for listvalue in dictnext.values():
             listvalue.sort()
         
-    outjson = osp.join(args.dir, 'out_full.json')
+    outjson = osp.join(dir, 'out_full.json')
     with open(outjson, 'w') as f:
         json.dump(outdict, f, indent=4)
     return imagebasenames, parsednames

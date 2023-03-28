@@ -25,7 +25,9 @@ def load_mat(matfile):
 
 
 def auto_find_thr(pvals):
-    pthr = np.percentile(pvals.ravel(), 50) * 0.9
+    pvals_ravel = pvals.ravel()
+    pvals_ravel = pvals_ravel[~np.isnan(pvals_ravel)]
+    pthr = np.percentile(pvals_ravel, 50) * 0.9
     return pthr
 
 def split_keypoint(keypoint, fps, global_time):
@@ -65,10 +67,40 @@ def get_background_img(global_iframe, vfile, views_xywh):
     return background_img
 
 
+def downsampe_keypoint(keypoint_xy_move):
+    ind_notnan = np.isnan(keypoint_xy_move[:,:,0]) #(nview, nframe)
+    ind_3notnan = np.sum(ind_notnan, axis=1) >=4
+    
+    keypoint_xy_move = keypoint_xy_move[ind_3notnan]
+    ind_notnan = np.isnan(keypoint_xy_move[:,:,0]) #(nview, nframe)
+
+    mycase=1
+    nchoose=1000
+    if mycase==0:
+        keypoint_xy_move_downsample = keypoint_xy_move
+    elif mycase==1:
+        keypoint_xy_move_downsample = keypoint_xy_move[:,::3,:]
+    elif mycase==2:
+        ind_notnan_iframe = np.all(ind_notnan, axis=0) #(nframe)
+        keypoint_xy_move_downsample = keypoint_xy_move[:, ind_notnan_iframe, :]
+    elif mycase==3:
+        count_notnan_iframe = np.mean(ind_notnan, axis=0) #(nframe)
+        p_iframe = np.clip(count_notnan_iframe, 0.3, 1)
+        p_iframe = (x-np.min(p_iframe))/(np.max(p_iframe)-np.min(p_iframe))
+        ind_rand = np.random.random(count_notnan_iframe.shape) < p_iframe
+        keypoint_xy_move_downsample = keypoint_xy_move[:, ind_rand, :]
+    nview, nget=keypoint_xy_move_downsample.shape[:2]
+
+    if nget>nchoose:
+        ind_down = np.random.choice(nget, nchoose, replace=False)
+        keypoint_xy_move_downsample = keypoint_xy_move_downsample[:, ind_down, :]
+    return keypoint_xy_move_downsample
+
+
 def convert(matfile, global_time):
     keypoint, fps, vfile, views_xywh = load_mat(matfile)
     keypoint_xy_global, keypoint_xy_move, global_index = split_keypoint(keypoint, fps, global_time)
-    keypoint_xy_move_downsample = keypoint_xy_move[:,::3,:]
+    keypoint_xy_move_downsample = downsampe_keypoint(keypoint_xy_move)
     background_img = get_background_img(global_index, vfile, views_xywh)
     fitball_xyz_global =  get_ballglobal_cm()
     if len(views_xywh) == 6:

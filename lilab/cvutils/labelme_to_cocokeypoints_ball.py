@@ -69,11 +69,10 @@ class Labelme2coco():
 
     def _image(self, obj, path):
         image = {}
+        
+        image['height'], image['width'] = obj['imageHeight'], obj['imageWidth']
 
-        img_x = utils.img_b64_to_arr(obj['imageData'])
-        image['height'], image['width'] = img_x.shape[:-1]
-
-        # self.img_id = int(os.path.basename(path).split(".json")[0])
+        #self.img_id = int(os.path.basename(path).split(".json")[0])
         self.img_id = self.auto_id.query_by_name(os.path.basename(path).split(".json")[0])
         image['id'] = self.img_id
         image['file_name'] = os.path.basename(path).replace(".json", ".jpg")

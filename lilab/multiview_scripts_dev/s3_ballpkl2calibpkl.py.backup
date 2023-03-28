@@ -1,4 +1,4 @@
-# python -m lilab.multiview_scripts_dev.s3_ballpkl2calibpkl a-b-l.ballpkl
+# python -m lilab.multiview_scripts_new.s3_ballpkl2calibpkl a-b-l.ballpkl
 # %%
 import argparse
 import matplotlib
@@ -24,7 +24,7 @@ from multiview_calib import utils
 from multiview_calib.extrinsics_short import (compute_relative_poses_robust, visualise_epilines, 
                                         verify_view_tree, global_registration, visualise_global_registration,
                                         concatenate_relative_poses, visualise_cameras_and_triangulated_points,
-                                        verify_landmarks, global_registration_np)
+                                        verify_landmarks)
 from multiview_calib.bundle_adjustment_scipy_short import (build_input, bundle_adjustment, evaluate, 
                                                      visualisation, unpack_camera_params, error_measure)
 from multiview_calib.singleview_geometry import reprojection_error
@@ -463,55 +463,8 @@ def a5_global_registrate_short(zscale):
     return kargs, fun_old2new, fun_new2old, strfun_ba2global, strfun_global2ba
 
 # %%
-def a6_global_regist(ba_poses, landmarks_global_xy, setup, background_img, landmarks_global_mm):
-    ba_points_global_xyz = b0_landmarksto3d(ba_poses, landmarks_global_xy, False, setup, background_img)
-    ba_posessrc_refine, ba_points_global_xyz_refine = a4_global_bundle_adjustment(setup, ba_poses, 
-            ba_points_global_xyz, landmarks_global_xy, landmarks_global_mm, background_img)
-    if ba_points_global_xyz_refine['points_3d'][-1][-1]<0:
-        L = landmarks_global_mm['landmarks_global']
-        tmp = copy.copy(L[3]); L[3] = L[1]; L[1] = tmp
-        ba_posessrc_refine, ba_points_global_xyz_refine = a4_global_bundle_adjustment(setup, ba_poses, 
-            ba_points_global_xyz, landmarks_global_xy, landmarks_global_mm, background_img)
-    
-    ba_poses = ba_posessrc_refine
-    ba_points_global_xyz = b0_landmarksto3d(ba_poses, landmarks_global_xy)
-    zscale =  landmarks_global_mm['landmarks_global'][-1,-1] / ba_points_global_xyz_refine['points_3d'][-1][-1]
-    assert 0.5 < zscale < 2
-    return ba_poses, ba_points_global_xyz
 
-def landmark_to_numpy(landmarks_global_xy:dict):
-    views = sorted(list(landmarks_global_xy.keys()))
-    nframe = max([max(lm['ids']) for lm in landmarks_global_xy.values()])+1
-    ndim = landmarks_global_xy[views[0]]['landmarks'][0].size
-    landmarks_np = np.zeros((len(views), nframe, ndim)) + np.nan
-    for iview in views:
-        id_lm = landmarks_global_xy[iview]
-        ids, lm = id_lm['ids'], np.array(id_lm['landmarks'])
-        landmarks_np[iview, ids, :] = lm
-
-    return landmarks_np
-
-
-def a6_global_regist_short(ba_poses, landmarks_global_xy, landmarks_global_mm):
-    from lilab.multiview_scripts_dev.s6_calibpkl_predict import CalibPredict
-    calibPredict = CalibPredict({'ba_poses':ba_poses})
-    landmarks_np = landmark_to_numpy(landmarks_global_xy)
-    landmarks_3d = calibPredict.p2d_to_p3d(landmarks_np)
-    landmarks_3d_mm = np.array(landmarks_global_mm['landmarks_global'])
-    is_sorted = lambda a: np.all(a[:-1] <= a[1:])
-    assert np.all(~np.isnan(landmarks_3d))
-    assert is_sorted(landmarks_global_mm['ids'])
-    assert landmarks_3d.shape == landmarks_3d_mm.shape
-    global_poses, _ = global_registration_np(ba_poses, landmarks_3d[:4], landmarks_3d_mm[:4])
-    global_poses, _ = global_registration_np(ba_poses, landmarks_3d, landmarks_3d_mm)
-
-    calibPredict2 = CalibPredict({'ba_poses':global_poses})
-    ba_points_global_xyz = calibPredict2.p2d_to_p3d(landmarks_np)
-    print('Error distance:', np.linalg.norm(ba_points_global_xyz - landmarks_3d_mm, axis=1).round(1))
-    return global_poses, ba_points_global_xyz
-
-
-def main_calibrate(ballfile):
+def main_calibrate(ballfile, ba_poseinitfile=ballcalibfile):
     setup, intrinsics, landmarks_move_xy, landmarks_global_xy, landmarks_global_mm, background_img = a0_read_ballfile(ballfile)
 
     # %% do bundle adjustment
@@ -523,18 +476,37 @@ def main_calibrate(ballfile):
                                             config = config, iter1=100, iter2=200)
 
     # %% do global registration
-    # ba_poses_refine, ba_points_global_xyz_refine = a6_global_regist(ba_poses, landmarks_global_xy, setup, background_img, landmarks_global_mm)
-    ba_poses_refine, ba_points_global_xyz_refine = a6_global_regist_short(ba_poses, landmarks_global_xy, landmarks_global_mm)
-    b0_landmarksto3d(ba_poses_refine, landmarks_move_xy, True, setup, background_img)
+    ba_points_global_xyz = b0_landmarksto3d(ba_poses, landmarks_global_xy, False, setup, background_img)
+    # give off the latest z millistone
+    ba_points_global_xyz = ba_points_global_xyz[:-1]
+    landmarks_global_xy = landmarks_global_xy[:-1]
+    landmarks_global_mm = landmarks_global_mm[:-1]
+    ba_posessrc_refine, ba_points_global_xyz_refine = a4_global_bundle_adjustment(setup, ba_poses, 
+            ba_points_global_xyz, landmarks_global_xy, landmarks_global_mm, background_img)
+    
+    if ba_points_global_xyz_refine['points_3d'][-1][-1]<0:
+        L = landmarks_global_mm['landmarks_global']
+        tmp = copy.copy(L[3]); L[3] = L[1]; L[1] = tmp;
+        ba_posessrc_refine, ba_points_global_xyz_refine = a4_global_bundle_adjustment(setup, ba_poses, 
+            ba_points_global_xyz, landmarks_global_xy, landmarks_global_mm, background_img)
+
+    ba_poses = ba_posessrc_refine
+    b0_landmarksto3d(ba_poses, landmarks_move_xy, True, setup, background_img)
+    ba_points_global_xyz = b0_landmarksto3d(ba_poses, landmarks_global_xy)
     
     # %% do global registration - post hoc
-    error_global = np.array(ba_points_global_xyz_refine) - landmarks_global_mm['landmarks_global']
-    error_global_dist = np.linalg.norm(error_global, axis=1).round(1).tolist()
-    print('Global Markers Error {}(mm)'.format(error_global_dist))
+    zscale =  landmarks_global_mm['landmarks_global'][-1,-1] / ba_points_global_xyz_refine['points_3d'][-1][-1]
+    assert 0.5 < zscale < 2
+    param = {}
+    param['kargs'], fun_ba2global, fun_global2ba, param['strfun_ba2global'], param['strfun_global2ba'] = a5_global_registrate_short(
+            zscale)
+    error_global = fun_ba2global(ba_points_global_xyz['points_3d']) - landmarks_global_mm['landmarks_global']
+    error_global_sort = sorted(np.linalg.norm(error_global, axis=1).round(1).tolist())
+    print('Global Markers Error {}(mm)'.format(error_global_sort))
 
     # %% save data
-    b1_merge_ballfile(ballfile, ba_poses=ba_poses_refine)
-    print('python -m lilab.multiview_scripts_dev.s4_matpkl2matcalibpkl ', 
+    b1_merge_ballfile(ballfile, ba_poses=ba_poses, ba_global_params = param)
+    print('python -m lilab.multiview_scripts_new.s4_matpkl2matcalibpkl ', 
             ballfile.replace('.ballpkl', '.matpkl'),
             ballfile.replace('.ballpkl', '.calibpkl'))
 

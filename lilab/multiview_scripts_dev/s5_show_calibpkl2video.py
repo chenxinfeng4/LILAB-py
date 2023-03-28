@@ -23,17 +23,15 @@ def load_mat(matfile):
     keypoints_xy = keypoints[:, :, :, :2]  # (nview, times, nkeypoints, 2)
     keypoints_xy[indmiss] = np.nan
     keypoints_xy_ba = data['keypoints_xy_ba'] if len(data.get('keypoints_xy_ba', [])) else keypoints_xy+np.nan
-    keypoints_xy_baglobal = data['keypoints_xy_baglobal'] if len(data.get('keypoints_xy_baglobal', [])) else keypoints_xy+np.nan
-    keypoints_xyz_baglobal = data['keypoints_xyz_baglobal'] if len(data.get('keypoints_xyz_baglobal', [])) else np.ones((keypoints_xy.shape[1], keypoints_xy.shape[2],3))+np.nan
-    for k1, k2, k3, crop_xywh in zip(keypoints_xy, keypoints_xy_ba, keypoints_xy_baglobal, views_xywh):
+    keypoints_xyz_ba = data['keypoints_xyz_ba'] if len(data.get('keypoints_xyz_ba', [])) else np.ones((keypoints_xy.shape[1], keypoints_xy.shape[2],3))+np.nan
+    for k1, k2, crop_xywh in zip(keypoints_xy, keypoints_xy_ba, views_xywh):
         k1[:] += np.array(crop_xywh[:2])
         k2[:] += np.array(crop_xywh[:2])
-        k3[:] += np.array(crop_xywh[:2])
 
-    return keypoints_xy, keypoints_xy_ba, keypoints_xy_baglobal, keypoints_xyz_baglobal, data
+    return keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data
 
 
-def keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xy_baglobal, keypoints_xyz_baglobal, data, gpu=0):
+def keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data, gpu=0):
     # %%
     resize = (1440, 1200)
 
@@ -47,8 +45,7 @@ def keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xy_baglobal, keyp
     keypoints_xy[..., 1] *= scale[1]
     keypoints_xy_ba[..., 0] *= scale[0]
     keypoints_xy_ba[..., 1] *= scale[1]
-    keypoints_xy_baglobal[..., 0] *= scale[0]
-    keypoints_xy_baglobal[..., 1] *= scale[1]
+
 
     def draw_point_color(frame, keypoints_xy, i, color, radius=3):
         keypoint_i_xy = keypoints_xy[:, i, :, :].reshape(-1, 2)
@@ -62,9 +59,8 @@ def keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xy_baglobal, keyp
     for i, frame in enumerate(tqdm.tqdm(vin)):
         draw_point_color(frame, keypoints_xy, i, (0,0,255), 5)
         draw_point_color(frame, keypoints_xy_ba, i, (0,255,0), 3)
-        draw_point_color(frame, keypoints_xy_baglobal, i, (0,255,255), 2)
         frame = cv2.putText(frame, str(i), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255), 2)
-        key_xyz = keypoints_xyz_baglobal[i][0]
+        key_xyz = keypoints_xyz_ba[i][0]
         if np.all(~np.isnan(key_xyz)):
             key_xyz_str = '{:4.1f},{:4.1f},{:4.1f}'.format(key_xyz[0], key_xyz[1], key_xyz[2])
             frame = cv2.putText(frame, key_xyz_str, (10,350), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0,0,255), 2)
@@ -73,14 +69,14 @@ def keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xy_baglobal, keyp
 
 
 def main_showvideo(matcalibpkl, gpu=0):
-    keypoints_xy, keypoints_xy_ba, keypoints_xy_baglobal, keypoints_xyz_baglobal, data = load_mat(matcalibpkl)
+    keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data = load_mat(matcalibpkl)
     # refine video path
     vfile = data['info']['vfile']
     print('vfile', vfile)
     if not (osp.exists(vfile) and osp.isfile(vfile)):
         vfile = osp.split(osp.abspath(matcalibpkl))[0] + '/' + osp.split(osp.abspath(vfile))[1]
         data['info']['vfile'] = vfile
-    keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xy_baglobal, keypoints_xyz_baglobal, data, gpu)
+    keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data, gpu)
 
 
 if __name__ == '__main__':

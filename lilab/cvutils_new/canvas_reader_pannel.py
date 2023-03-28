@@ -12,28 +12,6 @@ import cv2
 
 
 class CanvasReaderPannel(object):
-    def __init__(self, video_path, gpu=0):
-        self.vid = ffmpegcv.VideoCaptureNV(video_path, gpu=gpu)
-        if self.vid.size==(3840, 3200):
-            self.view_xywh = get_view_xywh_wrapper(10)
-        elif self.vid.size==(2560, 1440):
-            self.view_xywh = get_view_xywh_wrapper(6)
-        elif self.vid.size==(1280*2, 800*2):
-            self.view_xywh = get_view_xywh_wrapper(4)
-        else:
-            raise ValueError('unknown video size')
-        
-        self.release = self.vid.release
-        self.__len__ = self.vid.__len__
-
-    def read(self):
-        ret, frame = self.vid.read()
-        if not ret: return []
-        outpannels = [frame[y:y+h, x:x+w] for x, y, w, h in self.view_xywh]
-        return outpannels
-
-
-class CanvasReaderPannel(object):
     # set property 'iframe' is the self.vid.iframe
     @property
     def iframe(self):
@@ -81,8 +59,8 @@ class CanvasReaderPannel(object):
 
     def read(self):
         ret, frame = self.vid.read_gray()
-        if not ret: return []
-        frame = frame.copy()
+        if not ret: return ret,[]
+        # frame = frame.copy()
         imgpannels = [frame[y:y+h, x:x+w] for x, y, w, h in self.views_xywh]
         return ret, [imgpannels]
 
