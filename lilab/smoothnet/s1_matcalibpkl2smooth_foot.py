@@ -4,6 +4,7 @@
 import pickle
 from mmpose.core.post_processing.temporal_filters import build_filter
 from lilab.multiview_scripts_dev.s6_calibpkl_predict import CalibPredict
+import numpy as np
 import argparse
 
 # %%
@@ -44,8 +45,8 @@ def main(pklfile):
     p_max = pkldata['extra']['keypoints_xyz_pmax']
     X_centored = X_global - coms_3d
 
-    X_centored = X_centored[:]
-    centor = coms_3d[:]
+    X_centored = X_centored[:].astype(np.float32)
+    centor = coms_3d[:].astype(np.float32)
     # %%
     def filter_xyz(X, filter):
         T, N, K, D = X.shape
@@ -56,14 +57,14 @@ def main(pklfile):
 
     foot_KPT_index = [7,9,11,13]
     X_smoothed = filter_xyz(X_centored, filter)
-    X_smoothed_foot = filter_xyz(X_centored[:,:,foot_KPT_index,:], filter_foot)
+    X_smoothed_foot = filter_xyz(np.ascontiguousarray(X_centored[:,:,foot_KPT_index,:]), filter_foot)
     X_smoothed[:,:,foot_KPT_index,:] = X_smoothed_foot
 
     X_global_smoothed = X_smoothed + centor
 
     X_global_smoothed_xy = calibPredict.p3d_to_p2d(X_global_smoothed)
-    outdict = {**pkldata, 'keypoints_xyz_ba': X_global_smoothed,
-                'keypoints_xy_ba': X_global_smoothed_xy}
+    outdict = {**pkldata, 'keypoints_xyz_ba': X_global_smoothed.astype(np.float16),
+                'keypoints_xy_ba': X_global_smoothed_xy.astype(np.float16)}
 
     outpklfile =  pklfile.replace('.matcalibpkl', '.smoothed_foot.matcalibpkl')
     pickle.dump(outdict, open(outpklfile, 'wb'))

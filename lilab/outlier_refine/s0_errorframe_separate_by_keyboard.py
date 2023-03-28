@@ -15,7 +15,7 @@ maximgsize = [1280, 800]
 # use cv2 to read the image and then imshow
 def label(dir):
     imgs = glob.glob(osp.join(dir, '*.jpg')) + glob.glob(osp.join(dir, '*.png'))
-    cv2.namedWindow('TEST', cv2.WINDOW_NORMAL)
+    cv2.namedWindow('TEST', cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
     for imgpath in tqdm.tqdm(imgs):
         img = cv2.imread(imgpath)
         imgbasename = osp.basename(imgpath)

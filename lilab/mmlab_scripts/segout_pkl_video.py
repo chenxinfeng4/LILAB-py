@@ -1,14 +1,15 @@
 # python -m lilab.mmlab_scripts.segout_pkl_video .
-import os
-import numpy as np
-import pycocotools._mask as mask_util
-import cv2
-import mmcv
-from tqdm import tqdm
 import argparse
 import glob
 import multiprocessing
+import os
 from multiprocessing import Pool, Value
+
+import cv2
+import mmcv
+import numpy as np
+import pycocotools._mask as mask_util
+from tqdm import tqdm
 
 iPool = Value('i', 0)
 class_names = ['rat_black', 'rat_white']

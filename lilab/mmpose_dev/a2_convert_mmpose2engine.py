@@ -3,7 +3,6 @@
 import numpy as np
 import torch
 
-from mmpose.apis import init_pose_model
 from torch2trt import torch2trt
 from mmcv import Config
 import os.path as osp
@@ -54,6 +53,7 @@ def _convert_batchnorm(module):
 
 
 def convert(config, checkpoint):
+    from mmpose.apis import init_pose_model
     cfg = Config.fromfile(config, checkpoint)
     output = osp.splitext(checkpoint)[0] + '.engine'
     image_size = cfg.data_cfg.image_size

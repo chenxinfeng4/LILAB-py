@@ -8,7 +8,7 @@ import argparse
 from lilab.mmpose_dev.a2_convert_mmpose2engine import findcheckpoint_pth
 
 # config = '/home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_rat_oneclass.py'
-config = '/home/liying_lab/chenxinfeng/DATA/mmdetection/mask_rcnn_r101_fpn_2x_coco_bwrat.py'
+# config = '/home/liying_lab/chenxinfeng/DATA/mmdetection/mask_rcnn_r101_fpn_2x_coco_bwrat.py'
 
 
 def convert(config, checkpoint):

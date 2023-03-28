@@ -76,7 +76,7 @@ def convert(segpkl, calibpkl):
             coms_real_2d[:, iclass, :] = ims_to_com2ds(mask_ims[iclass])
         return coms_real_2d
 
-    with Pool(processes=10) as pool:
+    with Pool(processes=8) as pool:
         # result = pool.map(worker, range(nframes))
         results = list(tqdm.tqdm(pool.imap(worker, range(nframes)), total=nframes))
     
