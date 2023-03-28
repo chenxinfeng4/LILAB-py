@@ -1,12 +1,14 @@
 # python -m lilab.dannce.s1_anno2dataset xxx.mat
 # %%
-import scipy.io as sio
-import numpy as np
+import argparse
 import os
 import os.path as osp
-from scipy.spatial.distance import pdist
 import pickle
-import argparse
+
+import numpy as np
+import scipy.io as sio
+from scipy.spatial.distance import pdist
+
 from lilab.mmpose.s3_voxelpkl_2_matcalibpkl import matlab_pose_to_cv2_pose
 
 # %%

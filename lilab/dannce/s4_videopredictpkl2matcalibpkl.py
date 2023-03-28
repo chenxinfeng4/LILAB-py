@@ -43,11 +43,11 @@ def convert(videopkl):
     assert '_dannce_predict.pkl' in videopkl
     videofile = videopkl.replace('_dannce_predict.pkl', '.mp4')
     matcalibpkl = osp.splitext(videofile)[0] + '.matcalibpkl'
-    outdict = {'keypoints_xyz_ba': keypoints_xyz_ba,
+    outdict = {'keypoints_xyz_ba': keypoints_xyz_ba.astype(np.float16),
             'info': {'fps': 30, 'vfile':videofile},
-            'keypoints_xy_ba': keypoints_xy_ba,
-            'extra': {'keypoints_xyz_pmax': keypoints_xyz_pmax, 
-                      'coms_3d': coms_3d},
+            'keypoints_xy_ba': keypoints_xy_ba.astype(np.float16),
+            'extra': {'keypoints_xyz_pmax': keypoints_xyz_pmax.astype(np.float16), 
+                      'coms_3d': coms_3d.astype(np.float16)},
             'ba_poses': poses}
     pickle.dump(outdict, open(matcalibpkl, 'wb'))
 

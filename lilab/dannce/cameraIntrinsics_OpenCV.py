@@ -18,7 +18,8 @@ def matlab_pose_to_cv2_pose(camParamsOrig):
     for icam in range(len(camParamsOrig)):
         camParamOrig = camParamsOrig[icam]
         camParam = camParamOrig.copy()
-        if 'R' not in camParam: camParam['R'] = camParamOrig['r']
+        if 'R' not in camParam: 
+            camParam['R'] = camParamOrig['r']
         camParams.append(camParam)
 
     # from matlab to opencv

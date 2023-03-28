@@ -3,7 +3,7 @@ python /home/liying_lab/chenxinfeng/DATA/dannce/t1_keras2onnx.py latest.hdf5
 polygraphy run constrained_network.py --precision-constraints obey \
     --trt --fp16 --save-engine latest_fp16.engine \
     --load-tactics .tactics_fp16
-    # --save-tactics .tactics_fp16  #631sec
+# --save-tactics .tactics_fp16  #631sec
 
 # dynamic shape
 polygraphy run constrained_network.py --precision-constraints obey \
