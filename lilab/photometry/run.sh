@@ -1,4 +1,8 @@
-file="\\liying.cibr.ac.cn\Data_Temp\Chenxinfeng\LS_NAC_fiberphotometry\PHO_04_NAC\0320行为记录1"
+file=`w2l "\\liying.cibr.ac.cn\Data_Temp\Chenxinfeng\LS_NAC_fiberphotometry\videomerge\2023-03-27_15-53-08.dFFphotpkl"`
 
-w2l "$file" | xargs python -m lilab.photometry.s1_tdms_2_photpkl
-w2l "$file" | xargs python -m lilab.photometry.s2_photpkl_2_dFF
+ibrain=1
+ichan=2
+
+echo "$file" | xargs python -m lilab.photometry.s1_tdms_2_photpkl
+echo "$file" | xargs python -m lilab.photometry.s2_photpkl_2_dFF
+echo "$file" | xargs -I {} python -m lilab.photometry.s4_dFF_repick {} $ibrain $ichan

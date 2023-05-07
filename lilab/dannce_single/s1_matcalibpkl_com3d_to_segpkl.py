@@ -16,10 +16,18 @@ def convert(vfile):
 
     segpkl = osp.splitext(vfile)[0] + '.segpkl'
     data_segpkl = pickle.load(open(segpkl, 'rb')) if osp.isfile(segpkl) else dict()
-
     coms_3d = data_vfile['keypoints_xyz_ba']
+
+    #如果np.any(np.isnan(coms_3d))==True
+    nan_where = np.where(np.isnan(coms_3d[:,:,0]))[0]
+    for i in range(np.isnan(coms_3d[:,:,0]).sum()):
+        a = nan_where[i]
+        coms_3d[a,:] = coms_3d[a-1,:]
+
     assert coms_3d.ndim==3 and coms_3d.shape[1:]==(1,3)
     assert not np.any(np.isnan(coms_3d))
+
+
 
     coms_3d_smooth = np.zeros_like(coms_3d)
     for is1 in range(coms_3d.shape[1]):

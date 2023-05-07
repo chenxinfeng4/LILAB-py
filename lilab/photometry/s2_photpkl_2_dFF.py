@@ -11,6 +11,9 @@ import glob
 import os.path as osp
 from lilab.comm_signal.detectTTL import detectTTL
 import argparse
+from scipy.signal import butter, filtfilt
+from scipy import ndimage
+
 
 file_l = glob.glob('/mnt/liying.cibr.ac.cn_Data_Temp/LS_NAC_fiberphotometry/PHO_11_NAC/0324行为记录/*.photpkl')
 
@@ -76,9 +79,9 @@ class PhotFilter:
         kernel=np.ones((60))
         kernel[30:] = -1
         kernel /= np.abs(kernel).sum()
-        f_detect2 = ndimage.convolve(self.sig_l[0][:,None], kernel[:,None], mode='nearest')[:,0]
+        f_detect2 = ndimage.convolve(self.sig_l[2][:,None], kernel[:,None], mode='nearest')[:,0]
         f_detectabs = np.abs(f_detect2)
-        thr = 1
+        thr = 0.3
         if f_detectabs.max() > thr:
             print('Big motion detected')
             up_thr = f_detectabs > thr
@@ -177,7 +180,14 @@ class PhotFilter:
             GCaMP_est_motion = intercept + slope * ref
             GCaMP_corrected = sig - GCaMP_est_motion
             demotioned_l.append(GCaMP_corrected)
+
+        # demotioned_l = [medfilt(sig, 5) for sig in demotioned_l]
+        # use low pass filter to remove the high frequency noise
+        # low_pass=2
+        # b, a = butter(2, low_pass/(0.5*self.Fs), 'low')
+        # demotioned_l = [filtfilt(b,a,sig) for sig in demotioned_l]
         self.demotioned_l = demotioned_l
+        self.s3_p_remove_outlier()
 
         if show:
             for ix in range(1, len(self.label_l)):
@@ -185,6 +195,37 @@ class PhotFilter:
             plt.legend()
             plt.xlabel('Time (sec)')
             plt.title('Step3: Motion correlated')
+
+    def s3_p_remove_outlier(self, show=False):
+        from scipy import signal
+        thr = 1
+        kernel = signal.triang(50)
+        pad_width = 100
+        kernel_padded = np.pad(kernel, (pad_width, pad_width), mode='constant')
+        kernel_padded /= np.sum(kernel_padded)
+        demotioned_l = self.demotioned_l
+        filtered_l = []
+        k1 = kernel_padded[:,None] / kernel_padded[:,None].sum()
+        k2 = kernel_padded[::2][:,None] / kernel_padded[::2][:,None].sum()
+        k4 = kernel_padded[::4][:,None] / kernel_padded[::4][:,None].sum()
+        k5 = kernel_padded[::8][:,None] / kernel_padded[::8][:,None].sum()
+        for sig in demotioned_l:
+            sig1 = ndimage.convolve(sig[:,None], k1, mode='nearest')[:,0]
+            sig2 = ndimage.convolve(sig[:,None], k2, mode='nearest')[:,0]
+            sig4 = ndimage.convolve(sig[:,None], k4, mode='nearest')[:,0]
+            sig5 = ndimage.convolve(sig[:,None], k5, mode='nearest')[:,0]
+
+            sigmax = np.max(np.abs([sig1, sig2, sig4, sig5]), axis=0)
+            print('sigmax', sigmax.max())
+            index = sigmax > thr
+            if np.any(index): 
+                print('outlier detected')
+                #dilate the index by size 10
+                index_dialated = ndimage.binary_dilation(index, iterations=10)
+                sig[index_dialated] = 0
+                sig = medfilt(sig, 5)
+            filtered_l.append(sig)
+        self.demotioned_l = filtered_l
 
     def s4_dfF(self, show=False):
         self.dfF_l = [100*demotioned/bleach 
@@ -228,11 +269,11 @@ def extract_dFF_ibrainarea(Fs, data, iarea):
     sigs = data[iarea,1:,0:Fs*15*60]
 
     print(f'第{iarea}个脑区原始片段')
-    plt.figure(figsize=(10,10))
-    plt.subplot(3,2,1)
+    # plt.figure(figsize=(10,10))
+    # plt.subplot(3,2,1)
     rawphotFilter = PhotFilter(Fs, ref, sigs)
-    plt.xlabel(''); plt.xticks([])
-    plt.show()
+    # plt.xlabel(''); plt.xticks([])
+    # plt.show()
 
     subs_photFilter = rawphotFilter.p1_split()
 
@@ -260,14 +301,16 @@ def extract_dFF_ibrainarea(Fs, data, iarea):
 
         plt.subplot(3,2,6)
         photFilter.s5_zscore(True)
-        plt.show()
+        # plt.show()
+        plt.savefig('A.jpg')
 
     if len(subs_photFilter)>=2:
         # subs_photFilter[1].s6_reset()
         photFilter = PhotFilter.p2_merge(subs_photFilter)
         plt.figure(figsize=(8,2))
         photFilter.s4_dfF_show()
-        plt.show()
+        # plt.show()
+        plt.savefig('A.jpg')
 
     return np.array(photFilter.dfF_l)
 
@@ -276,6 +319,7 @@ def convert(pklfile):
     data_dict = pickle.load(open(pklfile, 'rb'))
     Fs, data = data_dict['Fs'], data_dict['data']
     data[:,:,:5] = np.mean(data[:,:,5:15], axis=-1, keepdims=True)
+    data[:,:,-15:] = np.mean(data[:,:,-35:-15], axis=-1, keepdims=True)
     dfF_data = []
     for iarea in range(len(data)):
         dfF_l = extract_dFF_ibrainarea(Fs, data, iarea)
@@ -297,6 +341,7 @@ def convert(pklfile):
         plt.ylabel('Signal (Volt)')
         plt.legend()
         plt.title(f'The {iarea+1} brean area')
+        # plt.xlim(300, 400)
 
         plt.axes(axs[1, iarea])
         for ic, (color, label) in enumerate(zip(PhotFilter.color_l, PhotFilter.label_l)):
@@ -307,7 +352,8 @@ def convert(pklfile):
                 sig_isNan = np.zeros_like(isNan, dtype=float)
                 sig_isNan[~isNan] = np.nan
                 plotHz(Fs, sig_isNan+ic*0.2, '--',color=color, label='LOSS')
-        
+        # plt.xlim(360, 420)
+
         plt.axes(axs[2, iarea])
         for ic, (color, label) in enumerate(zip(PhotFilter.color_l, PhotFilter.label_l)):
             if ic==0: continue
@@ -320,7 +366,7 @@ def convert(pklfile):
         
         plt.xlim([10, 110])
         plt.xlabel('Time (sec)')
-        plt.ylabel('Signal (dF/F)')
+        plt.ylabel('Signal (dF/F %)')
     plt.savefig(osp.splitext(pklfile)[0] + '.phot.jpg')
 
     outpklfile = osp.splitext(pklfile)[0] + '.dFFphotpkl'

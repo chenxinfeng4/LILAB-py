@@ -1,6 +1,7 @@
 from ._get_calibinfo import (get_json_1280x800x10, 
     get_json_800x600x6, get_json_1280x800x4,
-    get_json_1280x800x9, get_ballglobal_cm)
+    get_json_1280x800x9, get_json_bob, get_json_carl,
+    get_ballglobal_cm)
 
 def get_view_hflip():
     return [0, 1, 0, 
@@ -14,7 +15,7 @@ def get_view_xywh_wrapper(nviews):
         return get_view_xywh_1280x800x4()
     elif nviews==6:
         return get_view_xywh_800x600x6()
-    elif nviews==9:
+    elif nviews in [9, 'ana', 'bob', 'carl']:
         return get_view_xywh_1280x800x9()
     elif nviews==10:
         return get_view_xywh_1280x800x10()
@@ -30,6 +31,12 @@ def get_json_wrapper(nviews):
         return get_json_1280x800x9()
     elif nviews==10:
         return get_json_1280x800x10()
+    elif nviews=='ana':
+        return get_json_1280x800x9()
+    elif nviews=='bob':
+        return get_json_bob()
+    elif nviews=='carl':
+        return get_json_carl()
     else:
         raise NotImplementedError
 

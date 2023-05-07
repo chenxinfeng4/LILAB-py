@@ -9,8 +9,10 @@ import sys
 import glob
 import ffmpegcv
 
-numframe_to_extract = 100
+numframe_to_extract = 1
+# numframe_to_extract = 100
 maxlength = 27000 #30000
+# maxlength = 1000
 frame_dir = "outframes"
 frame_min_interval = 30
 

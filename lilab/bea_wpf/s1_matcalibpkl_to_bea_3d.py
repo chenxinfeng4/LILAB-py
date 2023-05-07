@@ -62,21 +62,18 @@ def convert_to_h5(kpt_3d, out_h5_file):
         h5_3Dskeleton.create_dataset("data3D", data=data3D)
         h5_3Dskeleton.create_dataset("Bodyparts", data=Bodyparts)
 
-    #def video_name_to_bea_name(video_name):
-        #video_nake_name = osp.basename(video_name)
-        #a = video_nake_name
-       # yy, mm, dd, h_,m_,s_ = a[:4], a[5:7], a[8:10], a[11:13], a[14:16], a[17:19]
-       # bea_nake_name = f'rec-1-CXF-{yy}{mm}{dd}{h_}{m_}{s_}'
-      #return bea_nake_name
 
 def video_name_to_bea_name(video_name):
     video_nake_name = osp.basename(video_name)
-    a=os.path.splitext(video_name)[0] 
-    bea_nake_name = f'rec-1-CXF-{a}'
+    a = video_nake_name
+    yy, mm, dd, h_,m_,s_ = a[:4], a[5:7], a[8:10], a[11:13], a[14:16], a[17:19]
+    bea_nake_name = f'rec-1-CXF-{yy}{mm}{dd}{h_}{m_}{s_}'
+
     return bea_nake_name
 
 
-def main(matcalibpkl):
+
+def main(matcalibpkl, force_ratid):
     projectdir = osp.join(osp.dirname(matcalibpkl), 'BeA_WPF')
     dir_3dskeleton = osp.join(osp.dirname(matcalibpkl), 'BeA_WPF', 'results', '3Dskeleton')
     video_nake_name = osp.basename(matcalibpkl).split('.')[0]
@@ -90,8 +87,13 @@ def main(matcalibpkl):
     os.makedirs(dir_beaoutputs, exist_ok=True)
 
     data = pickle.load(open(matcalibpkl, 'rb'))
-    kpt_3d_orig = np.squeeze(data['keypoints_xyz_ba'][:,[0],:,:])
-    #assert kpt_3d_orig.shape[1]==1, 'Should be SOLO rat.'
+    if force_ratid is None:
+        assert data['keypoints_xyz_ba'].shape[1]==1, 'Should be SOLO rat.'
+    
+    ratid = 0 if force_ratid is None else {'b':0, 'w':1}[force_ratid]
+    kpt_3d_orig = np.squeeze(data['keypoints_xyz_ba'][:,[ratid],:,:])
+    assert kpt_3d_orig.ndim==3, 'Should be SOLO rat.'
+    assert kpt_3d_orig.shape[1:] == (14,3), 'Keypoint should be 14 x 3.'
     kpt_3d_bea = kpt_3d_orig[:,indmap_matcalib2bea]
     
     convert_to_c3d(kpt_3d_bea, out_c3d_file)
@@ -103,16 +105,19 @@ def main(matcalibpkl):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('matcalibpkl_or_dir', type=str)
+    parser.add_argument('--force-ratid', default=None, type=str)
     args = parser.parse_args()
 
     if osp.isdir(args.matcalibpkl_or_dir):
-        matcalibpkl_l = glob.glob(osp.join(args.matcalibpkl_or_dir, '*smoothedfoot.matcalibpkl'))
+        matcalibpkl_l = glob.glob(osp.join(args.matcalibpkl_or_dir, '*smoothed_foot.matcalibpkl'))
         assert matcalibpkl_l, 'No any `smoothed_foot.matcalibpkl` file found in this dir.'
     elif osp.isfile(args.matcalibpkl_or_dir):
         matcalibpkl_l = [args.matcalibpkl_or_dir]
     else:
         raise ValueError('matcalibpkl_or_dir must be a directory or a file')
 
+    assert args.force_ratid in [None, 'b', 'w'], 'force_ratid must be `b` or `w` or None(Solo).'
+
     for matcalibpkl in matcalibpkl_l:
+        main(matcalibpkl, args.force_ratid)
         print('Done:', matcalibpkl)
-        main(matcalibpkl)

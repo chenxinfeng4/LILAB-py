@@ -52,8 +52,8 @@ class DataSet(OldDataSet):
             yield img_NCHW, img_preview
 
 
-class MyWorker(mmap_cuda.Worker):
-# class MyWorker():
+# class MyWorker(mmap_cuda.Worker):
+class MyWorker():
     def __init__(self):
         super().__init__()
         self.id = getattr(self, 'id', 0)
@@ -181,9 +181,9 @@ if __name__ == '__main__':
     # exit(0)
 
     # init the workers pool
-    mmap_cuda.workerpool_init(range(num_gpus), MyWorker)
-    mmap_cuda.workerpool_compute_map(args_iterable)
+    # mmap_cuda.workerpool_init(range(num_gpus), MyWorker)
+    # mmap_cuda.workerpool_compute_map(args_iterable)
 
-    # worker = MyWorker()
-    # for args in args_iterable:
-    #     worker.compute(args)
+    worker = MyWorker()
+    for args in args_iterable:
+        worker.compute(args)

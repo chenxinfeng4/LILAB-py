@@ -23,9 +23,9 @@ from lilab.multiview_scripts_dev.comm_functions import (
       box2cs, get_max_preds, get_max_preds_gpu, transform_preds)
 
 
-config_dict = {6:'/home/liying_lab/chenxinfeng/DATA/mmpose/hrnet_w32_coco_ball_512x512.py',
-          10:'/home/liying_lab/chenxinfeng/DATA/mmpose/res50_coco_ball_512x512.py',
-          4: '/home/liying_lab/chenxinfeng/DATA/mmpose/res50_coco_ball_512x512_ZJF.py'}
+config_dict = {6:'/home/liying_lab/chenxinfeng/DATA/mmpose/hrnet_w32_coco_ball_512x320.py',
+          10:'/home/liying_lab/chenxinfeng/DATA/mmpose/res50_coco_ball_512x320.py',
+          4: '/home/liying_lab/chenxinfeng/DATA/mmpose/res50_coco_ball_512x320_ZJF.py'}
 
 num_gpus = min([torch.cuda.device_count(), 4])
 

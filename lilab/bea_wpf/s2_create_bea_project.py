@@ -40,35 +40,37 @@ import shutil
 import glob
 import tqdm
 import argparse
+import ffmpegcv
 
-Behavior_Atlas_template='/home/liying_lab/chenxinfeng/ml-project/LILAB-py/lilab/bea_wpf/templates/Behavior_Atlas.json'
-Behavior_Atlas = json.load(open(Behavior_Atlas_template))
-
-projectdir='/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zzc_to_ouyang/20230218_oxtr-c/SOLO2/BeA_WPF'
+Behavior_Atlas_template = '/home/liying_lab/chenxinfeng/ml-project/LILAB-py/lilab/bea_wpf/templates/Behavior_Atlas.json'
+Behavior_Atlas = json.load(open(Behavior_Atlas_template, 'rb'))
+projectdir='/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zyq_to_dzy/20221105_1/multi/BeA_WPF'
 
 #%%
 def create_Behavior_Atlas_json(projectdir:str):
     resultdir=osp.join(projectdir, 'results')
-    infiles = glob.glob(osp.join(resultdir, '3Dskeleton', '*.csv'))
+    infiles = glob.glob(osp.join(resultdir, 'BeAOutputs', '*.h5'))
     assert len(infiles)
-    proj_file_l = [osp.basename(f).replace('_Cali_Data3d.csv', '') for f in infiles]
-    assert all('Calib' not in f for f in proj_file_l)
-    Behavior_Atlas['group_fileLists']['UnGrouped'] = proj_file_l
+    proj_file_l = [osp.basename(f).replace('_results.h5', '') for f in infiles]
+    # assert all('Calib' not in f for f in proj_file_l)
 
-    Behavior_Atlas_file = osp.join(resultdir, 'Behavior_Atlas.json')
-    with open(Behavior_Atlas_file, 'w') as f:
-        json.dump(Behavior_Atlas, f, indent=4)
+    # Behavior_Atlas['group_fileLists']['UnGrouped'] = proj_file_l
+
+    # Behavior_Atlas_file = osp.join(resultdir, 'Behavior_Atlas.json')
+    # with open(Behavior_Atlas_file, 'w') as f:
+    #     json.dump(Behavior_Atlas, f, indent=4)
 
     return proj_file_l
 
 
-def create_ProjectConfig_json(proj_file_l:list):
+def create_ProjectConfig_json(projectdir:str, proj_file_l:list):
     ProjectConfig=dict()
     ProjectConfig['projectName']=proj_file_l
-    ProjectConfig['last_model']="BlackMouse_WhiteBackground"
+    ProjectConfig['last_model']="BlackMouse_BlackBackground"
     ProjectConfig['step_1']={f:1 for f in proj_file_l}
     ProjectConfig['step_2']={f:0 for f in proj_file_l}
     ProjectConfig['step_3']={f:0 for f in proj_file_l}
+    ProjectConfig['step_4']={f:0 for f in proj_file_l}
     ProjectConfig_file = osp.join(projectdir, 'ProjectConfig.json')
     with open(ProjectConfig_file, 'w') as f:
         json.dump(ProjectConfig, f, indent=4)
@@ -95,16 +97,29 @@ def create_fake_caliParas(datadir, proj_file_l):
 def create_video_4views(datadir:str, v_name_as_project:dict):
     for nake_project, vfile in tqdm.tqdm(v_name_as_project.items()):
         outvfile_l = [osp.join(datadir, nake_project + '-camera-%d.avi' % i) for i in range(4)]
+        videoinfo = ffmpegcv.video_info.get_info(vfile)
+        assert videoinfo.codec in ['hevc', 'h264'], f'video codec not supported {videoinfo["codec"]}'
+        codec = videoinfo.codec + '_cuvid'
+        ori_wh = (videoinfo.width, videoinfo.height)
+        if ori_wh == (1280*3, 800*3):
+            bottom=800
+            right=1280
+        elif ori_wh == (1280*2, 800*2):
+            bottom=0
+            right=0
+        elif ori_wh == (1280*3, 800*2):
+            bottom=0
+            right=1280
+        else:
+            raise ValueError('video size not supported')
         top=0
-        bottom=800
         left=0
-        right=1280
         dst_w=1280//2
         det_h=800//2
         re_width = dst_w*2
         re_height = det_h*2
 
-        cmd = ('ffmpeg -loglevel warning -hwaccel cuda -hwaccel_device 0 -c:v hevc_cuvid'
+        cmd = (f'ffmpeg -loglevel warning -hwaccel cuda -hwaccel_device 0 -c:v {codec}'
         f' -resize {re_width}x{re_height}'
         f' -crop {top}x{bottom}x{left}x{right}'
         f' -i "{vfile}"'
@@ -142,14 +157,12 @@ if __name__ == '__main__':
 
     # create the files
     proj_file_l = create_Behavior_Atlas_json(projectdir)
-
+    assert len(proj_file_l)>0 and set(proj_file_l) <= set(v_name_as_project)
+    v_name_as_project_join = {f:v_name_as_project[f] for f in proj_file_l}
     # create the project
-    proj_file_nake_l = [f[:24] for f in proj_file_l]
-    assert set(proj_file_nake_l) <= set(v_name_as_project)
-
-    create_ProjectConfig_json(proj_file_l)
+    create_ProjectConfig_json(projectdir, proj_file_l)
     create_empty_dlc_result(datadir, proj_file_l)
     create_fake_caliParas(datadir, proj_file_l)
-    create_video_4views(datadir, v_name_as_project)
+    create_video_4views(datadir, v_name_as_project_join)
 
 # %%

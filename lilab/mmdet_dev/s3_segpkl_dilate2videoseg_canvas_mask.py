@@ -28,7 +28,6 @@ class MyWorker(mmap_cuda.Worker):
 # class MyWorker():
     def compute(self, args):
         video_in, enable_dilate, maxlen = args
-        if not maxlen: maxlen=9000
         self.cuda = getattr(self, 'cuda', 0)
         self.id = getattr(self, 'id', 0)
         vid = CanvasReaderThumbnail(video_in, gpu=self.cuda, dilate=enable_dilate)
@@ -38,6 +37,7 @@ class MyWorker(mmap_cuda.Worker):
                                         codec='h264', 
                                         fps=vid.fps, 
                                         pix_fmt='rgb24')
+        if not maxlen: maxlen=len(vid)
         for i in tqdm(range(min(len(vid), maxlen)), position=int(self.id), 
                                         desc='worker[{}]'.format(self.id)):
             frame_w_mask = vid.read_canvas_mask_img()

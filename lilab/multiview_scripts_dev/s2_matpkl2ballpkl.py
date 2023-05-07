@@ -4,7 +4,7 @@ import numpy as np
 import argparse
 import os.path as osp
 import cv2
-from lilab.cameras_setup import get_ballglobal_cm
+from lilab.cameras_setup import get_ballglobal_cm, get_json_wrapper
 
 second_based = True
 pthr = 0.62
@@ -97,23 +97,19 @@ def downsampe_keypoint(keypoint_xy_move):
     return keypoint_xy_move_downsample
 
 
-def convert(matfile, global_time):
+def convert(matfile, global_time, force_setupname:str):
     keypoint, fps, vfile, views_xywh = load_mat(matfile)
     keypoint_xy_global, keypoint_xy_move, global_index = split_keypoint(keypoint, fps, global_time)
     keypoint_xy_move_downsample = downsampe_keypoint(keypoint_xy_move)
     background_img = get_background_img(global_index, vfile, views_xywh)
     fitball_xyz_global =  get_ballglobal_cm()
-    if len(views_xywh) == 6:
-        from lilab.cameras_setup import get_json_800x600x6 as get_json
-    elif len(views_xywh) == 10:
-        from lilab.cameras_setup import get_json_1280x800x10 as get_json
-    elif len(views_xywh) == 4:
-        from lilab.cameras_setup import get_json_1280x800x4 as get_json
-    elif len(views_xywh) == 9:
-        from lilab.cameras_setup import get_json_1280x800x9 as get_json
+    if force_setupname is not None:
+        setup_json, intrinsics_json = get_json_wrapper(force_setupname)
     else:
-        raise ValueError("Only 6 or 10 views are supported")
-    setup_json, intrinsics_json = get_json()
+        setup_json, intrinsics_json = get_json_wrapper(len(views_xywh))
+    
+    assert len(intrinsics_json) == len(views_xywh)
+    
     outdict = {'landmarks_global_xy': keypoint_xy_global,         # VIEWxTIMExXY
                'landmarks_move_xy': keypoint_xy_move_downsample,  # VIEWxTIMExXY
                'global_iframe': global_index,                    # TIME
@@ -133,6 +129,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('matfile', type=str)
     parser.add_argument('--time', type=float, nargs='+')
+    parser.add_argument('--force-setupname', type=str, default=None)
     args = parser.parse_args()
     assert len(args.time) == 5, "global_time should be 5 elements"
-    convert(args.matfile, args.time)
+    convert(args.matfile, args.time, args.force_setupname)

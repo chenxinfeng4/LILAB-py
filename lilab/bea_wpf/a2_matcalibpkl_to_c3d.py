@@ -1,4 +1,4 @@
-# python -m lilab.bea_wpf.s1_matcalibpkl_to_c3d /A/B/C
+# python -m lilab.bea_wpf.a2_matcalibpkl_to_c3d /A/B/C
 # %%
 import pickle
 import numpy as np
@@ -11,11 +11,7 @@ import glob
 matcalibpkl = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/VPAxWT/DAY50/2023-01-18_16-42-19AbVPAxBwVPA.smoothed_foot.matcalibpkl'
 
 
-def main(matcalibpkl):
-    out_c3d_file = osp.join(osp.dirname(matcalibpkl), osp.basename(matcalibpkl).split('.')[0] + '.c3d')
-
-    data = pickle.load(open(matcalibpkl, 'rb'))
-    kpt_3d_orig = data['keypoints_xyz_ba']
+def convert_kpt_3d_to_c3d(kpt_3d_orig, out_c3d_file):
     kpt_3d_bea = kpt_3d_orig[:,:,indmap_matcalib2bea,:]
 
     nframe, nanimal, nkpt, ndim = kpt_3d_bea.shape
@@ -45,6 +41,14 @@ def main(matcalibpkl):
     with open(out_c3d_file, 'wb') as h:
         writer.write(h)
         print('Done convertion to c3d.')
+
+
+def main(matcalibpkl):
+    out_c3d_file = osp.join(osp.dirname(matcalibpkl), osp.basename(matcalibpkl).split('.')[0] + '.c3d')
+
+    data = pickle.load(open(matcalibpkl, 'rb'))
+    kpt_3d_orig = data['keypoints_xyz_ba']
+    convert_kpt_3d_to_c3d(kpt_3d_orig, out_c3d_file)
 
 
 if __name__ == '__main__':

@@ -8,7 +8,7 @@ from mmcv import Config
 import os.path as osp
 import argparse
 
-config = '/home/liying_lab/chenxinfeng/DATA/mmpose/res50_coco_ball_512x512_ZJF.py'
+config = '/home/liying_lab/chenxinfeng/DATA/mmpose/res50_coco_ball_512x320_ZJF.py'
 checkpoint = None
 
 def findcheckpoint_trt(config, trtnake='latest.engine'):

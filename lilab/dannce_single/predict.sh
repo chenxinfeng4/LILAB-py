@@ -1,8 +1,9 @@
 
 ## 1 必选项参数
-vdir='/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zyq_to_dzy/toy'  # 要分析的视频文件/文件夹
-vcalib=`ls /mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zyq_to_dzy/toy/*.calibpkl`    # 小球矫正的文件
-volsize=180
+vdir='/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zyq_to_dzy/20221116/solo'  # 要分析的视频文件/文件夹
+vdir='/mnt/liying.cibr.ac_cn_Data_Temp/multiview_9/zyq_to_dzy/20221123/solo'
+vcalib=`ls /mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/dzy_oyy_ball/checked/0328-0330/solo/*.calibpkl`    # 小球矫正的文件
+volsize=210
 ##  volsize for rats
 # |         | Male | Female |
 # | ------- | ---- | ------ |

@@ -511,7 +511,7 @@ def a6_global_regist_short(ba_poses, landmarks_global_xy, landmarks_global_mm):
     return global_poses, ba_points_global_xyz
 
 
-def main_calibrate(ballfile):
+def main_calibrate(ballfile, skip_global:bool, skip_camera_intrinsic:bool):
     setup, intrinsics, landmarks_move_xy, landmarks_global_xy, landmarks_global_mm, background_img = a0_read_ballfile(ballfile)
 
     # %% do bundle adjustment
@@ -519,18 +519,26 @@ def main_calibrate(ballfile):
     extrinsics = a2_concatenate_relative_poses(setup, relative_poses)
     poses = intri_extrin_to_ba_poses(intrinsics, extrinsics)
     config = {'th_outliers_early':100, "th_outliers":20}
+    if skip_camera_intrinsic:
+        print("Fixing camera instrincis!")
+        intrinsics_bounds = np.zeros(18) + 0.0001  #4+6+n
+        config["bounds_cp"] = [ 0.3, 0.3, 0.3, 100, 100, 100, *intrinsics_bounds]
     ba_poses, ba_points = a3_bundle_ajustment(setup, poses, landmarks_move_xy, background_img,
                                             config = config, iter1=100, iter2=200)
 
-    # %% do global registration
-    # ba_poses_refine, ba_points_global_xyz_refine = a6_global_regist(ba_poses, landmarks_global_xy, setup, background_img, landmarks_global_mm)
-    ba_poses_refine, ba_points_global_xyz_refine = a6_global_regist_short(ba_poses, landmarks_global_xy, landmarks_global_mm)
-    b0_landmarksto3d(ba_poses_refine, landmarks_move_xy, True, setup, background_img)
-    
-    # %% do global registration - post hoc
-    error_global = np.array(ba_points_global_xyz_refine) - landmarks_global_mm['landmarks_global']
-    error_global_dist = np.linalg.norm(error_global, axis=1).round(1).tolist()
-    print('Global Markers Error {}(mm)'.format(error_global_dist))
+    if skip_global:
+        print('Skipping global BA')
+        ba_poses_refine = ba_poses
+    else:
+        # %% do global registration
+        # ba_poses_refine, ba_points_global_xyz_refine = a6_global_regist(ba_poses, landmarks_global_xy, setup, background_img, landmarks_global_mm)
+        ba_poses_refine, ba_points_global_xyz_refine = a6_global_regist_short(ba_poses, landmarks_global_xy, landmarks_global_mm)
+        b0_landmarksto3d(ba_poses_refine, landmarks_move_xy, True, setup, background_img)
+        
+        # %% do global registration - post hoc
+        error_global = np.array(ba_points_global_xyz_refine) - landmarks_global_mm['landmarks_global']
+        error_global_dist = np.linalg.norm(error_global, axis=1).round(1).tolist()
+        print('Global Markers Error {}(mm)'.format(error_global_dist))
 
     # %% save data
     b1_merge_ballfile(ballfile, ba_poses=ba_poses_refine)
@@ -542,5 +550,7 @@ def main_calibrate(ballfile):
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('ballfile', type=str)
+    argparser.add_argument('--skip-global', action="store_true")
+    argparser.add_argument('--skip-camera-intrinsic', action="store_true")
     arg = argparser.parse_args()
-    main_calibrate(arg.ballfile)
+    main_calibrate(arg.ballfile, arg.skip_global, arg.skip_camera_intrinsic)
