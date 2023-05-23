@@ -15,7 +15,7 @@ def get_view_xywh_wrapper(nviews):
         return get_view_xywh_1280x800x4()
     elif nviews==6:
         return get_view_xywh_800x600x6()
-    elif nviews in [9, 'ana', 'bob', 'carl']:
+    elif nviews in [9, '9', 'ana', 'bob', 'carl']:
         return get_view_xywh_1280x800x9()
     elif nviews==10:
         return get_view_xywh_1280x800x10()

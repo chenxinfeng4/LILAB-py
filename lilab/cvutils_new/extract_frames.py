@@ -1,4 +1,4 @@
-# python -m lilab.cvutils_new.extract_frames testA.mp4
+# python -m lilab.cvutils_new.extract_frames testA.mp4 --npick 400
 import argparse
 import os
 import cv2
@@ -11,21 +11,21 @@ import ffmpegcv
 
 numframe_to_extract = 1
 # numframe_to_extract = 100
-maxlength = 27000 #30000
+maxlength = None #30000
 # maxlength = 1000
 frame_dir = "outframes"
-frame_min_interval = 30
+frame_min_interval = 10
 
 def extract(video_input, numframe_to_extract, maxlength):
     dirname,filename=os.path.split(video_input)
     nakefilename = os.path.splitext(filename)[0]
-    cap = ffmpegcv.VideoCaptureNV(video_input, gpu=2)
+    cap = ffmpegcv.VideoCapture(video_input)
     os.makedirs(os.path.join(dirname, frame_dir), exist_ok = True)
     length = cap.count
-    length = min([maxlength, length-1])
+    length = min([maxlength, length-1]) if maxlength else length-1
     downsample_length = length // frame_min_interval
     np.random.seed(0)
-    idxframe_to_extract = set(np.random.permutation(downsample_length)[:numframe_to_extract]*frame_min_interval + 50)
+    idxframe_to_extract = set(np.random.permutation(downsample_length)[:numframe_to_extract]*frame_min_interval + 5)
     idxframe_max = max(idxframe_to_extract)
 
     # for i in tqdm.tqdm(range(10000)):
@@ -51,7 +51,7 @@ def extract_iview(video_input, iview, numframe_to_extract, maxlength):
     cap = ffmpegcv.VideoCaptureNV(video_input, crop_xywh=crop_xywh)
     os.makedirs(os.path.join(dirname, frame_dir), exist_ok = True)
     length = len(cap)
-    length = min([maxlength, length-1])
+    length = min([maxlength, length-1]) if maxlength else length-1
     downsample_length = length // frame_min_interval
     idxframe_to_extract = set(np.random.permutation(downsample_length)[:numframe_to_extract]*frame_min_interval)
     idxframe_max = max(idxframe_to_extract)

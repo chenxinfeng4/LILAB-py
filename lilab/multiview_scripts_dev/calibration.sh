@@ -1,6 +1,6 @@
 # 1. 激活对应环境，输入相关地址配置
 # conda activate mmpose
-vfile=`w2l "\\liying.cibr.ac.cn\Data_Temp\Chenxinfeng\multiview_9\chenxf\LZTxWT_230505\2023-05-04_16-27-48ball.mp4"`
+vfile=`w2l "\\liying.cibr.ac.cn\Data_Temp\Chenxinfeng\multiview_9\chenxf\LZTxWT_230505\2023-04-05_13-18-24ball.mp4"`
 
 setupname="bob"
 
@@ -27,7 +27,7 @@ python -m lilab.multiview_scripts_dev.s4_matpkl2matcalibpkl $vfile.matpkl $vfile
 python -m lilab.multiview_scripts_dev.s5_show_calibpkl2video $vfile.matcalibpkl
 
 python -m lilab.dannce.s1_ball2mat $vfile.calibpkl
-
+/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/Shank3HetxWT_230405/ball/2023-04-11_13-23-39ball.calibpkl
 
 # 用已有的 calibpkl 验证新的小球视频，看看是否位置偏差
 vfile=/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/Shank3HetxWT_230405/ball/2023-04-05_13-18-24ball

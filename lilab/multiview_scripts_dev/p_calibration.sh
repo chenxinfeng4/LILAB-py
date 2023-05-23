@@ -1,25 +1,34 @@
 #!/bin/bash
-vfile=/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/LZTxWT_230505/ball/2023-05-06_13-52-32Sball.mp4
+if [ $# -lt 2 ]; then
+    echo "缺少参数，请输入两个参数. 第一个为视频路径，第二个为设备名"
+    exit 1
+fi
+
+vfile=$1
+setupname=$2  # ana bob carl, 3套多相机设备的标志
+
+# vfile=/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/LZTxWT_230505/ball/2023-05-06_13-52-32Sball.mp4
+# setupname="bob"  # ana bob carl, 3套多相机设备的标志
+
 vfile=`echo "$vfile" | sed 's/.mp4//'`
 vfile_checkboard=$vfile
 
-setupname="bob"  # ana bob carl, 3套多相机设备的标志
-tball=" 0 0 0 0 0 " # 没有用，只是占位
+tball=" 0 0 0 0 10 " # 没有用，只是占位
 
-# 2. 每个视角单独预测小球,绘制2D轨迹视频
+# 2A. 设置棋盘格，全局定标X、Y、Z轴
+python -m lilab.multiview_scripts_dev.p1_checkboard_global $vfile_checkboard.mp4 --board_size 11 8 --square_size 20 &
+
+# 2B. 每个视角单独预测小球,绘制2D轨迹视频
 python -m lilab.multiview_scripts_dev.s1_ballvideo2matpkl_full_faster $vfile.mp4 --pannels $setupname  #<深度学习>
 
-python -m lilab.multiview_scripts_dev.s5_show_calibpkl2video $vfile.matpkl  
+# python -m lilab.multiview_scripts_dev.s5_show_calibpkl2video $vfile.matpkl &
 
 # 3. （可选）检查是否有坏点，修正 
 
-# 4A. 多相机 relative pose
+# 4. 多相机 relative pose
 python -m lilab.multiview_scripts_dev.s2_matpkl2ballpkl $vfile.matpkl  --time  $tball --force-setupname  $setupname
 
 python -m lilab.multiview_scripts_dev.s3_ballpkl2calibpkl $vfile.ballpkl --skip-camera-intrinsic --skip-global 
-
-# 4B. 设置棋盘格，全局定标X、Y、Z轴
-python -m lilab.multiview_scripts_dev.p1_checkboard_global $vfile_checkboard.mp4 --board_size 11 8 --square_size 20 &
 
 # 5. 用全局定标对齐，得到多相机 global pose
 python -m lilab.multiview_scripts_dev.p2_calibpkl_refine_byglobal $vfile.calibpkl $vfile_checkboard.globalrefpkl

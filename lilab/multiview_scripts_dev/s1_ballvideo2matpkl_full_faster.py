@@ -148,15 +148,16 @@ def post_cpu(camsize, heatmap, center, scale, views_xywh, img_preview, calibobj)
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('video_path', type=str, help='path to video or folder')
-    parser.add_argument('--pannels', type=int, default=4, help='crop views')
+    parser.add_argument('--pannels', default=4, help='crop views')
     parser.add_argument('--config', type=str, default=None)
     parser.add_argument('--checkpoint', type=str, default=None)
     arg = parser.parse_args()
 
     views_xywh = get_view_xywh_wrapper(arg.pannels)
+    nviews = len(views_xywh)
     video_path, config, checkpoint = arg.video_path, arg.config, arg.checkpoint
     if config is None:
-        config = config_dict[arg.pannels]
+        config = config_dict[nviews]
     if checkpoint is None:
         checkpoint = findcheckpoint_trt(config, 'latest.full.engine')
     print("config:", config)

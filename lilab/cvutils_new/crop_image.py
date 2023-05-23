@@ -51,7 +51,7 @@ if __name__ == "__main__":
     elif osp.isdir(image_path):
         # image_path = [f for f in glob.glob(osp.join(image_path, '*.jpg'))
         #                 if f[-4] not in '0123456789']
-        image_path = glob.glob(osp.join(image_path, "*.jpg"))
+        image_path = glob.glob(osp.join(image_path, "*.jpg"))+glob.glob(osp.join(image_path, "*.png"))
         assert len(image_path) > 0, "no image found"
     else:
         raise ValueError("image_path is not a file or folder")

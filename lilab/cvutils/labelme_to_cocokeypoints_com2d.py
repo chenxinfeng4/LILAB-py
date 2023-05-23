@@ -1,4 +1,4 @@
-# python -m lilab.cvutils.labelme_to_cocokeypoints_ball /A/B/C
+# python -m lilab.cvutils.labelme_to_cocokeypoints_com2d /A/B/C
 import argparse
 import copy
 import glob

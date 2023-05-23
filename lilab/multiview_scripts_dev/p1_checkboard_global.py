@@ -2,7 +2,7 @@
 """
 python -m lilab.multiview_scripts_dev.p1_checkboard_global \
     /mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/LZTxWT_230505/ball/2023-05-04_13-11-04Scheckboard.mp4 \
-    --board_size 6 9 --square_size 23
+    --board_size 11 8 --square_size_mm 20
 """
 # %%
 import numpy as np
@@ -14,8 +14,8 @@ import pickle
 import argparse
 
 vfile='/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/LZTxWT_230505/ball/2023-05-04_13-11-04Scheckboard.mp4'
-board_size = (9, 6)
-square_size = 23.0
+board_size = (11, 8)
+square_size = 20.0
 
 # %%
 def convert(vfile, setupname, board_size, square_size):

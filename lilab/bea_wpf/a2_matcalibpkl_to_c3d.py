@@ -21,6 +21,12 @@ def convert_kpt_3d_to_c3d(kpt_3d_orig, out_c3d_file):
     for ianimal in range(nanimal):
         kpt_3d_bea_full[:,nkpt*ianimal:nkpt*(ianimal+1),:] = kpt_3d_bea[:,ianimal]
 
+    kpt_3d_bea_full *= 10
+    kpt_xy_head = kpt_3d_bea_full[:,[0],:2]
+    kpt_xy_head_mean = (np.min(kpt_xy_head, axis=0, keepdims=True) + 
+                        np.max(kpt_xy_head, axis=0, keepdims=True))/2
+    kpt_3d_bea_full[...,:2] -= kpt_xy_head_mean
+
 
     if nanimal==1:
         point_labels_all = point_labels
