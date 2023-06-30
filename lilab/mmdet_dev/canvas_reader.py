@@ -54,8 +54,7 @@ class CanvasReader:
             mask_index = {0:(0,0), 1:(0,1), 2:(0,2), 3:(1,0), 4:(1,1), 5:(1,2),
                       6:(2,0), 7:(2,1), 8:(2,2), 9:(3,0)}
         elif len(views_xywh)==9:
-            vid = ffmpegcv.VideoReaderNV(video_path,
-                                            gpu = gpu,
+            vid = ffmpegcv.VideoReader(video_path,
                                             pix_fmt='rgb24')
             mask_container_size = (3, 3, 800, 1280)
             mask_index = {0:(0,0), 1:(0,1), 2:(0,2), 3:(1,0), 4:(1,1), 5:(1,2),
@@ -226,7 +225,7 @@ class CanvasReaderCV:
 
 
 class CanvasReaderThumbnail(CanvasReader):
-    def __init__(self, video_path, segment_path=None, gpu=0, dilate=True):
+    def __init__(self, video_path, segment_path=None, gpu=0, dilate=True , nclass=2):
         super().__init__(video_path, segment_path, gpu, dilate)
         self.vid.release()
         if len(self.views_xywh)==6:
@@ -260,6 +259,8 @@ class CanvasReaderThumbnail(CanvasReader):
             raise NotImplementedError
         self.scale_wh = scale_wh
         self.vid = vid
+        self.nclass = nclass
+
         self.mask_container = torch.zeros((self.nclass, *mask_container_size), device=self.cuda, dtype=torch.half)
         self.fun_resize = torchvision.transforms.Resize(self.mask_container.shape[-2:],
                             torchvision.transforms.InterpolationMode.NEAREST)

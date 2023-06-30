@@ -454,7 +454,7 @@ if __name__ == "__main__":
         videos_path = [
             f
             for f in glob.glob(osp.join(video_path, "*.mp4"))
-            if  'mask.mp4' not in f
+            if  'mask.mp4' not in f and 'smoothed' not in f
         ]
         assert len(videos_path) > 0, "no video found"
     else:
@@ -465,7 +465,7 @@ if __name__ == "__main__":
 
 
     print('total vfiles:', len(videos_path))
-    num_gpus = min((1, torch.cuda.device_count(), len(video_path)*args.pannels))
+    num_gpus = min((torch.cuda.device_count(), len(video_path)*args.pannels))
     print("num_gpus:", num_gpus)
     # init the workers pool
 

@@ -81,7 +81,7 @@ class PhotFilter:
         kernel /= np.abs(kernel).sum()
         f_detect2 = ndimage.convolve(self.sig_l[2][:,None], kernel[:,None], mode='nearest')[:,0]
         f_detectabs = np.abs(f_detect2)
-        thr = 0.3
+        thr = 1
         if f_detectabs.max() > thr:
             print('Big motion detected')
             up_thr = f_detectabs > thr
@@ -157,7 +157,7 @@ class PhotFilter:
             bounds = ([0      , 0      , 0      , 600  , 0],
                     [max_sig, max_sig, max_sig, 36000, 1])
             GCaMP_parms, parm_cov = curve_fit(double_exponential, self.timestamps, sig, 
-                                            p0=inital_params, bounds=bounds, maxfev=1000)
+                                            p0=inital_params)#, bounds=bounds, maxfev=4000)
             GCaMP_expfit = double_exponential(self.timestamps, *GCaMP_parms)
             bleach_l.append(GCaMP_expfit)
             detrended_l.append(sig - GCaMP_expfit)
@@ -174,6 +174,7 @@ class PhotFilter:
     def s3_motion(self, show=False):
         ref = self.detrended_l[0]
         sigs = self.detrended_l
+        demotioned_l = sigs # copy, test
         demotioned_l = []
         for sig in sigs:
             slope, intercept, r_value, p_value, std_err = linregress(x=ref, y=sig)
@@ -198,7 +199,7 @@ class PhotFilter:
 
     def s3_p_remove_outlier(self, show=False):
         from scipy import signal
-        thr = 1
+        thr = 2
         kernel = signal.triang(50)
         pad_width = 100
         kernel_padded = np.pad(kernel, (pad_width, pad_width), mode='constant')
@@ -208,14 +209,14 @@ class PhotFilter:
         k1 = kernel_padded[:,None] / kernel_padded[:,None].sum()
         k2 = kernel_padded[::2][:,None] / kernel_padded[::2][:,None].sum()
         k4 = kernel_padded[::4][:,None] / kernel_padded[::4][:,None].sum()
-        k5 = kernel_padded[::8][:,None] / kernel_padded[::8][:,None].sum()
+        # k5 = kernel_padded[::8][:,None] / kernel_padded[::8][:,None].sum()
         for sig in demotioned_l:
             sig1 = ndimage.convolve(sig[:,None], k1, mode='nearest')[:,0]
             sig2 = ndimage.convolve(sig[:,None], k2, mode='nearest')[:,0]
             sig4 = ndimage.convolve(sig[:,None], k4, mode='nearest')[:,0]
-            sig5 = ndimage.convolve(sig[:,None], k5, mode='nearest')[:,0]
+            # sig5 = ndimage.convolve(sig[:,None], k5, mode='nearest')[:,0]
 
-            sigmax = np.max(np.abs([sig1, sig2, sig4, sig5]), axis=0)
+            sigmax = np.max(np.abs([sig1, sig2, sig4]), axis=0)
             print('sigmax', sigmax.max())
             index = sigmax > thr
             if np.any(index): 
@@ -265,8 +266,8 @@ class PhotFilter:
     
 # %%
 def extract_dFF_ibrainarea(Fs, data, iarea):
-    ref = data[iarea,0,0:Fs*15*60]
-    sigs = data[iarea,1:,0:Fs*15*60]
+    ref = data[iarea,0,0:int(Fs*15*60)]
+    sigs = data[iarea,1:,0:int(Fs*15*60)]
 
     print(f'第{iarea}个脑区原始片段')
     # plt.figure(figsize=(10,10))
@@ -278,7 +279,7 @@ def extract_dFF_ibrainarea(Fs, data, iarea):
     subs_photFilter = rawphotFilter.p1_split()
 
     for iseg, photFilter in enumerate(subs_photFilter):
-        print(f'第{iarea}个脑区，第{iseg}个片段')
+        print(f'第{iarea}个脑区，第{iseg}/{len(subs_photFilter)}个片段')
         plt.figure(figsize=(10,10))
         plt.subplot(3,2,1)
         photFilter.show_raw()

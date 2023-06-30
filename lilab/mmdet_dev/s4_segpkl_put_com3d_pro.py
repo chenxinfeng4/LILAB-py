@@ -33,28 +33,12 @@ def ims_to_com2ds(ims):
     coms_2d = np.array(coms_2d)
     return coms_2d
 
-# %%
-def convert(segpkl, calibpkl):
-    pkl_data = pickle.load(open(segpkl, 'rb'))
-    # assert 'coms_3d' not in pkl_data
 
-    views_xywh = pkl_data['views_xywh']
-    segdata = pkl_data['dilate_segdata']
-    calibPredict = CalibPredict(calibpkl)
-
-    if len(views_xywh)==6:
-        mask_original_shape = (600, 800)
-    elif len(views_xywh)==9:
-        mask_original_shape = (800, 1280)
-    elif len(views_xywh)==10:
-        mask_original_shape = (800, 1280)
-    else:
-        raise NotImplementedError
-
+def get_all_frame_com2d(segdata, mask_original_shape) -> np.ndarray:
     mask_real_shape = np.array(segdata[0][0][1][0][0]['size'])
     resize_scale = np.array([[mask_original_shape[1]/mask_real_shape[1], 
                             mask_original_shape[0]/mask_real_shape[0]]])
-    nviews = len(views_xywh)
+    nviews = len(segdata)
     nframes = len(segdata[0])
     nclass = 2
 
@@ -82,6 +66,37 @@ def convert(segpkl, calibpkl):
     
     coms_real_2d = np.array(results).transpose(1, 0, 2, 3)  # nviews, nframes, nclass, 2
     coms_2d = coms_real_2d * resize_scale  # nviews, nframes, nclass, 2
+    return coms_2d
+
+
+# %%
+def convert(segpkl, calibpkl):
+    pkl_data = pickle.load(open(segpkl, 'rb'))
+    # assert 'coms_3d' not in pkl_data
+
+    views_xywh = pkl_data['views_xywh']
+    segdata = pkl_data['dilate_segdata']
+    calibPredict = CalibPredict(calibpkl)
+
+    if len(views_xywh)==6:
+        mask_original_shape = (600, 800)
+    elif len(views_xywh)==9:
+        mask_original_shape = (800, 1280)
+    elif len(views_xywh)==10:
+        mask_original_shape = (800, 1280)
+    else:
+        raise NotImplementedError
+
+    assert len(views_xywh) == len(segdata)
+    nviews = len(segdata)
+    nframes = len(segdata[0])
+    nclass = len(segdata[0][0][1])
+
+    if 'coms_2d' in pkl_data and 'coms_3d' not in pkl_data:
+        coms_2d = np.array(pkl_data['coms_2d']) # nviews, nframes, nclass, 2
+    else:
+        coms_2d = get_all_frame_com2d(segdata, mask_original_shape)
+    assert coms_2d.shape == (nviews, nframes, nclass, 2)
     coms_3d = calibPredict.p2d_to_p3d(coms_2d) # nframes, nclass, 3
 
     #%%

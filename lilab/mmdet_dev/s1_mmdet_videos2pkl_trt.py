@@ -21,7 +21,7 @@ from lilab.mmdet_dev.s2_detpkl_to_segpkl import convert as convert_detpkl_to_seg
 from lilab.mmdet_dev.s2_segpkl_merge import convert as convert_segpkl_to_one
 from mmdet.core import encode_mask_results
 from mmdet.datasets.pipelines import Compose
-
+    
 # from lilab.mmpose_dev.a2_convert_mmpose2engine import findcheckpoint_trt
 
 video_path = [

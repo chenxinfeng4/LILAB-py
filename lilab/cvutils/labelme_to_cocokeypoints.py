@@ -14,6 +14,7 @@ import numpy as np
 bodyparts=['Nose','EarL','EarR','Neck','Back','Tail','ForeShoulderL','ForePowL',
 'ForeShoulderR','ForePowR','BackShoulderL','BackPowL','BackShoulderR','BackPowR']
 TemplateKeypointList = [{'points':[[0,0]],'shape_type':'point'} for i in range(len(bodyparts))]
+info = {'description': 'Rat Dataset', 'version': 1.0, 'year': 2020}
 
 class AutoId():
     def __init__(self):
@@ -46,6 +47,8 @@ class Labelme2coco():
         self.categories = []
         self.ann_id = 1 #start from 1
         self.auto_id = AutoId()
+        self.join_num = args.join_num
+        self.class_name = args.class_name
 
     def save_coco_json(self, instance, save_path):
         json.dump(instance, open(save_path, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
@@ -69,19 +72,18 @@ class Labelme2coco():
     def _image(self, obj, path):
         image = {}
 
-        img_x = utils.img_b64_to_arr(obj['imageData'])
-        image['height'], image['width'] = img_x.shape[:-1]
+        image['height'], image['width'] = obj['imageHeight'], obj['imageWidth']
 
         # self.img_id = int(os.path.basename(path).split(".json")[0])
         self.img_id = self.auto_id.query_by_name(os.path.basename(path).split(".json")[0])
         image['id'] = self.img_id
-        image['file_name'] = os.path.basename(path).replace(".json", ".png")
+        image['file_name'] = os.path.basename(obj["imagePath"])
 
         return image
 
     def _annotation(self, bboxes_list, keypoints_list, json_path):
-        if len(keypoints_list) != args.join_num * len(bboxes_list):
-            print('you loss {} keypoint(s) with file {}'.format(args.join_num * len(bboxes_list) - len(keypoints_list), json_path))
+        if len(keypoints_list) != self.join_num * len(bboxes_list):
+            print('you loss {} keypoint(s) with file {}'.format(self.join_num * len(bboxes_list) - len(keypoints_list), json_path))
             print('Please check !!!')
             # sys.exit()
         i = 0
@@ -100,7 +102,7 @@ class Labelme2coco():
             annotation['bbox'] = self._get_box(bbox)
             annotation['area'] = annotation['bbox'][2] * annotation['bbox'][3]
 
-            for keypoint in keypoints_list[i * args.join_num: (i + 1) * args.join_num]:
+            for keypoint in keypoints_list[i * self.join_num: (i + 1) * self.join_num]:
                 point = keypoint['points']
                 annotation['keypoints'], num_keypoints = self._get_keypoints(point[0], keypoints, num_keypoints)
             annotation['num_keypoints'] = num_keypoints
@@ -128,34 +130,38 @@ class Labelme2coco():
             obj = self.read_jsonfile(json_path)
             self.images.append(self._image(obj, json_path))
             shapes = obj['shapes']
-            imagePath = obj['imagePath']
-            imagePath = os.path.join(os.path.dirname(json_path), imagePath)
-            # read the image as grey color
-            img = cv2.imread(imagePath, cv2.IMREAD_GRAYSCALE)
-            imgbin = np.array(img > 0, dtype = np.uint8)
-            if np.sum(imgbin)/imgbin.size > 0.5:
-                x,y,w,h = 0,0,img.shape[1]-1,img.shape[0]-1
-            else:
-            # find the xmin, ymin, xmax, ymax of the imgbin
-                xmin = np.min(np.where(imgbin.any(axis=0))[0]) 
-                xmax = np.max(np.where(imgbin.any(axis=0))[0])
-                ymin = np.min(np.where(imgbin.any(axis=1))[0])
-                ymax = np.max(np.where(imgbin.any(axis=1))[0])
-                x,y,w,h = xmin,ymin,xmax-xmin,ymax-ymin
-                x,y,w,h = int(x),int(y),int(w),int(h)
+            x,y,w,h = [0, 0, obj['imageWidth'], obj['imageHeight']]
+            # imagePath = obj['imagePath']
+            # imagePath = os.path.join(os.path.dirname(json_path), imagePath)
+            # # read the image as grey color
+            # img = cv2.imread(imagePath, cv2.IMREAD_GRAYSCALE)
+            # imgbin = np.array(img > 0, dtype = np.uint8)
+            # if np.sum(imgbin)/imgbin.size > 0.5:
+            #     x,y,w,h = 0,0,img.shape[1]-1,img.shape[0]-1
+            # else:
+            # # find the xmin, ymin, xmax, ymax of the imgbin
+            #     xmin = np.min(np.where(imgbin.any(axis=0))[0]) 
+            #     xmax = np.max(np.where(imgbin.any(axis=0))[0])
+            #     ymin = np.min(np.where(imgbin.any(axis=1))[0])
+            #     ymax = np.max(np.where(imgbin.any(axis=1))[0])
+            #     x,y,w,h = xmin,ymin,xmax-xmin,ymax-ymin
+            #     x,y,w,h = int(x),int(y),int(w),int(h)
             
-            bboxes_list, keypoints_list = [{'label':'rat', 'points':[x,y,w,h]}], []
+            bboxes_list, keypoints_list = [{'label':self.class_name, 'points':[x,y,w,h]}], []
             keypoints_list = copy.copy(TemplateKeypointList)
+            kpt_labels = [kp['label'] for kp in shapes]
+            assert len(kpt_labels) == len(set(kpt_labels)), 'keypoint labels must be unique'
             for shape in shapes:
                 if shape['shape_type'] == 'point':
                     # find the index of the keypoint in bodyparts
                     idx = bodyparts.index(shape['label'])
                     keypoints_list[idx] = shape
-
+                else:
+                    raise ValueError('shape_type must be point')
             self._annotation(bboxes_list, keypoints_list, json_path)
 
         keypoints = {}
-        keypoints['info'] = {'description': 'Rat Dataset', 'version': 1.0, 'year': 2020}
+        keypoints['info'] = info
         keypoints['license'] = ['Free']
         keypoints['images'] = self.images
         keypoints['annotations'] = self.annotations
@@ -172,8 +178,8 @@ if __name__ == '__main__':
 
     assert len(bodyparts) == args.join_num, "the number of join is not equal to the number of keypoints"
 
-    labelme_path = args.input
-    saved_coco_path = args.input + '_trainval.json'
+    labelme_path = os.path.abspath(args.input)
+    saved_coco_path = labelme_path + '_trainval.json'
 
     json_list_path = glob.glob(labelme_path + "/*.json")
     print('{} for trainval'.format(len(json_list_path)))

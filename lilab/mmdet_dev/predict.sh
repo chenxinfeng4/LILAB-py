@@ -32,7 +32,7 @@ ball=`ls $vdir/ball/*.calibpkl`
 ls $vdir/*.segpkl | xargs -n 1 -I {} -P 4 python -m lilab.mmdet_dev.s4_segpkl_put_com3d_pro {} --calibpkl "$ball"
 
 #processor A (optional)
-ls $vdir/*.segpkl | sed 's/.segpkl/.mp4/' | xargs -n 1 -P 0 python -m lilab.mmdet_dev.s4_segpkl_com3d_to_video --vox_size 210
+ls $vdir/*.segpkl | sed 's/.segpkl/.mp4/' | xargs -n 1 -P 0 python -m lilab.mmdet_dev.s4_segpkl_com3d_to_video --vox_size 240
 #processor B (optional)
 ls $vdir/*.segpkl | sed 's/.segpkl/.mp4/' | grep 'F_' | xargs -n 1 -P 0 python -m lilab.mmdet_dev.s4_segpkl_com3d_to_video --vox_size 150
 ls $vdir/*.segpkl | sed 's/.segpkl/.mp4/' | grep 'M_' | xargs -n 1 -P 0 python -m lilab.mmdet_dev.s4_segpkl_com3d_to_video --vox_size 170

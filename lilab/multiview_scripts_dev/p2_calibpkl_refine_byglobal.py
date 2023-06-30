@@ -78,6 +78,8 @@ def main(calibpkl, globalrefpkl):
         pickle.dump(data_calib, f)
         print(f'recalibpkl saved as {outpkl}')
 
+    return outpkl
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

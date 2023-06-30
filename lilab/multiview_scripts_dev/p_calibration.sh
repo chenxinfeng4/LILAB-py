@@ -1,4 +1,5 @@
 #!/bin/bash
+# /home/liying_lab/chenxinfeng/ml-project/LILAB-py/lilab/multiview_scripts_dev/p_calibration.sh xxx.mp4 carl
 if [ $# -lt 2 ]; then
     echo "缺少参数，请输入两个参数. 第一个为视频路径，第二个为设备名"
     exit 1
@@ -16,7 +17,7 @@ vfile_checkboard=$vfile
 tball=" 0 0 0 0 10 " # 没有用，只是占位
 
 # 2A. 设置棋盘格，全局定标X、Y、Z轴
-python -m lilab.multiview_scripts_dev.p1_checkboard_global $vfile_checkboard.mp4 --board_size 11 8 --square_size 20 &
+python -m lilab.multiview_scripts_dev.p1_checkboard_global $vfile_checkboard.mp4 --setupname $setupname --board_size 11 8 --square_size 20 &
 
 # 2B. 每个视角单独预测小球,绘制2D轨迹视频
 python -m lilab.multiview_scripts_dev.s1_ballvideo2matpkl_full_faster $vfile.mp4 --pannels $setupname  #<深度学习>

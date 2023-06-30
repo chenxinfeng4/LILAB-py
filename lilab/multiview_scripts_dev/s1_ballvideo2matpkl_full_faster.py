@@ -119,7 +119,7 @@ class MyWorker():
             keypoints_xyp.append(kpt2d)
         
         # save data to pickle file
-        keypoints_xyp = np.array(keypoints_xyp).transpose(1,0,2,3)#(nview, T, 1, 3)
+        keypoints_xyp = np.array(keypoints_xyp).transpose(1,0,2,3)#(nview, T, K, 3)
         # assert np.mean(keypoints_xyp[...,2].ravel()<0.4) < 0.1, 'Too many nan in keypoints_xyp !'
         assert np.median(keypoints_xyp[...,2])>0.4, 'Too many nan in keypoints_xyp !'
 
@@ -141,7 +141,7 @@ def post_cpu(camsize, heatmap, center, scale, views_xywh, img_preview, calibobj)
     preds, maxvals = get_max_preds_gpu(heatmap)
     preds = transform_preds(
                 preds, center, scale, [W, H], use_udp=False)
-    keypoints_xyp = np.concatenate((preds, maxvals), axis=-1) #(N, xyp)
+    keypoints_xyp = np.concatenate((preds, maxvals), axis=-1) #(N, K, xyp)
     return keypoints_xyp
 
 

@@ -20,7 +20,7 @@ def load_pkl(mp4, idrat, iframe):
     if mp4 in pkldata_dict:
         pkldata = pkldata_dict[mp4]
     else:
-        pkl_file = osp.splitext(mp4)[0] + '.smoothed.matcalibpkl'
+        pkl_file = osp.splitext(mp4)[0] + '.matcalibpkl'
         pkldata = pickle.load(open(pkl_file, 'rb'))
         pkldata_dict[mp4] = pkldata
 

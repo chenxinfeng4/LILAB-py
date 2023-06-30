@@ -8,7 +8,6 @@ import tqdm
 import os.path as osp
 import sys
 import glob
-import ffmpegcv
 from lilab.mmdet_dev.canvas_reader import CanvasReader, CanvasReaderCV
 
 numframe_to_extract = 20

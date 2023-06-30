@@ -1,10 +1,5 @@
 # conda activate DEEPLABCUT
 # python -m lilab.cvutils.labelme_to_coco LABELME_DIR
-# functions:
-# 1. labelme_to_coco
-# 2. merge_multparts
-# 3. resort
-# 4. re_classid
 
 # %% import
 import labelme2coco

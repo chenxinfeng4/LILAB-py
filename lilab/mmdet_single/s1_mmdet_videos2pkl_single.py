@@ -2,12 +2,10 @@
 # python -m lilab.mmdet_single.s1_mmdet_videos2pkl_single  A/B/C
 import argparse
 import glob
-import itertools
 import os
 import os.path as osp
 
 import ffmpegcv
-import mmcv
 import numpy as np
 import torch
 import tqdm
@@ -39,7 +37,7 @@ video_path = [
 config = "/home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_onemice_816x512.py"
 # config = '/home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_bwrat_816x512_cam9_oldrat.py'
 
-
+iview, crop_xywh = 0, [513, 75, 790, 700]
 def prefetch_img_metas(cfg, ori_wh):
     w, h = ori_wh
     cfg.data.test.pipeline[0].type = "LoadImageFromWebcam"
@@ -82,7 +80,6 @@ def create_video(q:Queue, vfile_out:str, fps, cuda):
         codec='h264',
         fps=fps,
         gpu=int(cuda),
-        bitrate='200K'
     )
     #the first frame is background
     frame_origin, mask = q.get()
@@ -119,7 +116,7 @@ class MyWorker():
 
     def compute(self, args):
         video = args
-        iview, crop_xywh = 0, [0, 0, 1280, 800]
+        
         out_pkl = osp.splitext(video)[0] + f"_{iview}.pkl"
         if os.path.exists(out_pkl):
             print("Skipping:", osp.basename(out_pkl))
@@ -158,19 +155,21 @@ class MyWorker():
             maxlen = min([len(vid), self.maxlen]) if self.maxlen else len(vid)
 
             for i, frame in zip(tqdm.trange(maxlen, position=self.id, desc=f"[{self.id}]"), vid):
+                if i>1000:
+                    break
                 data = process_img(frame, img_metas)
                 result = model(return_loss=False, rescale=True, **data)
 
                 if len(result) == 2:
                     result = [result]
 
-                merge_mask = self.merge_masks(result, imghw=resize_wh)
+                merge_mask = self.merge_masks(result, imghw=resize_wh[::-1])
                 q.put((frame, merge_mask))
         q.put((None, None))
         process.join()
 
 
-    def merge_masks(self, result, thr=0.9, imghw=(800,1280)):
+    def merge_masks(self, result, imghw, thr=0.7):
         defaultMask = getattr(self, 'defaultMask', np.zeros(imghw, dtype='bool'))
         masks = np.array(result[0][1][0])
         if not len(masks):

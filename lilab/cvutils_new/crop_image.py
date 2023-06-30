@@ -1,6 +1,7 @@
 # python -m lilab.cvutils_new.crop_image a/b/
 # python -m lilab.cvutils_new.crop_image a/b/c.png
 import os.path as osp
+import os
 import argparse
 import glob
 import cv2
@@ -27,9 +28,12 @@ def convert(filename):
         views = get_view_xywh_wrapper(4)
     else:
         raise ValueError("Unknown image shape: {}".format(im.shape))
+    outdir = osp.join(osp.dirname(filename), "crop")
+    os.makedirs(outdir, exist_ok=True)
     for postfix, crop_xywh in enumerate(views):
+        outfile = os.path.splitext(os.path.join(outdir, os.path.basename(filename)))[0]
         outfileformat = "{}_output_" + str(postfix) + ".jpg"
-        outfilename = outfileformat.format(filename[:-4])
+        outfilename = outfileformat.format(outfile)
         # crop the image
         x, y, w, h = crop_xywh
         im1 = im[y : y + h, x : x + w]

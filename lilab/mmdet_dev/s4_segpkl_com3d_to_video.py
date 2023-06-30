@@ -61,8 +61,8 @@ def p2d_to_canvas(p2d, views_xywh, scale_wh):
     return p2d
 
 
-class MyWorker(mmap_cuda.Worker):
-# class MyWorker():
+# class MyWorker(mmap_cuda.Worker):
+class MyWorker():
     def compute(self, args):
         video_in, vox_size, maxlen = args
         self.cuda = getattr(self, 'cuda', 0)
@@ -90,18 +90,21 @@ class MyWorker(mmap_cuda.Worker):
         calibPredict = CalibPredict(pkl_data)
         coms_2d = p2d_to_canvas(coms_2d, views_xywh, scale_wh) # (nview, nsample, nclass, 2)
         nview, nsample, nclass, _ = coms_2d.shape
-        cube_xyz = coms_3d[None, ...] + verts[:,None,None,:]*vox_size/2  # (nsample, nclass, 3) + (8, 3) = (8, nsample, nclass, 3)
+        vox_size_list = vox_size*nclass if len(vox_size)==1 else vox_size
+        vox_size_list_np = np.array(vox_size_list)
+        assert len(vox_size_list)==nclass
+        cube_xyz = coms_3d[None, ...] + verts[:,None,None,:]*vox_size_list_np[:,None]/2  # (nsample, nclass, 3) + (8, 3) = (8, nsample, nclass, 3)
         cube_xyz[:,:,:,2] = np.clip(cube_xyz[:,:,:,2], 0, None) # set z to 0 if z<0
         cube_xy = calibPredict.p3d_to_p2d(cube_xyz)    # (nview, 8, nsample, nclass, 2)
-        vox_size=int(vox_size)
+        vox_labels = '_vol'.join([str(v) for v in vox_size])
         cube_xy = p2d_to_canvas(cube_xy, views_xywh, scale_wh) # (nview, 8, nsample, nclass, 2)
-        video_out = video_in.replace('.mp4', f'_com3d_vol{vox_size}.mp4')
-        vidout = ffmpegcv.VideoWriterNV(video_out, 
+        video_out = video_in.replace('.mp4', f'_com3d_vol{vox_labels}.mp4')
+        vidout = ffmpegcv.noblock(ffmpegcv.VideoWriterNV, video_out, 
                                         gpu = self.cuda,
                                         codec='h264', 
                                         fps=vid.fps, 
                                         pix_fmt='rgb24')
-        
+
         for i in tqdm(range(min(len(vid), maxlen)), position=int(self.id), 
                                         desc='worker[{}]'.format(self.id)):
             ret, frame = vid.read()
@@ -124,13 +127,13 @@ class MyWorker(mmap_cuda.Worker):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('video_path', type=str, default=None, help='path to video or folder')
-    parser.add_argument('--vox_size', type=float, default=vox_size, help='voxel total box size')
+    parser.add_argument('--vox_size', type=float, nargs='+', default=[vox_size], help='voxel total box size')
     parser.add_argument('--maxlen', type=int, default=None, help='maxlen of the video')
     args = parser.parse_args()
 
     video_path = args.video_path
     assert osp.exists(video_path), 'video_path not exists'
-    assert args.vox_size>0, 'voxel size should >0'
+    assert all(v>0 for v in args.vox_size), 'voxel size should >0'
     if osp.isfile(video_path):
         video_path = [video_path]
     elif osp.isdir(video_path):
@@ -142,10 +145,10 @@ if __name__ == '__main__':
     args_iterable = [(v, args.vox_size, args.maxlen) for v in video_path]
     num_gpus = min([torch.cuda.device_count()*4, len(args_iterable)])
     # init the workers pool
-    mmap_cuda.workerpool_init(range(num_gpus), MyWorker)
-    mmap_cuda.workerpool_compute_map(args_iterable)
+    # mmap_cuda.workerpool_init(range(num_gpus), MyWorker)
+    # mmap_cuda.workerpool_compute_map(args_iterable)
 
-    # worker = MyWorker()
-    # for args in args_iterable:
-    #     worker.compute(args)
+    worker = MyWorker()
+    for args in args_iterable:
+        worker.compute(args)
     

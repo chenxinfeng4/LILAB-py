@@ -9,7 +9,7 @@ crop_tbg = None
 crop_tdur = None
 codec = 'h264_nvenc'
 encoder = 'h264_cuvid'
-nviews = 9
+nviews = 4
 
 
 def xywh2whxy(xywh, keepXeqY=True):

@@ -12,6 +12,10 @@ import argparse
 matfile = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/ball/2022-04-29_17-58-45_ball.matcalibpkl'
 thr = 0.4
 
+pred_colors = [[0,0,255],[233,195,120],[0,215,255]] #BGR
+ba_colors = [[0,255,0],[234,100,202],[255,255,0]]
+
+
 def load_mat(matfile):
     print("Loading {}".format(matfile))
     data = pickle.load(open(matfile, 'rb'))
@@ -33,7 +37,7 @@ def load_mat(matfile):
 
 def keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data, gpu=0):
     # %%
-    resize = (1440, 1200)
+    resize = (1536, 960)
 
     vfile = data['info']['vfile']
     vin = ffmpegcv.VideoCaptureNV(vfile, resize=resize, resize_keepratio=False, gpu=gpu)
@@ -47,18 +51,23 @@ def keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data, gpu
     keypoints_xy_ba[..., 1] *= scale[1]
 
 
-    def draw_point_color(frame, keypoints_xy, i, color, radius=3):
-        keypoint_i_xy = keypoints_xy[:, i, :, :].reshape(-1, 2)
-        keypoint_i_xy = keypoint_i_xy[~np.isnan(keypoint_i_xy[:,0])]
-        # draw keypoints
-        for xy in keypoint_i_xy:
-            cv2.circle(frame, tuple(xy.astype(np.int32)), radius, color, -1)
+    def draw_point_color(frame, keypoints_xy, i, color_list, radius=3):
+        keypoint_i_xy = keypoints_xy[:, i, ...] # (NVIEW,K,xy).reshape(-1, 2)
+        K = keypoint_i_xy.shape[1]
+        NC = len(color_list)
+        color_K = [color_list[k%NC] for k in range(K)]
+
+        for k in range(K):
+            keypoint_i_xy_k = keypoint_i_xy[:, k, :]
+            keypoint_i_xy_k = keypoint_i_xy_k[~np.isnan(keypoint_i_xy_k[:,0])]
+            for xy in keypoint_i_xy_k:
+                cv2.circle(frame, tuple(xy.astype(np.int32)), radius, color_K[k], -1)
 
     # %%
     vout = ffmpegcv.VideoWriterNV(vfile.replace('.mp4', '_keypoints.mp4'), codec='h264', fps=vin.fps, gpu=gpu)
     for i, frame in enumerate(tqdm.tqdm(vin)):
-        draw_point_color(frame, keypoints_xy, i, (0,0,255), 5)
-        draw_point_color(frame, keypoints_xy_ba, i, (0,255,0), 3)
+        draw_point_color(frame, keypoints_xy, i, pred_colors, 5)
+        draw_point_color(frame, keypoints_xy_ba, i, ba_colors, 3)
         frame = cv2.putText(frame, str(i), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255), 2)
         key_xyz = keypoints_xyz_ba[i][0]
         if np.all(~np.isnan(key_xyz)):
@@ -68,8 +77,10 @@ def keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data, gpu
     vout.release()
 
 
-def main_showvideo(matcalibpkl, gpu=0):
+def main_showvideo(matcalibpkl, gpu=0, only3D=False):
     keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data = load_mat(matcalibpkl)
+    if only3D:
+        keypoints_xy[:] = np.nan
     # refine video path
     vfile = data['info']['vfile']
     print('vfile', vfile)
@@ -83,5 +94,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('matcalib', type=str)
     parser.add_argument('--gpu', type=int, default=0)
+    parser.add_argument('--only3D', action='store_true')
     args = parser.parse_args()
-    main_showvideo(args.matcalib, args.gpu)
+    main_showvideo(args.matcalib, args.gpu, args.only3D)

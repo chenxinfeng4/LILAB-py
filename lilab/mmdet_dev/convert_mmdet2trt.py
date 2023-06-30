@@ -18,7 +18,8 @@ def convert(config, checkpoint):
         config,
         checkpoint,
         fp16_mode=True,
-        enable_mask=True)
+        enable_mask=True,
+        output_names=['num_detections', 'boxes', 'scores', 'classes', 'masks'])
     print('Saving TRT model to: {}'.format(osp.basename(output)))
     torch.save(trt_model.state_dict(), output)
 

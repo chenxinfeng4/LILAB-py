@@ -58,6 +58,24 @@ def get_max_preds_gpu(heatmaps:torch.Tensor):
     return preds, maxvals
 
 
+def non_max_suppression(heatmap:np.ndarray, num_peaks, w=5) -> np.ndarray:
+    peaks = np.zeros((num_peaks, 3), dtype=np.float32)
+    for i in range(num_peaks):
+        max_index = np.argmax(heatmap)
+        peak = np.unravel_index(max_index, heatmap.shape)
+        peak_y, peak_x = peak
+        peak_v = heatmap[peak_y, peak_x]
+        peaks[i] = peak_x, peak_y, peak_v
+
+        y_min = max(0, peak_y - w // 2)
+        y_max = min(heatmap.shape[0], peak_y + w // 2 + 1)
+        x_min = max(0, peak_x - w // 2)
+        x_max = min(heatmap.shape[1], peak_x + w // 2 + 1)
+        heatmap[y_min:y_max, x_min:x_max] = 0
+
+    return peaks
+
+
 def transform_preds(coords, center, scale, output_size, use_udp=False):
     assert coords.shape[-1] == 2
     assert len(center) == 2

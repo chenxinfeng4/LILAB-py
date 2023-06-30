@@ -18,7 +18,8 @@ def parser_json(json_file, dir_name=None, rat_name=None):
     rat_name_id = rat_name_map[rat_name] if rat_name is not None else None
     if dir_name is None:
         dir_name = osp.dirname(osp.dirname(json_file))
-    outdirname = osp.join(dir_name, 'outframes')
+    outdirname = osp.join(dir_name, 'outframes_voxel')
+    os.makedirs(outdirname, exist_ok=True)
     filenames_dict = {filename:osp.join(dirpath, filename) for dirpath, _, filenames in os.walk(dir_name) for filename in filenames}
     for vfile in vfiles:
         full_vfile = filenames_dict[vfile]

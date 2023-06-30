@@ -15,7 +15,7 @@ import numpy as np
 
 bodyparts=['ball']
 TemplateKeypointList = [{'points':[[0,0]],'shape_type':'point'} for i in range(len(bodyparts))]
-
+info = {'description': 'Rat Dataset', 'version': 1.0, 'year': 2020}
 class AutoId():
     def __init__(self):
         self.id = 1 # start from 1

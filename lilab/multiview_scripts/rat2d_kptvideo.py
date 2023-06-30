@@ -14,6 +14,7 @@ mat_file_black = '/home/liying_lab/chenxinfeng/DATA/multiview-project/2021-11-02
 mat_file_white = '/home/liying_lab/chenxinfeng/DATA/multiview-project/2021-11-02-bwrat_800x600_30fps/whiteblack/15-37-42-white-copy/dlc/15-37-42_output_1-white.mat'
 video = osp.join(osp.dirname(mat_file_black), '15-37-42_output_1.mp4')
 
+color_dict = {'black': (36, 173, 243), 'white': (96, 30, 31), 'dot':(255,155,54)}
 # %%
 linkbody = np.array([[0,1],[0,2],[1,3],[2,3],[3,6],[3,8],[6,7],[4,6], [4,8],[8,9],
                      [4,10], [4,12],[6,10],[8,12],[5,10],[10,11], [5,12], [12,13]])
@@ -30,7 +31,8 @@ def cv_plot_skeleton_aframe(aframe, point2d_aframe, name):
     aframe = aframe.copy()
     # identitycolor = [97, 0, 15] if name=='white' else [0, 78, 130]  #RGB
     # identitycolor = [97, 0, 15] if name=='white' else [0, 78, 130]  #RGB
-    identitycolor = [96, 30, 31] if name=='white' else [36, 173, 243]  #RGB #[96, 30, 31] 白鼠,[235, 219, 119]金色黑鼠
+    # identitycolor = [96, 30, 31] if name=='white' else [36, 173, 243]  #RGB #[96, 30, 31] 白鼠,[235, 219, 119]金色黑鼠
+    identitycolor = color_dict[name]
     colors = [[255,0,0],  [255, 0, 255], [255, 0, 255], identitycolor, [255,255,0], [0, 255, 0]] + [identitycolor]*8
     colors = np.array(colors, dtype=np.uint8)[:,::-1].tolist() # BGR to RGB
     for marker_type, color, point2d in zip(marker_types, colors, point2d_aframe):
