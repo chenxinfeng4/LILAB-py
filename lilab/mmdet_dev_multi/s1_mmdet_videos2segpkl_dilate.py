@@ -28,7 +28,7 @@ from mmdet.datasets.pipelines import Compose
 from multiprocessing import Process, Queue
 import multiprocess as mp
 import itertools
-
+from lilab.mmdet_dev.filter_vname import filter_vname
 # from lilab.mmpose_dev.a2_convert_mmpose2engine import findcheckpoint_trt
 
 video_path = [
@@ -39,7 +39,13 @@ video_path = [
     if f[-4] not in "0123456789"
 ]
 
+config = '/home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_rat_oneclass.py'
+config = '/home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_bwdrat_816x512_cam9.py'
 config = '/home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_bwrat_816x512_cam9_oldrat.py'
+img_wh = 1280, 800
+kernel_size = (21, 21)
+kernel_np = np.ones(kernel_size, np.uint8)
+
 
 def prefetch_img_metas(cfg, ori_wh):
     w, h = ori_wh
@@ -155,61 +161,116 @@ def s1_filt_by_thr(result, thr=0.5):
         result_out.append(a_frame_out)
     return result_out
 
-def s2_det2seg_part(resultf):
-    nclass = len(resultf[0][0])
-    masks0 = np.array(resultf[0][1][0], dtype='uint8')
-    masks1 = np.array(resultf[0][1][1], dtype='uint8')
-    masks0, masks1 = refine_mask(masks0, masks1)# nmasks, y, x
-    pvals = []
-    if len(masks0) and len(masks1):
-        masks = np.concatenate([masks0, masks1], axis=0) > 0
-    elif len(masks0) == 0:
-        masks = masks1 > 0
-    elif len(masks1) == 0:
-        masks = masks0 > 0
-    classids = []
+# def s2_det2seg_part(resultf):
+#     nclass = len(resultf[0][0])
+#     masks0 = np.array(resultf[0][1][0], dtype='uint8')
+#     masks1 = np.array(resultf[0][1][1], dtype='uint8')
+#     masks0, masks1 = refine_mask(masks0, masks1)# nmasks, y, x
+#     pvals = []
+#     if len(masks0) and len(masks1):
+#         masks = np.concatenate([masks0, masks1], axis=0) > 0
+#     elif len(masks0) == 0:
+#         masks = masks1 > 0
+#     elif len(masks1) == 0:
+#         masks = masks0 > 0
+#     classids = []
 
+#     for iclass in range(nclass):
+#         for boxp, maskzip in zip(resultf[0][0][iclass], resultf[0][1][iclass]):
+#             pvals.append(boxp[-1])
+#             classids.append(iclass)
+
+#     canvas = np.zeros((800,1280))
+#     pvals = np.array(pvals)
+#     classids = np.array(classids)
+#     sort_inds = np.argsort(classids)[::-1]  # ascending order
+#     pvals = pvals[sort_inds]
+#     masks = masks[sort_inds]
+#     classids = classids[sort_inds]
+#     pvals_dict = dict(zip(classids, pvals))
+#     for mask_mat, iclass in zip(masks, classids):
+#         canvas[mask_mat] = iclass + 1
+
+#     # canvas = mask2resize(canvas, shape_base)
+#     for iclass in range(nclass):
+#         mask = canvas == (iclass + 1)
+#         if np.sum(mask) <= 4:
+#             # ignore this mask
+#             resultf[0][0][iclass] = []
+#         else:
+#             x, y, w, h = cv2.boundingRect(mask.astype(np.uint8))
+#             pval = pvals_dict[iclass]
+#             resultf[0][0][iclass] = [np.array([x, y, x + w, y + h, pval])]
+
+#         resultf[0][1][iclass] = [np.array(mask[:,:,np.newaxis], order='F', dtype=np.uint8)]
+#     return resultf
+
+
+def s2_det2seg_part_single(resultf):
+    masks0 = np.array(resultf[0][1][0], dtype='uint8')
+    iclass = 0
+    if len(masks0)==0:
+        mask = np.zeros((800, 1280), dtype='uint8')
+        resultf[0][0][iclass] = [0, 0, *img_wh, 0]
+    else:
+        mask = masks0[0]
+        x, y, w, h = cv2.boundingRect(mask.astype(np.uint8))
+        pval = resultf[0][0][iclass][0][-1]  #choose the first one
+        resultf[0][0][iclass] = [np.array([x, y, x + w, y + h, pval])]
+
+    resultf[0][1][iclass] = [np.array(mask[:,:,np.newaxis], dtype=np.uint8)]
+    return resultf
+
+
+def s2_det2seg_part(resultf):
+    nclass = len(resultf[0][0])# 2/3
+    if nclass == 1:
+        return s2_det2seg_part_single(resultf)
+    
+    pvals = []
+    classids = []
+    masksall = []
     for iclass in range(nclass):
         for boxp, maskzip in zip(resultf[0][0][iclass], resultf[0][1][iclass]):
             pvals.append(boxp[-1])
             classids.append(iclass)
-
-    canvas = np.zeros((800,1280))
+            masksall.append(np.array(maskzip, dtype=np.uint8))
     pvals = np.array(pvals)
+    sorted_idx = np.argsort(pvals)
+    pvals = pvals[sorted_idx]
     classids = np.array(classids)
-    sort_inds = np.argsort(classids)[::-1]  # ascending order
-    pvals = pvals[sort_inds]
-    masks = masks[sort_inds]
-    classids = classids[sort_inds]
+    classids = classids[sorted_idx]
+    masksmerge = np.zeros((img_wh[1],img_wh[0]))
     pvals_dict = dict(zip(classids, pvals))
-    for mask_mat, iclass in zip(masks, classids):
-        canvas[mask_mat] = iclass + 1
 
-    # canvas = mask2resize(canvas, shape_base)
+    for i in range(len(pvals)):
+        if pvals[i] < 0.5:
+            masksall[sorted_idx[i]][:] = 0
+        masksmerge[masksall[sorted_idx[i]] != 0] = (classids[i]+1)
+
+    x, y, w, h = 0, 0, *img_wh
     for iclass in range(nclass):
-        mask = canvas == (iclass + 1)
+        mask = masksmerge == (iclass + 1)
         if np.sum(mask) <= 4:
             # ignore this mask
-            resultf[0][0][iclass] = []
+            resultf[0][0][iclass] = [np.array([x, y, x + w, y + h, 0])]
         else:
-            x, y, w, h = cv2.boundingRect(mask.astype(np.uint8))
+            # x, y, w, h = cv2.boundingRect(mask.astype(np.uint8))
             pval = pvals_dict[iclass]
             resultf[0][0][iclass] = [np.array([x, y, x + w, y + h, pval])]
 
-        resultf[0][1][iclass] = [np.array(mask[:,:,np.newaxis], order='F', dtype=np.uint8)]
+        resultf[0][1][iclass] = [np.array(mask[:,:,np.newaxis], dtype=np.uint8)]
     return resultf
 
-kernel_size = (21, 21)
-kernel_np = np.ones(kernel_size, np.uint8)
 
 def s3_dilate_cv(result):
-
     nclass = len(result[0][0])
     for iclass in range(nclass):
         mask = result[0][1][iclass][0]
         out_array = cv2.dilate(mask, kernel_np, iterations=1)
-        result[0][1][iclass] = [out_array]
+        result[0][1][iclass] = [np.array(out_array, order='F', dtype=np.uint8)]
     return result 
+
 
 def s4_com2d(result):
     nclass = len(result[0][0])
@@ -395,7 +456,6 @@ class MyWorker(mmap_cuda.Worker):
         return out_pkl
 
 def convert(vfile,nviews):
-
     pkl_files = glob.glob(osp.splitext(vfile)[0] + '_*.seg2pkl')
     p = re.compile('.*(\d+).seg2pkl$')
     views = [int(p.findall(pkl_file)[0]) for pkl_file in pkl_files]
@@ -412,6 +472,8 @@ def convert(vfile,nviews):
         segdata[view] = data['segdata']
         com2d[view] = data['coms_2d']
 
+    com2d = np.array(com2d)
+    _, nframe, nclass, _ = com2d.shape
     outdata = { 'info': {
         'vfile': vfile, 
         'nview': len(views), 
@@ -421,6 +483,8 @@ def convert(vfile,nviews):
     'segdata': segdata,
     'coms_2d': com2d,
     'dilate_segdata': segdata,
+    'nclass': nclass,
+    'nframe': nframe
     }
     # save  file
     outpkl  = osp.splitext(vfile)[0] + '.segpkl'
@@ -429,8 +493,33 @@ def convert(vfile,nviews):
     for iviews in range(nviews):
         os.remove(osp.splitext(vfile)[0]+f'_{iviews}.seg2pkl')
     return outpkl
-        
+      
 
+def parse_args(parser:argparse.ArgumentParser):
+    args = parser.parse_args()
+
+    views_xywh = get_view_xywh_wrapper(args.pannels)# 分割坐标 x轴 y轴 width height
+    video_path = args.video_path
+    assert osp.exists(video_path), "video_path not exists"
+    if osp.isfile(video_path):
+        videos_path = [video_path]
+    elif osp.isdir(video_path):
+        videos_path = glob.glob(osp.join(video_path, "*.mp4"))
+        videos_path = filter_vname(videos_path)
+        assert len(videos_path) > 0, "no video found"
+    else:
+        raise ValueError("video_path is not a file or folder")
+    if args.checkpoint is None:
+        args.checkpoint = findcheckpoint_trt(args.config, "latest.trt")
+        # args.checkpoint = findcheckpoint_trt(args.config, "latest.pth")
+
+    print('total vfiles:', len(videos_path))
+    num_gpus = min((torch.cuda.device_count(), len(video_path)*args.pannels))
+    print("num_gpus:", num_gpus)
+    # init the workers pool
+
+    args_iterable = list(itertools.product(videos_path, enumerate(views_xywh)))
+    return num_gpus, videos_path, args_iterable, args
 
 
 if __name__ == "__main__":
@@ -443,34 +532,7 @@ if __name__ == "__main__":
     parser.add_argument("--checkpoint", type=str, default=None)
     parser.add_argument("--maxlen", type=int, default=None)
 
-    args = parser.parse_args()
-
-    views_xywh = get_view_xywh_wrapper(args.pannels)# 分割坐标 x轴 y轴 width height
-    video_path = args.video_path
-    assert osp.exists(video_path), "video_path not exists"
-    if osp.isfile(video_path):
-        videos_path = [video_path]
-    elif osp.isdir(video_path):
-        videos_path = [
-            f
-            for f in glob.glob(osp.join(video_path, "*.mp4"))
-            if  'mask.mp4' not in f and 'smoothed' not in f
-        ]
-        assert len(videos_path) > 0, "no video found"
-    else:
-        raise ValueError("video_path is not a file or folder")
-    if args.checkpoint is None:
-        args.checkpoint = findcheckpoint_trt(args.config, "latest.trt")
-        # args.checkpoint = findcheckpoint_trt(args.config, "latest.pth")
-
-
-    print('total vfiles:', len(videos_path))
-    num_gpus = min((torch.cuda.device_count(), len(video_path)*args.pannels))
-    print("num_gpus:", num_gpus)
-    # init the workers pool
-
-    args_iterable = list(itertools.product(videos_path, enumerate(views_xywh)))
-    
+    num_gpus, videos_path, args_iterable, args = parse_args(parser)
     mmap_cuda.workerpool_init(range(num_gpus), MyWorker, args.config, args.checkpoint, args.maxlen)
     detpkls = mmap_cuda.workerpool_compute_map(args_iterable)
     # worker = MyWorker(args.config, args.checkpoint, args.maxlen)

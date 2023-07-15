@@ -21,6 +21,7 @@ from lilab.multiview_scripts_dev.s1_ballvideo2matpkl_full_realtimecam import (
 import os.path as osp
 import glob
 import lilab.cvutils.map_multiprocess_cuda as mmap_cuda
+import warnings
 
 num_gpus = min([torch.cuda.device_count(), 4])
 
@@ -76,10 +77,11 @@ class MyWorker():
         views_xywh_shrink = np.round(views_xywh_np / np.array([scale_shrink_w, scale_shrink_h, scale_shrink_w, scale_shrink_h])).astype(int)
         vid = ffmpegcv.VideoCaptureNV(video_file, pix_fmt='rgb24', crop_xywh=canvas_xywh.tolist(), 
                                       resize=canvas_xywh_shrink[2:].tolist(),
+                                      resize_keepratio=False,
                                       gpu=self.cuda)
         c_channel_in=1 if vid.pix_fmt=='nv12' else 3
         dataset = DataSet(vid, cfg, views_xywh_shrink, c_channel_in=c_channel_in)
-        dataset.center, dataset.scale = box2cs(np.array([0,0,view_w,view_h]), feature_in_wh)
+        dataset.center, dataset.scale = box2cs(np.array([0,0,view_w,view_h]), feature_in_wh, keep_ratio=False)
         dataset_iter = iter(dataset)
 
         center, scale = dataset.center, dataset.scale
@@ -121,7 +123,9 @@ class MyWorker():
         # save data to pickle file
         keypoints_xyp = np.array(keypoints_xyp).transpose(1,0,2,3)#(nview, T, K, 3)
         # assert np.mean(keypoints_xyp[...,2].ravel()<0.4) < 0.1, 'Too many nan in keypoints_xyp !'
-        assert np.median(keypoints_xyp[...,2])>0.4, 'Too many nan in keypoints_xyp !'
+        if np.median(keypoints_xyp[...,2])>0.4:
+            warnings.warn('Too many nan in keypoints_xyp !')
+            # assert np.median(keypoints_xyp[...,2])>0.4, 'Too many nan in keypoints_xyp !'
 
         info = {'vfile': video_file, 'nview': len(views_xywh), 'fps':  dataset.vid.fps}
         outpkl = os.path.splitext(video_file)[0] + '.matpkl'

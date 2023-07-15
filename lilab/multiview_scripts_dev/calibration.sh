@@ -1,10 +1,10 @@
 # 1. 激活对应环境，输入相关地址配置
 # conda activate mmpose
-vfile=`w2l "\\liying.cibr.ac.cn\Data_Temp\Chenxinfeng\multiview_9\chenxf\LZTxWT_230505\2023-04-05_13-18-24ball.mp4"`
+vfile=`w2l "\\liying.cibr.ac.cn\Data_Temp\Chenxinfeng\multiview_9\zhongzhenchao\zzc_to_dzy\202305oxtr-gq_m\ball\2023-05-07_14-29-32_ball.mp4"`
 
-setupname="bob"
+setupname="ana"
 
-tball=" 0 8 14 20 31 "
+tball=" 0 17 31 50 74 "
 
 vfile=`echo "$vfile" | sed 's/.mp4//'`
 # 2. 每个视角单独预测小球

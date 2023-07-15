@@ -23,6 +23,7 @@ python -m lilab.multiview_scripts_dev.p1_checkboard_global $vfile_checkboard.mp4
 python -m lilab.multiview_scripts_dev.s1_ballvideo2matpkl_full_faster $vfile.mp4 --pannels $setupname  #<深度学习>
 
 # python -m lilab.multiview_scripts_dev.s5_show_calibpkl2video $vfile.matpkl &
+.
 
 # 3. （可选）检查是否有坏点，修正 
 

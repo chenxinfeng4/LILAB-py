@@ -70,7 +70,8 @@ def get_background_img(global_iframe, vfile, views_xywh):
 def downsampe_keypoint(keypoint_xy_move):
     ind_notnan = np.isnan(keypoint_xy_move[:,:,0]) #(nview, nframe)
     ind_3notnan = np.sum(ind_notnan, axis=1) >=4
-    
+    # ind_3notnan = np.sum(ind_notnan, axis=1) >=2
+
     keypoint_xy_move = keypoint_xy_move[ind_3notnan]
     ind_notnan = np.isnan(keypoint_xy_move[:,:,0]) #(nview, nframe)
 

@@ -18,9 +18,10 @@ def get_json_800x600x6():
 
 
 def get_json_1280x800x4():
-    setup_json = json.loads(setup_json1280x800x4)
+    setup_json  = json.loads(setup_json1280x800x4)
     intrinsics_rational_json = json.loads(intrinsics_rational_json1280x800x4)
     return setup_json, intrinsics_rational_json
+
 
 def get_json_ana():
     return get_json_1280x800x9()
@@ -34,6 +35,22 @@ def get_json_carl():
     setup_json = json.loads(setup_json1280x800x9)
     intrinsics_rational_json = json.loads(intrinsics_rational_json1280x800x9_carl)
     return setup_json, intrinsics_rational_json
+
+def get_json_zyy():
+    setup_json  = json.loads(setup_json1280x800x9)
+    setup_json = {
+        "views": [ 0, 1, 2, 3, 4, 5],
+        "minimal_tree": [
+            [1, 0],
+            [2, 1],
+            [1, 3],
+            [1, 4],
+            [5, 4]
+        ]
+    }
+    intrinsics_rational_json = json.loads(intrinsics_rational_json2448x2048x9_zyy)
+    return setup_json, intrinsics_rational_json
+
 
 def get_ballglobal_cm():
     fitball_xyz_global =  np.array([[0, 0, 0],
@@ -723,6 +740,65 @@ intrinsics_rational_json800x600x6 = """
                     0.0, 0.0, 0.0, 0.0, 0.0],
         "reproj_error": 0.1,
         "image_shape": [600, 800]
+    }
+}
+"""
+
+intrinsics_rational_json2448x2048x9_zyy =  """
+{
+    "0": {
+        "date": "2023-5-4 21:55:50",
+        "description": "",
+        "K": [[1774,0,1214],
+            [0,1779,1045],
+            [0,0,1.0]],
+        "dist": [-0.1775, 0.1114, 0.0, 0.0, 0.0],
+        "image_shape": [2048,2448]
+    },
+    "1": {
+        "date": "2023-5-4 21:55:50",
+        "description": "",
+        "K": [[1809,0,1239],
+            [0,1809,1054],
+            [0,0,1.0]],
+        "dist": [-0.1801, 0.1021, 0.0, 0.0, 0.0],
+        "image_shape": [2048,2448]
+    },
+    "2": {
+        "date": "2023-5-4 21:55:50",
+        "description": "",
+        "K": [[1804,0,1239],
+            [0,1804,1056],
+            [0,0,1.0]],
+        "dist": [-0.1853, 0.1293, 0.0, 0.0, 0.0],
+        "image_shape": [2048,2448]
+    },
+    "3": {
+        "date": "2023-5-4 21:55:50",
+        "description": "",
+        "K": [[594,0,1201],
+            [0,594,1054],
+            [0,0,1.0]],
+        "dist": [0.0215, -0.0069, 0.0, 0.0, 0.0],
+        "image_shape": [2048,2448]
+    },
+    "4": {
+        "date": "2023-5-4 21:55:50",
+        "description": "",
+        "K": [[1803,0,1201],
+            [0,1803,1054],
+            [0,0,1.0]],
+        "dist": [-0.1817, 0.1035, 0.0, 0.0, 0.0],
+        "image_shape": [2048,2448]
+    },
+    "5": {
+        "date": "2023-5-4 21:55:50",
+        "description": "",
+        "K": [[1832,0,1243],
+            [0,1831,1024],
+            [0,0,1.0]],
+        "dist": [-0.1903, 0.1614, 0.0, 0.0, 0.0],
+        "image_shape": [2048,2448]
     }
 }
 """

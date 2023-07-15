@@ -24,7 +24,7 @@ from multiview_calib import utils
 from multiview_calib.extrinsics_short import (compute_relative_poses_robust, visualise_epilines, 
                                         verify_view_tree, global_registration, visualise_global_registration,
                                         concatenate_relative_poses, visualise_cameras_and_triangulated_points,
-                                        verify_landmarks, global_registration_np)
+                                        verify_landmarks, global_registration_np, compute_relative_poses)
 from multiview_calib.bundle_adjustment_scipy_short import (build_input, bundle_adjustment, evaluate, 
                                                      visualisation, unpack_camera_params, error_measure)
 from multiview_calib.singleview_geometry import reprojection_error
@@ -57,6 +57,7 @@ def get_sub_ba_poses(subviews, setup, intrinsics, landmarks_move_xy, background_
     extrinsics = a2_concatenate_relative_poses(setup, relative_poses)
     poses = intri_extrin_to_ba_poses(intrinsics, extrinsics)
     config = {'th_outliers_early':100, "th_outliers":20}
+    config = {'th_outliers_early':500, "th_outliers":100}
     ba_poses, ba_points = a3_bundle_ajustment(setup, poses, landmarks_move_xy, background_img,
                                               config = config, iter1=100, iter2=300)
     return setup, ba_poses, ba_points
@@ -121,9 +122,11 @@ def a1_relative_poses(setup,
     if not verify_view_tree(setup['minimal_tree']):
         raise ValueError("minimal_tree is not a valid tree!")     
     
-    relative_poses = compute_relative_poses_robust(setup['views'], setup['minimal_tree'], intrinsics, 
-                                                   landmarks, method=method, th=th, max_paths=max_paths,
-                                                   verbose=1)
+    # relative_poses = compute_relative_poses_robust(setup['views'], setup['minimal_tree'], intrinsics, 
+    #                                                landmarks, method=method, th=th, max_paths=max_paths,
+    #                                                verbose=1)
+    relative_poses = compute_relative_poses(setup['minimal_tree'], intrinsics, 
+                                            landmarks, method=method, th=th, verbose=1)
     visualise_epilines(setup['minimal_tree'], relative_poses, intrinsics, landmarks, 
                         background_img, output_path=output_path)
     
@@ -519,6 +522,7 @@ def main_calibrate(ballfile, skip_global:bool, skip_camera_intrinsic:bool):
     extrinsics = a2_concatenate_relative_poses(setup, relative_poses)
     poses = intri_extrin_to_ba_poses(intrinsics, extrinsics)
     config = {'th_outliers_early':100, "th_outliers":20}
+    # config = {'th_outliers_early':400, "th_outliers":100}
     if skip_camera_intrinsic:
         print("Fixing camera instrincis!")
         intrinsics_bounds = np.zeros(18) + 0.0001  #4+6+n

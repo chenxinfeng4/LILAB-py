@@ -67,7 +67,7 @@ class CanvasReader:
         self.vid = vid
         self.views_xywh = views_xywh
         self.pkl_data = pkl_data
-        self.nclass = 2
+        self.nclass = len(pkl_data['segdata'][0][0][1])
         with torch.cuda.device(self.cuda):
             self.mask_container = torch.zeros((self.nclass, *mask_container_size)).cuda().half()
             self.mask_index = mask_index
@@ -225,7 +225,7 @@ class CanvasReaderCV:
 
 
 class CanvasReaderThumbnail(CanvasReader):
-    def __init__(self, video_path, segment_path=None, gpu=0, dilate=True , nclass=2):
+    def __init__(self, video_path, segment_path=None, gpu=0, dilate=True):
         super().__init__(video_path, segment_path, gpu, dilate)
         self.vid.release()
         if len(self.views_xywh)==6:
@@ -259,7 +259,6 @@ class CanvasReaderThumbnail(CanvasReader):
             raise NotImplementedError
         self.scale_wh = scale_wh
         self.vid = vid
-        self.nclass = nclass
 
         self.mask_container = torch.zeros((self.nclass, *mask_container_size), device=self.cuda, dtype=torch.half)
         self.fun_resize = torchvision.transforms.Resize(self.mask_container.shape[-2:],

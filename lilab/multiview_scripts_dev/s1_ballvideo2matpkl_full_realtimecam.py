@@ -40,6 +40,7 @@ class DataSet():
         self.center, self.scale = center, scale
 
         canvas_w, canvas_h = vid.width, vid.height
+        preview_resize = (canvas_w, canvas_h)
         desired_size = cfg.data_cfg['image_size'][::-1] #(h,w)
         chw_coord_ravel_nview = []
         c_channel_out=3

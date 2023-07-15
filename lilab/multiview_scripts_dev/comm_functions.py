@@ -3,23 +3,23 @@
 import numpy as np
 import torch
 
-def box2cs(box, image_size):
+def box2cs(box, image_size, keep_ratio=True):
     """Encode bbox(x,y,w,h) into (center, scale) without padding.
 
     Returns:
         tuple: A tuple containing center and scale.
     """
     x, y, w, h = box[:4]
-
     aspect_ratio = 1. * image_size[0] / image_size[1]
     center = np.zeros((2), dtype=np.float32)
     center[0] = x + w * 0.5
     center[1] = y + h * 0.5
 
-    if w > aspect_ratio * h:
-        h = w * 1.0 / aspect_ratio
-    elif w < aspect_ratio * h:
-        w = h * aspect_ratio
+    if keep_ratio:
+        if w > aspect_ratio * h:
+            h = w * 1.0 / aspect_ratio
+        elif w < aspect_ratio * h:
+            w = h * aspect_ratio
     scale = np.array([w * 1.0 / 200.0, h * 1.0 / 200.0], dtype=np.float32)
     return center, scale
 
@@ -54,7 +54,6 @@ def get_max_preds_gpu(heatmaps:torch.Tensor):
     preds[:, :, 0] = preds[:, :, 0] % W
     preds[:, :, 1] = preds[:, :, 1] // W
 
-    preds = np.where(np.tile(maxvals, (1, 1, 2)) > 0.0, preds, -1)
     return preds, maxvals
 
 

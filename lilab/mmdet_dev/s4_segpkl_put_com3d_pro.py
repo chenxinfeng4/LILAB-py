@@ -40,7 +40,7 @@ def get_all_frame_com2d(segdata, mask_original_shape) -> np.ndarray:
                             mask_original_shape[0]/mask_real_shape[0]]])
     nviews = len(segdata)
     nframes = len(segdata[0])
-    nclass = 2
+    nclass = len(segdata[0][0][1])
 
     global worker
     def worker(iframe):
@@ -91,8 +91,8 @@ def convert(segpkl, calibpkl):
     nviews = len(segdata)
     nframes = len(segdata[0])
     nclass = len(segdata[0][0][1])
-
-    if 'coms_2d' in pkl_data and 'coms_3d' not in pkl_data:
+    print(nclass)
+    if 'coms_2d' in pkl_data: # and 'coms_3d' not in pkl_data:
         coms_2d = np.array(pkl_data['coms_2d']) # nviews, nframes, nclass, 2
     else:
         coms_2d = get_all_frame_com2d(segdata, mask_original_shape)

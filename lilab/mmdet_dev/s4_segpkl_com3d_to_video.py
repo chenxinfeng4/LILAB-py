@@ -88,6 +88,7 @@ class MyWorker():
         scale_wh = vid.width/origin_width, vid.height/origin_height
 
         calibPredict = CalibPredict(pkl_data)
+        calibPredict.image_shape = None
         coms_2d = p2d_to_canvas(coms_2d, views_xywh, scale_wh) # (nview, nsample, nclass, 2)
         nview, nsample, nclass, _ = coms_2d.shape
         vox_size_list = vox_size*nclass if len(vox_size)==1 else vox_size
@@ -144,6 +145,7 @@ if __name__ == '__main__':
 
     args_iterable = [(v, args.vox_size, args.maxlen) for v in video_path]
     num_gpus = min([torch.cuda.device_count()*4, len(args_iterable)])
+
     # init the workers pool
     # mmap_cuda.workerpool_init(range(num_gpus), MyWorker)
     # mmap_cuda.workerpool_compute_map(args_iterable)

@@ -15,7 +15,8 @@ import itertools
 import ffmpegcv
 from lilab.mmdet_dev.canvas_reader import CanvasReader, CanvasReaderThumbnail
 from lilab.mmlab_scripts.show_pkl_seg_video_fast import get_mask_colors
-from lilab.cameras_setup import get_view_xywh_wrapper as get_view_xywh
+from lilab.mmdet_dev.filter_vname import filter_vname
+
 video_path = [f for f in glob.glob('/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/TPH2HETxWT/*.mp4')
                 if f[-5] not in '0123456789' and 'mask' not in f]
 
@@ -24,13 +25,13 @@ mask_colors = torch.Tensor(get_mask_colors())
 nclass = 2
 
 
-# class MyWorker(mmap_cuda.Worker):
-class MyWorker():
+class MyWorker(mmap_cuda.Worker):
+# class MyWorker():
     def compute(self, args):
-        video_in, enable_dilate, maxlen, nclass = args
+        video_in, enable_dilate, maxlen = args
         self.cuda = getattr(self, 'cuda', 0)
         self.id = getattr(self, 'id', 0)
-        vid = CanvasReaderThumbnail(video_in, gpu=self.cuda, dilate=enable_dilate, nclass=nclass)
+        vid = CanvasReaderThumbnail(video_in, gpu=self.cuda, dilate=enable_dilate)
         video_out = video_in.replace('.mp4', f'_mask.mp4')
         # print('video_out:', video_out)
         vidout = ffmpegcv.VideoWriterNV(video_out, 
@@ -55,7 +56,6 @@ if __name__ == '__main__':
     parser.add_argument('video_path', type=str, default=None, help='path to video or folder')
     parser.add_argument('--disable-dilate', action='store_true', help='disable dilate')
     parser.add_argument('--maxlen', type=int, default=None, help='maxlen of the video')
-    parser.add_argument('--nclass', type=int, default=2, help='number of animals')
     args = parser.parse_args()
 
     video_path = args.video_path
@@ -63,18 +63,15 @@ if __name__ == '__main__':
     if osp.isfile(video_path):
         video_path = [video_path]
     elif osp.isdir(video_path):
-        video_path = [
-            f
-            for f in glob.glob(osp.join(video_path, "*.mp4"))
-            if  'mask.mp4' not in f and 'smoothed' not in f
-        ]
-        assert len(video_path) > 0, 'no video found'
+        video_path = glob.glob(osp.join(video_path, "*.mp4"))
+        video_path = filter_vname(video_path)
+        assert len(video_path) > 0, "no video found"
     else:
         raise ValueError('video_path is not a file or folder')
 
     print('video_path:', video_path)
     enable_dilate = not args.disable_dilate
-    args_iterable = list(itertools.product(video_path, [enable_dilate], [args.maxlen], [args.nclass]))
+    args_iterable = list(itertools.product(video_path, [enable_dilate], [args.maxlen]))
     num_gpus = min([torch.cuda.device_count()*2, len(args_iterable)])
     # init the workers pool
     if True:

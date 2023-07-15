@@ -1,7 +1,7 @@
 from ._get_calibinfo import (get_json_1280x800x10, 
     get_json_800x600x6, get_json_1280x800x4,
     get_json_1280x800x9, get_json_bob, get_json_carl,
-    get_ballglobal_cm)
+    get_ballglobal_cm, get_json_zyy)
 
 def get_view_hflip():
     return [0, 1, 0, 
@@ -17,6 +17,8 @@ def get_view_xywh_wrapper(nviews):
         return get_view_xywh_800x600x6()
     elif nviews in [9, '9', 'ana', 'bob', 'carl']:
         return get_view_xywh_1280x800x9()
+    elif nviews == 'zyy':
+        return get_view_xywh_2448x2048x6()
     elif nviews==10:
         return get_view_xywh_1280x800x10()
     else:
@@ -37,6 +39,8 @@ def get_json_wrapper(nviews):
         return get_json_bob()
     elif nviews=='carl':
         return get_json_carl()
+    elif nviews=='zyy':
+        return get_json_zyy()
     else:
         raise NotImplementedError
 
@@ -73,6 +77,16 @@ def get_view_xywh_1280x800x4():
                 [w*1,h*0,w,h],
                 [w*0,h*1,w,h],
                 [w*1,h*1,w,h]]
+    return crop_xywh
+
+def get_view_xywh_2448x2048x6():
+    w, h = 2448, 2048
+    crop_xywh = [[w*0,h*0,w,h],
+                [w*1,h*0,w,h],
+                [w*2,h*0,w,h],
+                [w*0,h*1,w,h],
+                [w*1,h*1,w,h],
+                [w*2,h*1,w,h]]
     return crop_xywh
 
 def get_view_xywh_800x600x6():

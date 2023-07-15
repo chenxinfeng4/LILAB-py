@@ -78,7 +78,7 @@ class CanvasReaderPannelMask(object):
         return self.vid.fps
 
     def __len__(self):
-        return self.vid.count
+        return self.nframe
 
     def read(self):
         return self.vid.read()
@@ -121,6 +121,7 @@ class CanvasReaderPannelMask(object):
         self.nview = len(views_xywh)
         self.pkl_data = pkl_data
         self.nclass = len(pkl_data['segdata'][0][0][1])
+        self.nframe = len(pkl_data['segdata'][0])
         self.h_w = h_w
         self.dilate = dilate
         self.dataset = MaskDataset(pkl_data,self.dilate,self.h_w,self.nclass,self.nview)

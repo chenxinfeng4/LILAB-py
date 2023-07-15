@@ -21,6 +21,8 @@ class NormalizedModel(torch.nn.Module):
         self.module = module
         
     def forward(self, x): #x: NCHW rgb 0-255
+        if x.shape[1] == 1:
+            x = x.repeat(1,3,1,1)
         y = (x - self.mean_value) / self.std_value
         y = self.module(y)
         return y
@@ -52,7 +54,7 @@ def _convert_batchnorm(module):
     return module_output
 
 
-def convert(config, checkpoint, full, dynamic):
+def convert(config, checkpoint, full, monocolor, dynamic):
     cfg = Config.fromfile(config, checkpoint)
     output_file = osp.splitext(checkpoint)[0] + ('.full.onnx' if full else '.onnx')
     image_size = cfg.data_cfg.image_size
@@ -77,9 +79,11 @@ def convert(config, checkpoint, full, dynamic):
 
     if full:
         model = NormalizedModel(mean_value, std_value, model)
-
+    else:
+        assert monocolor == False
     model = model.eval()
-    input_shape = (1, 3, image_size[1], image_size[0])
+    C = 1 if monocolor else 3
+    input_shape = (1, C, image_size[1], image_size[0])
     if dynamic:
         dynamic_axes = {'input_1': {0: 'batch_size'}, 'output_1': {0: 'batch_size'}}
     else:
@@ -100,9 +104,9 @@ def convert(config, checkpoint, full, dynamic):
         "--fp16 "
         f"--saveEngine={out_enginefile} "
         f"--timingCacheFile={out_cachefile} --workspace=3072 "
-        f"--optShapes=input_1:4x{C}x{H}x{W} "
+        f"--optShapes=input_1:9x{C}x{H}x{W} "
         f"--minShapes=input_1:1x{C}x{H}x{W} "
-        f"--maxShapes=input_1:10x{C}x{H}x{W} ")
+        f"--maxShapes=input_1:9x{C}x{H}x{W} ")
     else:
         print(f"trtexec --onnx={output_file} "
         "--fp16 "
@@ -114,6 +118,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Convert PyTorch model to TensorRT model')
     parser.add_argument('config', help='test config file path')
     parser.add_argument('--checkpoint', help='checkpoint file', default=None)
+    parser.add_argument('--monocolor', action='store_true', help='Use NCHW, C==1')
     parser.add_argument('--full', action='store_true', help='Use full model which integrated input normlization layer')
     parser.add_argument('--dynamic', action='store_true', help='dynamic shape')
     args = parser.parse_args()
@@ -121,4 +126,4 @@ if __name__ == '__main__':
     checkpoint = args.checkpoint
     if checkpoint is None:
         checkpoint = findcheckpoint_pth(config)
-    convert(config, checkpoint, args.full, args.dynamic)
+    convert(config, checkpoint, args.full, args.monocolor, args.dynamic)
