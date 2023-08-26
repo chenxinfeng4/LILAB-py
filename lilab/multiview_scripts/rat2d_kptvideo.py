@@ -37,7 +37,7 @@ def cv_plot_skeleton_aframe(aframe, point2d_aframe, name):
     colors = np.array(colors, dtype=np.uint8)[:,::-1].tolist() # BGR to RGB
     for marker_type, color, point2d in zip(marker_types, colors, point2d_aframe):
         if np.any(np.isnan(point2d)): continue
-        point2d = point2d.astype(np.int32).tolist()
+        point2d = tuple(point2d.astype(np.int32).tolist())
         if marker_type:
             cv_triangle(aframe, point2d, 16, color)
         else:
@@ -47,8 +47,8 @@ def cv_plot_skeleton_aframe(aframe, point2d_aframe, name):
     link2ds_to = point2d_aframe[linkbody[:,1],:]
     for link2d_from, link2d_to in zip(link2ds_from, link2ds_to):
         if np.any(np.isnan(link2d_from)) or np.any(np.isnan(link2d_to)): continue
-        link2d_from = link2d_from.astype(np.int32).tolist()
-        link2d_to = link2d_to.astype(np.int32).tolist()
+        link2d_from = tuple(link2d_from.astype(np.int32).tolist())
+        link2d_to = tuple(link2d_to.astype(np.int32).tolist())
         cv2.line(aframe, link2d_from, link2d_to, identitycolor[::-1], 1, cv2.LINE_AA)
     
     return aframe

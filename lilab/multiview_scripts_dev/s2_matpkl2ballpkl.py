@@ -63,7 +63,7 @@ def get_background_img(global_iframe, vfile, views_xywh):
     background_img = []
     for crop_xywh in views_xywh:
         x, y, w, h = crop_xywh
-        background_img.append(background_canvas[y:y+h, x:x+w, :])
+        background_img.append(background_canvas[y:y+h, x:x+w])
     return background_img
 
 

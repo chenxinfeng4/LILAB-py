@@ -21,6 +21,8 @@ def get_view_xywh_wrapper(nviews):
         return get_view_xywh_2448x2048x6()
     elif nviews==10:
         return get_view_xywh_1280x800x10()
+    elif nviews in ['els']: # early life stress
+        return get_view_xywh_800x600x12()
     else:
         raise NotImplementedError
 
@@ -69,6 +71,26 @@ def get_view_xywh_1280x800x9():
                 [w*0,h*2,w,h],
                 [w*1,h*2,w,h],
                 [w*2,h*2,w,h]]
+    return crop_xywh
+
+def get_view_xywh_800x600x12():
+    w, h = 800, 600
+    # crop_xywh = [[w*0,h*0,w,h],
+    #             [w*1,h*0,w,h],
+    #             [w*2,h*0,w,h],
+    #             [w*0,h*1,w,h],
+    #             [w*1,h*1,w,h],
+    #             [w*2,h*1,w,h],
+    #             [w*0,h*2,w,h],
+    #             [w*1,h*2,w,h],
+    #             [w*2,h*2,w,h],
+    #             [w*0,h*3,w,h],
+    #             [w*1,h*3,w,h],
+    #             [w*2,h*3,w,h]]
+    crop_xywh = [[w*2,h*0,w,h],
+                [w*2,h*1,w,h],
+                [w*2,h*2,w,h],
+                [w*2,h*3,w,h]]
     return crop_xywh
 
 def get_view_xywh_1280x800x4():

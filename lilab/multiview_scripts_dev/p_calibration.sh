@@ -7,8 +7,7 @@ fi
 
 vfile=$1
 setupname=$2  # ana bob carl, 3套多相机设备的标志
-
-# vfile=/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/LZTxWT_230505/ball/2023-05-06_13-52-32Sball.mp4
+# vfile=/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zhongzhenchao/tmp/202305_oxtr-gi4m2f_c2m-pnd80play/ball/2023-05-31_13-41-54ball.mp4
 # setupname="bob"  # ana bob carl, 3套多相机设备的标志
 
 vfile=`echo "$vfile" | sed 's/.mp4//'`
@@ -17,7 +16,7 @@ vfile_checkboard=$vfile
 tball=" 0 0 0 0 10 " # 没有用，只是占位
 
 # 2A. 设置棋盘格，全局定标X、Y、Z轴
-python -m lilab.multiview_scripts_dev.p1_checkboard_global $vfile_checkboard.mp4 --setupname $setupname --board_size 11 8 --square_size 20 &
+python -m lilab.multiview_scripts_dev.p1_checkboard_global $vfile.mp4 --setupname $setupname --board_size 11 8 --square_size 20 &
 
 # 2B. 每个视角单独预测小球,绘制2D轨迹视频
 python -m lilab.multiview_scripts_dev.s1_ballvideo2matpkl_full_faster $vfile.mp4 --pannels $setupname  #<深度学习>
@@ -28,7 +27,7 @@ python -m lilab.multiview_scripts_dev.s1_ballvideo2matpkl_full_faster $vfile.mp4
 # 3. （可选）检查是否有坏点，修正 
 
 # 4. 多相机 relative pose
-python -m lilab.multiview_scripts_dev.s2_matpkl2ballpkl $vfile.matpkl  --time  $tball --force-setupname  $setupname
+python -m lilab.multiview_scripts_dev.s2_matpkl2ballpkl $vfile.matpkl  --time $tball --force-setupname  $setupname
 
 python -m lilab.multiview_scripts_dev.s3_ballpkl2calibpkl $vfile.ballpkl --skip-camera-intrinsic --skip-global 
 

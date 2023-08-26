@@ -25,23 +25,27 @@ def parser_json(json_file, dir_name=None):
         ready_to_extract(full_vfile, idxframes, dir_name)
 
 
-def ready_to_extract(video_input, idxframe_to_extract, dirname):
+def ready_to_extract(video_input, idxframe_to_extract, outdirname, isrootdir=False):
     idxframe_max = max(idxframe_to_extract)
     _, filename=os.path.split(video_input)
     nakefilename = os.path.splitext(filename)[0]
-    os.makedirs(os.path.join(dirname, frame_dir), exist_ok = True)
+    outdirname = outdirname if isrootdir else os.path.join(outdirname, frame_dir)
+    os.makedirs(outdirname, exist_ok = True)
     cap = ffmpegcv.VideoCaptureNV(video_input, pix_fmt='nv12')
     length = idxframe_max+1
+    filenames = []
     for iframe in tqdm.tqdm(range(length)):
         ret, frame = cap.read()
         if not ret: break
         if iframe>idxframe_max: break
         if iframe not in idxframe_to_extract: continue
 
-        filename = os.path.join(dirname, frame_dir, nakefilename + '_{:06}.jpg'.format(iframe))
+        filename = os.path.join(outdirname, nakefilename + '_{:06}.jpg'.format(iframe))
         frame_color = cv2.cvtColor(frame, cv2.COLOR_YUV2BGR_NV12)
         cv2.imwrite(filename, frame_color, [int(cv2.IMWRITE_JPEG_QUALITY),100])
+        filenames.append(filename)
     cap.release()
+    return filenames
 
 
 if __name__ == '__main__':

@@ -1,24 +1,20 @@
 #!/usr/bin/python
-# python -m lilab.cvutils.crop_videofast multiview_color/2022-2-24-side6-bwrat-shank3/16-39-47/
+# python -m lilab.cvutils.crop_videofast A.mp4
 
 import os
 import argparse
 import cv2
 from lilab.cameras_setup import get_view_xywh_wrapper
 crop_tbg = None
-crop_tdur = None
+crop_tdur = '00:10:00'
 codec = 'h264_nvenc'
 encoder = 'h264_cuvid'
-nviews = 4
+nviews = 'els'
 
 
-def xywh2whxy(xywh, keepXeqY=True):
-    if keepXeqY:
-        maxXY = max(xywh[2:])
-        xywh[2] = xywh[3] = maxXY
+def xywh2whxy(xywh):
     whxy = (xywh[2], xywh[3], xywh[0], xywh[1])
     return whxy
-
 
 def fun_crop_mp4(filename, whxy_list):
     ffmpeg_args = ''
@@ -38,8 +34,9 @@ def fun_crop_mp4(filename, whxy_list):
     fps30 = min([30, framespersecond])
 
     # convert        
-    ffout_list = [f'-map "[v{i}]" -y -r {fps30} -c:v {codec} {ffmpeg_args} -preset p6 -tune hq -b:v 2M "{filename[:-4]}_output_{i+1}.mp4"'
+    ffout_list = [f'-map "[v{i}]" -y -r {fps30} -c:v {codec} {ffmpeg_args} -preset p6 -tune hq -b:v 1M "{filename[:-4]}_output_{i+1}.mp4"'
             for i in range(len(whxy_list))]
+
     ffoutstr = ' '.join(ffout_list)
 
     mystr = f'ffmpeg -i "{filename}" -filter_complex "{filterstr}" {ffoutstr}'
@@ -48,9 +45,8 @@ def fun_crop_mp4(filename, whxy_list):
 
 
 def main(vfile):
-    keepXeqY = False
     views_xywh = get_view_xywh_wrapper(nviews)
-    whxy_list = [xywh2whxy(xywh, keepXeqY) for xywh in views_xywh]
+    whxy_list = [xywh2whxy(xywh) for xywh in views_xywh]
     fun_crop_mp4(vfile, whxy_list)
 
 

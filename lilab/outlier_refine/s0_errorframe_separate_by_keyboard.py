@@ -1,4 +1,4 @@
-# python -m lilab.outlier_refine.s0_errorframe_separate_by_keyboard DIR
+# python -m lilab.outlier_refine.s0_errorframe_separate_by_keyboard DIR \\liying.cibr.ac.cn\Data_Temp\Chenxinfeng\multiview_9\chenxf\WTxWT_230724
 # %%
 import cv2
 import os
@@ -7,18 +7,23 @@ import glob
 import argparse
 import shutil
 import tqdm
-
+import os
+import matplotlib.pyplot as plt
+#import s0_errorframe_separate_by_keyboard
+#from google.colab.patches import cv2_imshow
 
 dir = r'\\liying.cibr.ac.cn\Data_Temp\Chenxinfeng\multiview-large\TPH2KOxWT\tmp_video\frames_overlap'
 maximgsize = [1280, 800]
 
-# use cv2 to read the image and then imshow
+#maximgsize = [2400, 2400]
+# use cv2 to read the , image and then imshow
 def label(dir):
-    imgs = glob.glob(osp.join(dir, '*.jpg')) + glob.glob(osp.join(dir, '*.png'))
+    imgs = glob.glob(osp.join(dir, '*.png'))
     cv2.namedWindow('TEST', cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
     for imgpath in tqdm.tqdm(imgs):
         img = cv2.imread(imgpath)
         imgbasename = osp.basename(imgpath)
+        
 
         # resize the image and keep the aspect ratio
         if img.shape[0] > maximgsize[0] or img.shape[1] > maximgsize[1]:

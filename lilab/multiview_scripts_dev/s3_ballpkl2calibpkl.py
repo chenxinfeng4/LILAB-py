@@ -47,7 +47,7 @@ def convert_landmarks_xy(landmarks_xy_mat):
     return landmarks
 
 def convert_filenames(background_img):
-    return {i:background_img[i] for i in range(len(background_img))}
+    return {i:background_img[i][...,::-1] for i in range(len(background_img))}  # BGR to RGB
 
 def get_sub_ba_poses(subviews, setup, intrinsics, landmarks_move_xy, background_img):
     setup = copy.deepcopy(setup)

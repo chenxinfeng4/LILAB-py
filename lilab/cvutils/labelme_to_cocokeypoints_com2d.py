@@ -12,7 +12,7 @@ import numpy as np
 from labelme import utils
 from tqdm import tqdm
 
-bodyparts=['com2d']
+bodyparts=['pup']
 TemplateKeypointList = [{'points':[[0,0]],'shape_type':'point'} for i in range(len(bodyparts))]
 
 class AutoId():

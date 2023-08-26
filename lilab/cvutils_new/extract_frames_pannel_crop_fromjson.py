@@ -14,7 +14,7 @@ import os.path as osp
 
 
 pannels_xywh = get_view_xywh_wrapper(9)
-frame_dir = "outframes_raw"
+frame_dir = "outframes_raw_2"
 
 
 def parser_json(json_file, dir_name=None):

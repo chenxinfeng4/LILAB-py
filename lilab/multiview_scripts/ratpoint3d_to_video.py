@@ -78,7 +78,8 @@ linkbody = np.array([[0,1],[0,2],[1,3],[2,3],[3,6],[3,8],[6,7],[4,6], [4,8],[8,9
 def plot_skeleton_aframe(point3d_aframe, name, createdumpy=False):
     hplots = hplot_dict[name]
     if createdumpy:
-        identitycolor = '#004e82' if name=='white' else '#61000f'
+        # identitycolor = '#004e82' if name=='white' else '#61000f'
+        identitycolor = '#373737' if name=='black' else '#61000f'
         markersize = 6
         hplots['leftbody'] = plt.plot(np.nan,np.nan, linestyle = 'None', marker='o', markeredgecolor='none', markerfacecolor=identitycolor, markersize=markersize)[0]
         hplots['rightbody'] = plt.plot(np.nan,np.nan, linestyle = 'None', marker='v', markeredgecolor='none', markerfacecolor=identitycolor, markersize=markersize+2)[0]

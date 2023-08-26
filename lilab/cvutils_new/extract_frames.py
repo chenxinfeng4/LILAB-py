@@ -8,6 +8,7 @@ import os.path as osp
 import sys
 import glob
 import ffmpegcv
+from lilab.mmdet_dev.filter_vname import filter_vname
 
 numframe_to_extract = 1
 # numframe_to_extract = 100
@@ -82,6 +83,7 @@ if __name__ == '__main__':
     elif osp.isdir(video_path):
         video_path = [f for f in glob.glob(osp.join(video_path, '*.mp4'))
                         if f[-4] not in '0123456789']
+        video_path = filter_vname(video_path)
         assert len(video_path) > 0, 'no video found'
     else:
         raise ValueError('video_path is not a file or folder')

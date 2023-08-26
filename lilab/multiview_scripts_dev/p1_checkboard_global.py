@@ -122,4 +122,4 @@ if __name__ == '__main__':
     assert sum(args.board_size) % 2 == 1, "board size should be (even, odd) or (odd, even)"
 
     assert osp.isfile(args.video_path)
-    convert(args.video_path, args.setupname, args.board_size, args.square_size_mm)
+    convert(args.video_path, args.setupname, tuple(args.board_size), args.square_size_mm)

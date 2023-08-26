@@ -151,15 +151,12 @@ class MyWorker:
                 if idx<=-1: continue
                 post_cpu(self.camsize, heatmap, center, scale, views_xywh, img_preview, self.calibobj)
                 
-
             heatmap = mid_gpu(trt_model, img_NCHW)
             post_cpu(self.camsize, heatmap, center, scale, views_xywh, img_preview, self.calibobj)
 
 
 def pre_cpu(dataset_iter):
-    img_NCHW, img_preview = next(dataset_iter)
-    return img_NCHW, img_preview
-
+    return next(dataset_iter)
 
 def mid_gpu(trt_model, img_NCHW, input_dtype):
     batch_img = torch.from_numpy(img_NCHW).cuda().type(input_dtype)
