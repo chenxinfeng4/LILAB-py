@@ -1,20 +1,13 @@
 # %%
 import numpy as np
-import pandas as pd
-import os.path as osp
-import seaborn as sns
 import matplotlib.pyplot as plt
-from scipy import stats
 from lilab.openlabcluster_postprocess.u1_percent_rat_boxplot_CompPairPro import (
-    load_data, define_group, define_group_freq, 
-    create_nodemerge_group_x_freq, get_clean_df
+    load_data, define_group
 )
 from sklearn.preprocessing import OneHotEncoder
 from lilab.comm_signal.detectTTL import detectTTL
-from lilab.comm_signal.cutwave import cutwave
-from lilab.comm_signal.BF_AlignSg2Tg import BF_AlignSg2Tg
 from lilab.comm_signal.BF_AlignWave2Tg import BF_AlignWave2Tg
-from lilab.comm_signal.BF_plotwSEM import BF_plotwSEM
+
 
 project='/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/00_BehaviorAnalysis-seq2seq/SexAge/Day75'
 sheet_name = '熊组合作D75_treat_info'
