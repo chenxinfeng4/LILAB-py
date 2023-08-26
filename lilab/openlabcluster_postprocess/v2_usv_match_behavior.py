@@ -1,26 +1,14 @@
 # %%
 import numpy as np
-import pandas as pd
 import os.path as osp
-import seaborn as sns
 import matplotlib.pyplot as plt
-from scipy import stats
 from lilab.openlabcluster_postprocess.u1_percent_rat_boxplot_CompPairPro import (
-    load_data, define_group, define_group_freq, 
-    create_nodemerge_group_x_freq, get_clean_df
+    load_data, define_group
 )
-from scipy.ndimage import gaussian_filter1d
-from scipy.signal import savgol_filter
 from lilab.openlabcluster_postprocess.s1_merge_3_file import get_assert_1_file
-from sklearn.preprocessing import OneHotEncoder
 from lilab.comm_signal.detectTTL import detectTTL
-from lilab.comm_signal.cutwave import cutwave
-from lilab.comm_signal.BF_AlignSg2Tg import BF_AlignSg2Tg
-from lilab.comm_signal.BF_AlignWave2Tg import BF_AlignWave2Tg
-from lilab.comm_signal.BF_plotwSEM import BF_plotwSEM
 from lilab.comm_signal.BF_AlignSg2Tg import BF_AlignSg2Tg
 from lilab.comm_signal.BF_plotRaster import BF_plotRasterCell
-from lilab.comm_signal.line_scale import line_scale
 import pickle
 from collections import defaultdict
 
@@ -32,6 +20,7 @@ df_group = define_group(rat_info, video_info, df_labnames)
 
 usv_file = get_assert_1_file(osp.join(project, 'usv_label', '*.usvpkl'))
 usv_file_data = pickle.load(open(usv_file, 'rb'))
+
 
 # %%
 video_nakes = set(usv_file_data['video_nakes'])
@@ -68,5 +57,3 @@ for i in range(len(df_group_usv)):
     ax_now.set_xticks([-10,-5, 0,5,10])
     ax_now.set_ylim([0, len(usv_evt_now)])
     ax_now.set_title(df_labnames['lab_names'].iloc[i])
-
-# %%
