@@ -19,5 +19,5 @@ ls -d $imgdir/out*/out.json | xargs -P 2 -n 1 python -m lilab.cvutils_new.extrac
 
 
 ## 如果挑选原始图片用于 segment label, 也可用于ball label
-# %% segmenta error frames
+# %% segment error frames
 ls -d $imgdir/out*/out.json | xargs -P 2 -n 1 python -m lilab.cvutils_new.extract_frames_fromjson --dir_name $videodir

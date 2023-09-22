@@ -59,7 +59,7 @@ def load_data(project, sheet_name):
     return rat_info, video_info, bhvSeqs, df_labnames, k_best, cluster_nodes_merged
 
 
-def define_group(rat_info, video_info, df_labnames):
+def define_group(rat_info, video_info, df_labnames=None):
     rats_black = rat_info[rat_info['color'] == 'b']['animal'].values
     rats_male  = rat_info[rat_info['gender'] == 'male']['animal'].values
 

@@ -7,12 +7,12 @@ fi
 
 vfile=$1
 setupname=$2  # ana bob carl, 3套多相机设备的标志
-# vfile=/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zhongzhenchao/tmp/202305_oxtr-gi4m2f_c2m-pnd80play/ball/2023-05-31_13-41-54ball.mp4
+# vfile=/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/multiview_9/zhangyuanqing/miniscope-behavior/ID010/out_2
+#vfile=/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zhangyuanqing/miniscope-behavior/ID010/ball/2023-09-10_21-15-12ball.mp4
 # setupname="bob"  # ana bob carl, 3套多相机设备的标志
 
 vfile=`echo "$vfile" | sed 's/.mp4//'`
 vfile_checkboard=$vfile
-
 tball=" 0 0 0 0 10 " # 没有用，只是占位
 
 # 2A. 设置棋盘格，全局定标X、Y、Z轴
@@ -42,3 +42,5 @@ python -m lilab.multiview_scripts_dev.s5_show_calibpkl2video $vfile.matcalibpkl
 # 7. 确定无误后，替换原来的 calibpkl
 mv $vfile.recalibpkl $vfile.calibpkl
 
+# 8. 导出为 matlab 格式，用于 label3D
+     

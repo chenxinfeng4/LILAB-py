@@ -4,8 +4,8 @@ conda activate mmdet
 """
 # %%
 import os
-from os.path import join
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import cv2
 from sklearn.manifold import TSNE
@@ -18,10 +18,12 @@ from sklearn.neighbors import KNeighborsClassifier
 from matplotlib.colors import LinearSegmentedColormap
 import argparse
 
-clippredpkl_file = "/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/00_BehaviorAnalysis-seq2seq/sexDay55/kmeans/FWPCA0.00_P100_en3_hid30_epoch777_svm2allAcc0.93_kmeansK2use-38_fromK1-20_K100.clippredpkl"
+# matplotlib.use("Agg")
 
+clippredpkl_file = "/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/00_BehaviorAnalysis-seq2seq/SexAge/DayAll20230828/All-DecSeq/FWPCA0.00_P100_en3_hid30_epoch300-decSeqPC0.9_svm2allAcc0.96_kmeansK2use-43_fromK1-20_K100.clippredpkl"
 
-nbin = 200
+umap_mask_threshold = 0.5
+nbin = 100
 
 #%%
 def center_of_mass(map2D: np.ndarray):
@@ -43,7 +45,7 @@ def center_of_mass(map2D: np.ndarray):
 def center_of_mass_cv(map2D: np.ndarray):
     map2D_bool = np.zeros_like(map2D, dtype=bool)
     map2D_bool[map2D > 0] = True
-    if np.sum(map2D_bool) <= 200:
+    if np.sum(map2D_bool) <= map2D.size * 0.005:
         return np.nan, np.nan
 
     num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
@@ -79,20 +81,23 @@ def plot_knn_decision_boundary_mosaik(heatobj, X, y, clu_lab_uni, clu_lab_shuf, 
     for idsrc, idtrg in zip(clu_lab_uni, clu_lab_shuf):
         classfimap_shuf[classfimap == idsrc] = idtrg
 
-    heatobj.classfi_map = classfimap
+    heatobj.classfimap = classfimap
     heatobj.classfimap_shuf = classfimap_shuf
 
-    heatobj.plt_heatmap("classfimap_shuf")
+    # heatobj.plt_heatmap("classfimap_shuf")
+    # heatobj.plt_heatmap()
+    heatobj.plt_heatmap("classfimap")
     heatobj.plt_maskheatmap()
     # plt.axis('off')
-
     ##add contour
     cNOs = list(set(y))
-    masked_heatmap = heatobj.density_mask * heatobj.classfi_map
-    centers = np.array([center_of_mass(masked_heatmap == i) for i in cNOs])
+    masked_heatmap = heatobj.density_mask * heatobj.classfimap
+    centers = np.array([center_of_mass_cv(masked_heatmap == i) for i in cNOs])
     cNOs_dicts = {}
     for i in cNOs:  # from 1
         cNOs_dicts[i] = centers[i - 1]
+
+    print(cNOs_dicts)
 
     for i, c in enumerate(cNOs):
         plt.text(
@@ -105,6 +110,7 @@ def plot_knn_decision_boundary_mosaik(heatobj, X, y, clu_lab_uni, clu_lab_shuf, 
         )
     # plt.gca().set_aspect('equal', 'datalim')
     ##
+
     cMax = np.max(y) + 1
     # plt.colorbar(boundaries=np.arange(1,cMax)).set_ticks(np.arange(1,cMax))
     plt.xticks([])
@@ -112,8 +118,8 @@ def plot_knn_decision_boundary_mosaik(heatobj, X, y, clu_lab_uni, clu_lab_shuf, 
         [-100,]
     )
     # plt.yticks([0, 200])
-    plt.xlabel("UMAP-1", fontsize=24)
-    plt.ylabel("UMAP-2", fontsize=24)
+    plt.xlabel("tSNE-1", fontsize=24)
+    plt.ylabel("tSNE-2", fontsize=24)
 
     ax = plt.gca()
     # set spine line to invisible
@@ -124,15 +130,13 @@ def plot_knn_decision_boundary_mosaik(heatobj, X, y, clu_lab_uni, clu_lab_shuf, 
     plt.tight_layout()
 
 
-def main(clippredpkl_file):
+def main(clippredpkl_file, outfig=None):
     clippreddata = pickle.load(open(clippredpkl_file, "rb"))
     assert {
         "ncluster",
-        "ntwin",
         "cluster_labels",
         "embedding",
         "embedding_d2",
-        "clipNames",
     } <= clippreddata.keys()
 
     embedding = clippreddata["embedding_d2"]
@@ -155,7 +159,6 @@ def main(clippredpkl_file):
     clu_lab_shuf = clu_lab_uni.copy()
     np.random.seed(2)
     np.random.shuffle(clu_lab_shuf)
-    nbin = 200
     # plot_knn_decision_boundary_mosaik(embedding, clu_labs, mosaikFig,k=kNum)
 
     # heatmat, xedges, yedges = heatmap(embedding, bins=nbin)
@@ -170,7 +173,7 @@ def main(clippredpkl_file):
     heatobj.calculate()
     heatobj.plt_heatmap()
     # heatobj.plt_boundary()
-    heatobj.set_mask_by_densitymap(0.5)
+    heatobj.set_mask_by_densitymap(umap_mask_threshold)
 
     # %%
     # 把 embeding 的 xy坐标系映射到 bin 的像素坐标系
@@ -183,10 +186,11 @@ def main(clippredpkl_file):
     )
 
     X, y = embedding_re_XY, clu_labs
-
+    print('Begin to plot figure')
     plt.figure(figsize=(10, 10))
     plot_knn_decision_boundary_mosaik(heatobj, X, y, clu_lab_uni, clu_lab_shuf, n_neighbors=100)
-    outfig = osp.join(osp.dirname(clippredpkl_file), 'kmeans_umap.pdf')
+    if not outfig: outfig = osp.join(osp.dirname(clippredpkl_file), 'kmeans_umap.pdf')
+    print('save to ', outfig)
     plt.savefig(outfig)
 
 

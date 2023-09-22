@@ -67,9 +67,10 @@ def process_img(frame_resize, img_metas):
         frame_cuda = frame_resize.cuda().float()  # NHWC
         frame_cuda = frame_cuda.permute(0, 3, 1, 2)  # NCHW
 
+    assert len(frame_cuda) == 1
     mean = torch.from_numpy(img_metas["img_norm_cfg"]["mean"]).cuda()
     std = torch.from_numpy(img_metas["img_norm_cfg"]["std"]).cuda()
-    frame_cuda = F.normalize(frame_cuda, mean=mean, std=std, inplace=True)
+    F.normalize(frame_cuda[0], mean=mean, std=std, inplace=True) #N==1
     data = {"img": [frame_cuda], "img_metas": [[img_metas]]}
     return data
 
@@ -80,53 +81,6 @@ def findcheckpoint_trt(config, trtnake="latest.engine"):
     checkpoint = osp.join(basedir, "work_dirs", basenakename, trtnake)
     assert osp.isfile(checkpoint), "checkpoint not found: {}".format(checkpoint)
     return checkpoint
-
-def refine_mask(masks0, masks1):
-    if len(masks0) <=1 and len(masks1) <=1:
-        pass
-    elif len(masks0) == 0 or len(masks1) == 0:
-        pass
-    elif len(masks0) > 1 or len(masks1) > 1:
-        focus_masks, parnter_masks = ((masks0, masks1), (masks1, masks0))
-        for focus, parnter in zip(focus_masks, parnter_masks):
-            if len(focus) == 1:
-                continue
-            # case 1: Focus main 接壤 Partner main, Focus sub 接壤 Partner sub。忽略
-            partner_main = parnter[0].astype('uint8')
-            focus_main = focus[0].astype('uint8')
-            kernel = np.ones((10, 10))
-            partner_main_dilate = cv2.dilate(partner_main, kernel, iterations=1)
-            focus_main_dilate = cv2.dilate(focus_main, kernel, iterations=1)
-            if np.sum(focus_main + partner_main_dilate == 2)>50:
-                # Focus main 接壤 Partner main
-                for  focus_sub in focus[1:]:
-                    focus_sub_unique = focus_sub > partner_main
-                    if np.sum(focus_sub_unique + partner_main_dilate==2)>50:
-                        # Focus sub 接壤 Partner main, 保留
-                        continue
-                    elif np.sum(focus_sub_unique + focus_main_dilate==2)>50:
-                        # Focus sub 接壤 Focus main, 保留
-                        continue
-                    else:
-                        # Focus sub 不接壤 Partner sub, 删除
-                        focus_sub[:] = 0
-            else:
-                # Focus main 不接壤 Partner main
-                for  focus_sub in focus[1:]:
-                    focus_sub_unique = focus_sub > partner_main
-                    if np.sum(focus_sub_unique + focus_main_dilate==2)>50:
-                        # Focus sub 接壤 Partner sub, 保留
-                        continue
-                    elif (np.sum(focus_sub_unique + partner_main_dilate==2)>50
-                        and np.sum(focus_sub_unique + focus_main_dilate==2)==0):
-                        # Focus sub 接壤 Partner sub, 移交给 Partner main
-                        partner_main[:] = (partner_main + focus_sub >0).astype(partner_main.dtype)
-                        focus_main_dilate = cv2.dilate(focus_main, kernel, iterations=1)
-                        focus_sub[:] = 0
-                    else:
-                        # Focus sub 不接壤 Partner sub, 删除
-                        focus_sub[:] = 0
-    return masks0, masks1
 
 def center_of_mass_cxf(input):
     a_x, a_y = np.sum(input, axis=0, keepdims=True), np.sum(input, axis=1, keepdims=True)
@@ -161,49 +115,6 @@ def s1_filt_by_thr(result, thr=0.5):
         result_out.append(a_frame_out)
     return result_out
 
-# def s2_det2seg_part(resultf):
-#     nclass = len(resultf[0][0])
-#     masks0 = np.array(resultf[0][1][0], dtype='uint8')
-#     masks1 = np.array(resultf[0][1][1], dtype='uint8')
-#     masks0, masks1 = refine_mask(masks0, masks1)# nmasks, y, x
-#     pvals = []
-#     if len(masks0) and len(masks1):
-#         masks = np.concatenate([masks0, masks1], axis=0) > 0
-#     elif len(masks0) == 0:
-#         masks = masks1 > 0
-#     elif len(masks1) == 0:
-#         masks = masks0 > 0
-#     classids = []
-
-#     for iclass in range(nclass):
-#         for boxp, maskzip in zip(resultf[0][0][iclass], resultf[0][1][iclass]):
-#             pvals.append(boxp[-1])
-#             classids.append(iclass)
-
-#     canvas = np.zeros((800,1280))
-#     pvals = np.array(pvals)
-#     classids = np.array(classids)
-#     sort_inds = np.argsort(classids)[::-1]  # ascending order
-#     pvals = pvals[sort_inds]
-#     masks = masks[sort_inds]
-#     classids = classids[sort_inds]
-#     pvals_dict = dict(zip(classids, pvals))
-#     for mask_mat, iclass in zip(masks, classids):
-#         canvas[mask_mat] = iclass + 1
-
-#     # canvas = mask2resize(canvas, shape_base)
-#     for iclass in range(nclass):
-#         mask = canvas == (iclass + 1)
-#         if np.sum(mask) <= 4:
-#             # ignore this mask
-#             resultf[0][0][iclass] = []
-#         else:
-#             x, y, w, h = cv2.boundingRect(mask.astype(np.uint8))
-#             pval = pvals_dict[iclass]
-#             resultf[0][0][iclass] = [np.array([x, y, x + w, y + h, pval])]
-
-#         resultf[0][1][iclass] = [np.array(mask[:,:,np.newaxis], order='F', dtype=np.uint8)]
-#     return resultf
 
 
 def s2_det2seg_part_single(resultf):
@@ -223,7 +134,7 @@ def s2_det2seg_part_single(resultf):
 
 
 def s2_det2seg_part(resultf):
-    nclass = len(resultf[0][0])# 2/3
+    nclass = len(resultf[0][0])# 2 or 3
     if nclass == 1:
         return s2_det2seg_part_single(resultf)
     
@@ -518,7 +429,16 @@ def parse_args(parser:argparse.ArgumentParser):
     print("num_gpus:", num_gpus)
     # init the workers pool
 
-    args_iterable = list(itertools.product(videos_path, enumerate(views_xywh)))
+    args_iterable_ = list(itertools.product(videos_path, enumerate(views_xywh)))
+    args_iterable = []
+    for worker_args in args_iterable_:
+        video, (iview, crop_xywh) = worker_args
+        out_pkl = osp.splitext(video)[0] + f"_{iview}.seg2pkl"
+        if os.path.exists(out_pkl):
+            print("Skipping:", osp.basename(out_pkl))
+        else:
+            args_iterable.append(worker_args)
+
     return num_gpus, videos_path, args_iterable, args
 
 

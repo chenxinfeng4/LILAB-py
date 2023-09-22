@@ -5,44 +5,49 @@ import os.path as osp
 import argparse
 
 
-cluster_names_page = """Facing or sniffing a rat rearing up
-Head contacting or mutual sniffing oppositly
-Rearing when being faced oppositely
-Exploring seperately back to back
-Sniffing a rat's genital or being allogroomed on neck
-Rearing when being faced other side
-Approaching from behind mainly
-Approching or chasing to sniffing tail or head
-Pining stably
-Head contact the same way
-Head contact with less facing each other
-Facing each other with less nose contact
-Mounting or rearing down in contact or social range
-Chasing
-Rearing up when being sniffed, approached or faced
-Rearing when being sniffed, approached or faced
-Being allogroomed, pinned, mounted mixed
-Both rearing with head contact or in social range
-Being approached and sniffed
-Rearing down in contact or in social range
-Being chased
-Behind or sniffing tail of a rat
-Being pinned stably
-Being left and approaching
-Being tail sniffed and turning to contact
-Being pinned fiercely and rolling
-Facing or sniffing a rat rearing
-Facing away when rat rearing
-In front of a rat or being tail sniffed
-Leaving and being approahed
+cluster_names_page = """Facing away or far away when a rat rearing
+Both rearing with contact
+Mutual head tail sniff
+Sniffing tail or behind
+Chasing a leaving rat
+Mutual head contacting parallelly
+Facing toward or pressed when a rat rearing
+Pinning stable
+Facing away when a rat rearing
+Approaching or facing toward when a rat rearing
+Being leaved
+Mounting, pouncing, pinning mix
+Both rearing far away
+Sniffing tail or behind
+Rearing when being faced away
+Being pinned fiercely, pounced, mounted mix
+Rearing when being faced or sniffed
+Rearing when being far away
+Being sniffed or chased slowly
+Half rearing attension
 Leaving each other oppositely
-Pinnig,mounting mixed
-Both rearing no contact
-Mutual contacting mainly sniffing opposite way 
-Approaching, sniffing or in social range when a rat rearing down
-Mutual approaching face to face
-One rearing down in both rearing in social range
-Mutual walking aside oppositely with contact
+Rearing when being looked or sniffed
+Near each other back to back
+Being tail sniffed or chased
+Sniffing or chasing slowly from behind
+Behind or sniffing tail when a rat rearing
+Being approached
+Exploring seperately back to back
+Being tail sniffed
+Far away when a rat rearing
+Both rearing with contact
+Rearing down or leaving
+Crossing side by side opposite way
+Approaching
+Both rearing with less contact
+In front of a rat and non contact
+Pinning fiercely
+Facing away or far away when a rat rearing
+Mutual head-head contact
+Chasing and sniffing when a rat rearing
+Being pinned stable
+Rearing when sniffed or being social range
+Being chased or tail sniffed
 """
 
 
@@ -57,6 +62,7 @@ def inplace_append_givename(clippredpkl_file):
         "clipNames",
     } <= clippreddata.keys()
     cluster_names = [s for s in cluster_names_page.split("\n") if len(s)]
+    print(cluster_names)
     assert clippreddata["ncluster"] == len(cluster_names)
     clippreddata["cluster_names"] = cluster_names
     pickle.dump(clippreddata, open(clippredpkl_file, "wb"))

@@ -18,7 +18,7 @@ sheet_name = 'treat_info'
 rat_info, video_info, bhvSeqs, df_labnames, k_best, cluster_nodes_merged = load_data(project, sheet_name)
 df_group = define_group(rat_info, video_info, df_labnames)
 
-usv_file = get_assert_1_file(osp.join(project, 'usv_label', '*.usvpkl'))
+usv_file = get_assert_1_file(osp.join(project, 'usv_label', 'usv_evt*.usvpkl'))
 usv_file_data = pickle.load(open(usv_file, 'rb'))
 
 
@@ -26,7 +26,7 @@ usv_file_data = pickle.load(open(usv_file, 'rb'))
 video_nakes = set(usv_file_data['video_nakes'])
 df_group_usv = df_group[df_group['video_nake'].isin(video_nakes)]
 df_tick_usv = usv_file_data['df_usv_evt']
-# %%
+
 # 1个 usv 文件对应 2个 beh_key
 usv_evt_dict = defaultdict(list)
 twin = [-10, 10]
@@ -42,9 +42,8 @@ for i in range(len(df_group_usv)):
         trigger = detectTTL(bhvSeq==behlabel, 'up-up', 4, fs=fs)[0]
         Alg_cell = BF_AlignSg2Tg(usv_start, trigger, *twin)
         usv_evt_dict[behlabel].extend(Alg_cell)
-        
-# %%
 
+# %%
 for i in range(len(df_group_usv)):
     if i%4 ==0:
         fig,ax = plt.subplots(2,2, figsize=(10,10))

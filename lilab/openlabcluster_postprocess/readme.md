@@ -10,7 +10,9 @@
 - clipNames.txt:  list of clipnames
 
 合并后 `*.clippredpkl`:
-> python -m lilab.openlabcluster_postprocess.s1_merge_3_file PROJECT_DIR
+> cd PROJECT_DIR
+>
+> python -m lilab.openlabcluster_postprocess.s1_merge_3_file $PWD
 ```python
 {
     'ncluster': ncluster,

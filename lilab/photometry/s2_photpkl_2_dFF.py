@@ -14,7 +14,6 @@ import argparse
 from scipy.signal import butter, filtfilt
 from scipy import ndimage
 
-
 file_l = glob.glob('/mnt/liying.cibr.ac.cn_Data_Temp/LS_NAC_fiberphotometry/PHO_11_NAC/0324行为记录/*.photpkl')
 
 # pklfile = file_l[0]
@@ -157,7 +156,9 @@ class PhotFilter:
             bounds = ([0      , 0      , 0      , 600  , 0],
                     [max_sig, max_sig, max_sig, 36000, 1])
             GCaMP_parms, parm_cov = curve_fit(double_exponential, self.timestamps, sig, 
-                                            p0=inital_params)#, bounds=bounds, maxfev=4000)
+                                            p0=inital_params, bounds=bounds, maxfev=4000)
+            # GCaMP_parms, parm_cov = curve_fit(double_exponential, self.timestamps, sig, 
+            #                                 p0=inital_params)#, bounds=bounds, maxfev=4000)
             GCaMP_expfit = double_exponential(self.timestamps, *GCaMP_parms)
             bleach_l.append(GCaMP_expfit)
             detrended_l.append(sig - GCaMP_expfit)

@@ -36,13 +36,16 @@ def main(clippredpkl_file):
     cluster_names = clippreddata['cluster_names']
     assert kmeans_label.min() == 1
 
-    # 归一化处理
-    scaler = StandardScaler()
-    data_scaled = scaler.fit_transform(feat_data)
+    if False:
+        # 归一化处理
+        scaler = StandardScaler()
+        data_scaled = scaler.fit_transform(feat_data)
 
-    # PCA降维
-    pca = PCA(n_components=30)  # 选择主成分的个数
-    condensed_data = pca.fit_transform(data_scaled)
+        # PCA降维
+        pca = PCA(n_components=30)  # 选择主成分的个数
+        condensed_data = pca.fit_transform(data_scaled)
+    else:
+        condensed_data = feat_data
 
     # Kmeans 聚类的中心点
     cluster_centers = np.zeros(
