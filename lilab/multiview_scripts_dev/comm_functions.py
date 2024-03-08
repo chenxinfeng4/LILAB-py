@@ -2,6 +2,10 @@
 #       box2cs, get_max_preds, get_max_preds_gpu, transform_preds)
 import numpy as np
 import torch
+import cv2
+import pickle as pkl
+import matplotlib.pyplot as plt
+import os
 
 def box2cs(box, image_size, keep_ratio=True):
     """Encode bbox(x,y,w,h) into (center, scale) without padding.
@@ -56,21 +60,23 @@ def get_max_preds_gpu(heatmaps:torch.Tensor):
 
     return preds, maxvals
 
-
 def non_max_suppression(heatmap:np.ndarray, num_peaks, w=5) -> np.ndarray:
     peaks = np.zeros((num_peaks, 3), dtype=np.float32)
+    # plt.imshow(heatmap, cmap='viridis', interpolation='nearest')
+    # path = '/home/liying_lab/chenxinfeng/ml-project/LILAB-py/lilab/multiview_scripts_dev/check_heatmap/heatmap_'+str(i)+'.png'
+    # plt.savefig(path)
     for i in range(num_peaks):
         max_index = np.argmax(heatmap)
         peak = np.unravel_index(max_index, heatmap.shape)
         peak_y, peak_x = peak
-        peak_v = heatmap[peak_y, peak_x]
-        peaks[i] = peak_x, peak_y, peak_v
-
-        y_min = max(0, peak_y - w // 2)
+        peak_v = heatmap[peak_y, peak_x] #heatmap的最大值
+        peaks[i] = peak_x, peak_y, peak_v #peaks[i]为第i次，np.zeros((num_peaks, 3) -> 对应的第i行[peak_x, peak_y, peak_v]        
+        y_min = max(0, peak_y - w // 2) #peak_y - w // 2 表示从峰值位置向上移动窗口一半的距离。然后，max(0, peak_y - w // 2) 确保结果不小于0，以防窗口移动超过了图像或信号的边界。
         y_max = min(heatmap.shape[0], peak_y + w // 2 + 1)
         x_min = max(0, peak_x - w // 2)
         x_max = min(heatmap.shape[1], peak_x + w // 2 + 1)
         heatmap[y_min:y_max, x_min:x_max] = 0
+#heatmap[y_min:y_max, x_min:x_max] 表示选择数组 heatmap 中的一个矩形区域。通过将该区域的所有值设置为0，实现了在热图或图像中将特定区域置零的效果
 
     return peaks
 

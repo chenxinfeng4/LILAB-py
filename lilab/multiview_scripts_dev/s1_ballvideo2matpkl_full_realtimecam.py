@@ -6,7 +6,7 @@ import numpy as np
 import tqdm
 import torch
 # from mmpose.apis import init_pose_model
-import mmcv
+
 import ffmpegcv
 from torch2trt import TRTModule
 import cv2
@@ -96,6 +96,7 @@ class DataSet():
 
 class MyWorker:
     def __init__(self, config, video_file, checkpoint, ballcalib, views_xywh):
+        import mmcv
         super().__init__()
         self.id = getattr(self, 'id', 0)
         self.cuda = getattr(self, 'cuda', 0)
@@ -158,7 +159,7 @@ class MyWorker:
 def pre_cpu(dataset_iter):
     return next(dataset_iter)
 
-def mid_gpu(trt_model, img_NCHW, input_dtype):
+def mid_gpu(trt_model, img_NCHW, input_dtype=torch.float32):
     batch_img = torch.from_numpy(img_NCHW).cuda().type(input_dtype)
     heatmap = trt_model(batch_img)
     return heatmap
@@ -223,7 +224,7 @@ def show_kpt_data(orisize, keypoints_xyp, views_xywh, img_preview, calibobj):
     
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--pannels', type=int, default=4, help='crop views')
+    parser.add_argument('--pannels', type=int, default=9, help='crop views')
     parser.add_argument('--video_file', type=str, default=None)
     parser.add_argument('--config', type=str, default=None)
     parser.add_argument('--checkpoint', type=str, default=None)

@@ -11,12 +11,13 @@ import argparse
 import scipy.stats
 import pandas as pd
 import seaborn as sns
-
+import sys
 plt.rcParams["font.sans-serif"] = ["SimHei"]  # 用来正常显示中文标签
 plt.rcParams["axes.unicode_minus"] = False  # 用来正常显示负号
 
 #%%
-clippredpkl_file = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/00_BehaviorAnalysis-seq2seq/SexAge/DayAll20230828/All-DecSeq/FWPCA0.00_P100_en3_hid30_epoch300-decSeqPC0.9_svm2allAcc0.96_kmeansK2use-43_fromK1-20_K100.clippredpkl'
+# clippredpkl_file = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zhangyuanqing/00_BehaviorAnalysis-seq2seq/miniscope-behavior/ID010/20230809/FWPCA0.00_P100_en3_hid30_epoch250-decSeqPC0.9_svm2allAcc0.91_kmeansK2use-45_fromK1-20_K100.clippredpkl'
+clippredpkl_file = sys.argv[1]
 beh_project_dir = osp.dirname(clippredpkl_file)
 clippreddata = pickle.load(open(clippredpkl_file, "rb"))
 assert {
@@ -25,8 +26,7 @@ assert {
     "cluster_labels",
     "embedding",
     "embedding_d2",
-    "clipNames",
-    "cluster_names",
+    "clipNames"
 } <= clippreddata.keys()
 # %% 载入数据
 feat_data = clippreddata["embedding"]  # nsample x nfeat

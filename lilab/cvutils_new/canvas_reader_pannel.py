@@ -146,7 +146,7 @@ class CanvasReaderPannelMask(object):
         return mask_out_imgs
 
     def read(self):
-        ret, frame = self.vid.read_gray()
+        ret, frame = self.vid.read()
         if not ret: return []
         imgpannels = [frame[y:y+h, x:x+w] for x, y, w, h in self.views_xywh]
         return ret, imgpannels

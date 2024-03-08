@@ -32,26 +32,26 @@ def BF_AlignWave2Tg(Wave, Trigger, wds_L, wds_R, fs=1, ifshow=False):
     assert ntrial >= 1, 'flag 数量太少'
 
     # calculate
-    Alg_sXtrail = np.zeros((int(wds_R - wds_L), ntrial))
+    Alg_sXtrail = np.zeros((ntrial, int(wds_R - wds_L)))
     for i in range(ntrial):
         ind_choose = Trigger[i] + np.arange(wds_L, wds_R)
-        Alg_sXtrail[:, i] = Wave[ind_choose]
+        Alg_sXtrail[i] = Wave[ind_choose]
 
     # ifshow
     if ifshow:
-        Alg_mean = np.mean(Alg_sXtrail, axis=1)
+        Alg_mean = np.mean(Alg_sXtrail, axis=0)
 
         plt.figure()
         plt.subplot(3, 1, 1)
         xtick = np.arange(wds_L, wds_R + 1)
         ytick = np.arange(1, ntrial + 1)
-        plt.imshow(Alg_sXtrail.T, aspect='auto', extent=[xtick[0], xtick[-1], ytick[0], ytick[-1]])
+        plt.imshow(Alg_sXtrail, aspect='auto', extent=[xtick[0], xtick[-1], ytick[0], ytick[-1]])
         plt.xlabel('sample tick')
         plt.ylabel('trial (#)')
         plt.axis('tight')
 
         plt.subplot(3, 1, 2)
-        plt.plot(xtick, Alg_sXtrail.T, color=0.2 * np.array([1, 1, 1]))
+        plt.plot(xtick, Alg_sXtrail, color=0.2 * np.array([1, 1, 1]))
         plt.plot(xtick, Alg_mean, color=[1, 0, 0], linewidth=2)
         plt.xlabel('sample tick')
         plt.ylabel('Amp')

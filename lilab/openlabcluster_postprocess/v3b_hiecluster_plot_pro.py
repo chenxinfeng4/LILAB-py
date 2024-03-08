@@ -21,7 +21,7 @@ import scipy
 plt.rcParams["font.sans-serif"] = ["SimHei"]  # 用来正常显示中文标签
 plt.rcParams["axes.unicode_minus"] = False  # 用来正常显示负号
 
-clippredpkl_file = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/00_BehaviorAnalysis-seq2seq/SexAge/DayAll20230828/usv_cluster/svm2allAcc0.96_kmeansK2use-30_fromK1-15.usvclippredpkl'
+clippredpkl_file = '/mnt/liying.cibr.ac.cn_Data_Temp/usv_zyq/usv_data/detect/svm2allAcc0.93_kmeansK2use-54_fromK1-20_K100_labels.usvclippredpkl'
 
 
 def get_pearsonr(xs, ys, embedding):
@@ -154,6 +154,8 @@ def main(clippredpkl_file):
 
     outfig = osp.join(osp.dirname(clippredpkl_file), "dendrogram_similiar.pdf")
     plt.savefig(outfig, bbox_inches="tight")
+    
+
 
 #%%
 

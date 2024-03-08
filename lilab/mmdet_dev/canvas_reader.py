@@ -25,7 +25,7 @@ class CanvasReader:
         return self.vid.fps
 
     def __len__(self):
-        return self.vid.count
+        return self._len_
 
     def read(self):
         return self.vid.read()
@@ -68,6 +68,9 @@ class CanvasReader:
         self.views_xywh = views_xywh
         self.pkl_data = pkl_data
         self.nclass = len(pkl_data['segdata'][0][0][1])
+        seg_len = len(pkl_data['segdata'][0])
+        assert seg_len <= len(self.vid)
+        self._len_ = seg_len
         with torch.cuda.device(self.cuda):
             self.mask_container = torch.zeros((self.nclass, *mask_container_size)).cuda().half()
             self.mask_index = mask_index
@@ -85,9 +88,9 @@ class CanvasReader:
             segdata_iview = segdata[iview][self.iframe]
             for iclass in range(self.nclass):
                 mask = segdata_iview[1][iclass]
-                mask = maskUtils.decode(mask)[:,:,0] if mask else np.zeros((h, w), dtype=np.uint8)
+                mask = maskUtils.decode(mask)[:,:,0] if mask and len(mask[0]) else np.zeros((h, w), dtype=np.uint8)
                 mask_cuda = torch.from_numpy(mask).cuda(self.cuda).half()
-                if mask_cuda.shape[0] != h or mask_cuda.shape[1] != w:
+                if mask.shape[0] != h or mask.shape[1] != w:
                     mask_cuda = self.fun_resize(mask_cuda[None,...])[None]
                 index = self.mask_index[iview]
                 maskiclass_canvas_a[iclass][index[0]][index[1]] = mask_cuda

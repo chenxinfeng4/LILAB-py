@@ -7,7 +7,6 @@ import pickle
 import numpy as np
 import argparse
 
-tdms_f = glob.glob('/mnt/liying.cibr.ac.cn_Data_Temp/LS_NAC_fiberphotometry/PHO_11_NAC/0324行为记录/*.tdms')[0]
 
 
 def convert(tdms_f:str):

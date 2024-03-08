@@ -1,5 +1,5 @@
 # conda activate deeplabcut
-# python -m lilab.cvutils.coco_split -s 0.9 A/B/C_trainval.json
+# python -m lilab.cvutils.coco_split -s 0.9 /mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zhangyuanqing/202402_scpp_behavior/test/outframes_raw_2_trainval.json
 import os
 import json
 import argparse

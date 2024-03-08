@@ -44,7 +44,7 @@ def convert(voxel_origin_pklfiles):
         halflength = np.nanmax(np.linalg.norm(pts3d - com3d[:,None,:], axis=-1), axis=-1)
         bodylength = np.percentile(halflength*2, 90)
         vol_size = np.ceil(bodylength/10) * 10 + 10
-        vol_size = 250
+        # vol_size = 250
         print('vol_size: %.0f (mm)' % np.nanmean(vol_size))
 
         pkldata['com3d'] = com3d

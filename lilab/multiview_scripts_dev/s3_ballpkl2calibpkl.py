@@ -69,7 +69,11 @@ def ba_poses_to_intrin_extrin(ba_poses):
 
 def intri_extrin_to_ba_poses(intrin, extrin):
     views = set(intrin.keys()) & set(extrin.keys())
-    ba_poses = {view:{'K':intrin[view]['K'], 'dist':intrin[view]['dist'], 'R':extrin[view]['R'], 't':extrin[view]['t']}
+    ba_poses = {view:{'K':intrin[view]['K'], 
+                      'dist':intrin[view]['dist'], 
+                      'R':extrin[view]['R'], 
+                      't':extrin[view]['t'],
+                      'image_shape': intrin[view]['image_shape']}
                  for view in views}
     return ba_poses
 
@@ -176,8 +180,8 @@ def a3_bundle_ajustment(
             "bounds_pt": [1000, 1000, 1000],
             "max_nfev": 100,
             "max_nfev2": 100,
-            "ftol": 1e-08,
-            "xtol": 1e-08,  
+            "ftol": 1e-8,
+            "xtol": 1e-8,  
             "loss": "linear",
             "f_scale": 1,
             "output_path": "output/bundle_adjustment/"
@@ -389,8 +393,11 @@ def a3_bundle_ajustment(
     ba_poses = {}
     for i,(view, cp) in enumerate(zip(views, new_camera_params)):
         K, R, t, dist = unpack_camera_params(cp)
-        ba_poses[view] = {"R":R.tolist(), "t":t.tolist(), "K":K.tolist(), "dist":dist.tolist()}
-        
+        ba_poses[view] = {  "R":R.tolist(),
+                    "t":t.tolist(), 
+                    "K":K.tolist(),
+                    "dist":dist.tolist(),
+                    "image_shape": pose[view]["image_shape"]}
         points3d = new_points_3d[point_indices[camera_indices==i]]
         points2d = points_2d[camera_indices==i]
         
@@ -521,7 +528,7 @@ def main_calibrate(ballfile, skip_global:bool, skip_camera_intrinsic:bool):
     relative_poses = a1_relative_poses(setup, intrinsics, landmarks_move_xy, background_img)
     extrinsics = a2_concatenate_relative_poses(setup, relative_poses)
     poses = intri_extrin_to_ba_poses(intrinsics, extrinsics)
-    config = {'th_outliers_early':100, "th_outliers":20}
+    config = {'th_outliers_early':200, "th_outliers":20}
     # config = {'th_outliers_early':400, "th_outliers":100}
     if skip_camera_intrinsic:
         print("Fixing camera instrincis!")

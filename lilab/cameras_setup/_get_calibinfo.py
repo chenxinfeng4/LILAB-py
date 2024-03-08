@@ -36,6 +36,21 @@ def get_json_carl():
     intrinsics_rational_json = json.loads(intrinsics_rational_json1280x800x9_carl)
     return setup_json, intrinsics_rational_json
 
+def get_json_david():
+    setup_json = json.loads(setup_json640x480x3)
+    intrinsics_rational_json = json.loads(intrinsics_rational_json640x480x3_david)
+    return setup_json, intrinsics_rational_json
+
+def get_json_eva():
+    setup_json = json.loads(setup_json640x480x4)
+    intrinsics_rational_json = json.loads(intrinsics_rational_json640x480x4_eva)
+    return setup_json, intrinsics_rational_json
+
+def get_json_frank():
+    setup_json = setup_json_frank
+    intrinsics_rational_json = intrinsics_rational_json_frank
+    return setup_json, intrinsics_rational_json
+
 def get_json_zyy():
     setup_json  = json.loads(setup_json1280x800x9)
     setup_json = {
@@ -126,6 +141,195 @@ setup_json1280x800x4 = """
 }
 """
 
+setup_json640x480x3 = """
+{
+  "views": [ 0, 1, 2],
+  "minimal_tree": [
+    [1, 0],
+    [2, 1]
+  ]
+}
+"""
+
+setup_json640x480x4 = """
+{
+  "views": [ 0, 1, 2, 3],
+  "minimal_tree": [
+    [1, 0],
+    [2, 1],
+    [1, 3]
+  ]
+}
+"""
+
+setup_json_frank = {
+  "views": [ 0, 1, 2, 3, 4, 5],
+  "minimal_tree": [
+    [1, 0],
+    [2, 1],
+    [3, 2],
+    [4, 3],
+    [5, 4],
+    [0, 5]
+  ]
+}
+
+
+intrinsics_rational_json640x480x3_david = """
+{
+    "0": {
+        "date": "2024-01-16 18:58:03",
+        "description": "by opencv",
+        "K": [[430, 0, 326],
+            [0, 575, 231],
+            [0, 0, 1]],
+        "dist": [-0.369, 0.135, 0.0, 0.0, 0.0],
+        "image_shape": [480, 640]
+    },
+    "1": {
+        "date": "2024-01-16 18:58:03",
+        "description": "by opencv",
+        "K": [[469, 0, 312],
+            [0, 625, 235],
+            [0, 0, 1]],
+        "dist": [-0.399, 0.164, 0.0, 0.0, 0.0],
+        "image_shape": [480, 640]
+    },
+    "2": {
+        "date": "2024-01-16 18:58:03",
+        "description": "by opencv",
+        "K": [[626, 0, 316],
+            [0, 835, 246],
+            [0, 0, 1]],
+        "dist": [-0.37, 0.133, 0.0, 0.0, 0.0],
+        "image_shape": [480, 640]
+    },
+    "3": {
+        "date": "2024-01-16 18:58:03",
+        "description": "by opencv",
+        "K": [[467, 0, 335],
+            [0, 624, 246],
+            [0, 0, 1]],
+        "dist": [-0.429, 0.179, 0.0, 0.0, 0.0],
+        "image_shape": [480, 640]
+    }
+}
+"""
+
+
+intrinsics_rational_json640x480x3_david = """
+{
+    "0": {
+        "date": "2024-01-09 20:16:09",
+        "description": "by opencv",
+        "K": [[588, 0, 329],
+            [0, 783, 231],
+            [0, 0, 1]],
+        "dist": [-0.385, 0.177, 0.0, 0.0, 0.0],
+        "image_shape": [480, 640]
+    },
+    "1": {
+        "date": "2024-01-09 20:16:09",
+        "description": "by opencv",
+        "K": [[521, 0, 329],
+            [0, 695, 246],
+            [0, 0, 1]],
+        "dist": [-0.397, 0.187, 0.0, 0.0, 0.0],
+        "image_shape": [480, 640]
+    },
+    "2": {
+        "date": "2024-01-09 20:16:09",
+        "description": "by opencv",
+        "K": [[490, 0, 319],
+            [0, 653, 239],
+            [0, 0, 1]],
+        "dist": [-0.398, 0.164, 0.0, 0.0, 0.0],
+        "image_shape": [480, 640]
+    },
+    "3": {
+        "date": "2024-01-09 20:16:09",
+        "description": "by opencv",
+        "K": [[565, 0, 336],
+            [0, 749, 256],
+            [0, 0, 1]],
+        "dist": [-0.406, 0.184, 0.0, 0.0, 0.0],
+        "image_shape": [480, 640]
+    }
+}
+"""
+
+intrinsics_rational_json640x480x3_david = """
+{
+    "0": {
+        "date": "2023-11-24 15:43:13",
+        "description": "by opencv",
+        "K": [[361, 0, 304],
+            [0, 481, 253],
+            [0, 0, 1]],
+        "dist": [-0.342, 0.129, 0.0, 0.0, 0.0],
+        "image_shape": [480, 640]
+    },
+    "1": {
+        "date": "2023-11-24 15:43:13",
+        "description": "by opencv",
+        "K": [[526, 0, 342],
+            [0, 702, 209],
+            [0, 0, 1]],
+        "dist": [-0.355, 0.136, 0.0, 0.0, 0.0],
+        "image_shape": [480, 640]
+    },
+    "2": {
+        "date": "2023-11-24 15:43:13",
+        "description": "by opencv",
+        "K": [[312, 0, 303],
+            [0, 416, 258],
+            [0, 0, 1]],
+        "dist": [-0.417, 0.184, 0.0, 0.0, 0.0],
+        "image_shape": [480, 640]
+    }
+}
+"""
+
+intrinsics_rational_json640x480x4_eva = """
+{
+    "0": {
+        "date": "2024-01-16 18:58:03",
+        "description": "by opencv",
+        "K": [[430, 0, 326],
+            [0, 575, 231],
+            [0, 0, 1]],
+        "dist": [-0.369, 0.135, 0.0, 0.0, 0.0],
+        "image_shape": [480, 640]
+    },
+    "1": {
+        "date": "2024-01-16 18:58:03",
+        "description": "by opencv",
+        "K": [[469, 0, 312],
+            [0, 625, 235],
+            [0, 0, 1]],
+        "dist": [-0.399, 0.164, 0.0, 0.0, 0.0],
+        "image_shape": [480, 640]
+    },
+    "2": {
+        "date": "2024-01-16 18:58:03",
+        "description": "by opencv",
+        "K": [[626, 0, 316],
+            [0, 835, 246],
+            [0, 0, 1]],
+        "dist": [-0.37, 0.133, 0.0, 0.0, 0.0],
+        "image_shape": [480, 640]
+    },
+    "3": {
+        "date": "2024-01-16 18:58:03",
+        "description": "by opencv",
+        "K": [[467, 0, 335],
+            [0, 624, 246],
+            [0, 0, 1]],
+        "dist": [-0.429, 0.179, 0.0, 0.0, 0.0],
+        "image_shape": [480, 640]
+    }
+}
+"""
 
 intrinsics_rational_json1280x800x10 = """
 {
@@ -743,6 +947,65 @@ intrinsics_rational_json800x600x6 = """
     }
 }
 """
+
+intrinsics_rational_json_frank = {
+    "0": {
+        "date": "2024-02-01 01:53:05",
+        "description": "by opencv",
+        "K": [[435, 0, 333],
+            [0, 582, 236],
+            [0, 0, 1]],
+        "dist": [-0.375, 0.126, 0.0, 0.0, 0.0],
+        "image_shape": [480, 640]
+    },
+    "1": {
+        "date": "2024-02-01 01:53:05",
+        "description": "by opencv",
+        "K": [[461, 0, 312],
+            [0, 616, 235],
+            [0, 0, 1]],
+        "dist": [-0.395, 0.166, 0.0, 0.0, 0.0],
+        "image_shape": [480, 640]
+    },
+    "2": {
+        "date": "2024-02-01 01:53:05",
+        "description": "by opencv",
+        "K": [[406, 0, 316],
+            [0, 541, 224],
+            [0, 0, 1]],
+        "dist": [-0.385, 0.138, 0.0, 0.0, 0.0],
+        "image_shape": [480, 640]
+    },
+    "3": {
+        "date": "2024-02-01 01:53:05",
+        "description": "by opencv",
+        "K": [[396, 0, 318],
+            [0, 528, 239],
+            [0, 0, 1]],
+        "dist": [-0.378, 0.122, 0.0, 0.0, 0.0],
+        "image_shape": [480, 640]
+    },
+    "4": {
+        "date": "2024-02-01 01:53:05",
+        "description": "by opencv",
+        "K": [[425, 0, 326],
+            [0, 565, 238],
+            [0, 0, 1]],
+        "dist": [-0.406, 0.149, 0.0, 0.0, 0.0],
+        "image_shape": [480, 640]
+    },
+    "5": {
+        "date": "2024-02-01 01:53:05",
+        "description": "by opencv",
+        "K": [[675, 0, 316],
+            [0, 901, 236],
+            [0, 0, 1]],
+        "dist": [-0.247, 0.174, 0.0, 0.0, 0.0],
+        "image_shape": [480, 640]
+    }
+}
+
+
 
 intrinsics_rational_json2448x2048x9_zyy =  {
     "0": {

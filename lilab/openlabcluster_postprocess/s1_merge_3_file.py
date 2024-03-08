@@ -13,6 +13,8 @@ import glob
 
 
 def get_assert_1_file(globpattern: str):
+
+
     files = glob.glob(globpattern)
     files = [f for f in files if '$' not in f]
     assert len(files) == 1
@@ -23,7 +25,7 @@ def convert(cleaned_proj):
     if len(glob.glob(osp.join(cleaned_proj, "*_simple.hlpkl"))):
         out_embedding = get_assert_1_file(osp.join(cleaned_proj, "*_simple.hlpkl"))
         embedding_data_ = pickle.load(open(out_embedding, "rb"))
-        assert {"encFeats", "embedding"} <= embedding_data.keys()
+        assert {"encFeats", "embedding"} <= embedding_data_.keys()
         embedding_data = {'embedding_d60': embedding_data_['encFeats'], 
                           'embedding_d2': embedding_data_['embedding']}
     elif len(glob.glob(osp.join(cleaned_proj, "*embedding.pkl"))):

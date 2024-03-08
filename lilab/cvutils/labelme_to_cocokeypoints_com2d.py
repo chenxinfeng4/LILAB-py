@@ -1,4 +1,6 @@
 # python -m lilab.cvutils.labelme_to_cocokeypoints_com2d /A/B/C
+#python -m lilab.cvutils.labelme_to_cocokeypoints_com2d  /mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zhangyuanqing/cpp/20231205/rotate
+import argparse
 import argparse
 import copy
 import glob
@@ -12,7 +14,7 @@ import numpy as np
 from labelme import utils
 from tqdm import tqdm
 
-bodyparts=['pup']
+bodyparts=['rat']
 TemplateKeypointList = [{'points':[[0,0]],'shape_type':'point'} for i in range(len(bodyparts))]
 
 class AutoId():

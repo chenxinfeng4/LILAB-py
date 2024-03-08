@@ -8,15 +8,37 @@ import os.path as osp
 from matplotlib.colors import LinearSegmentedColormap
 import argparse
 import tqdm
+import cv2
+import mmcv
+from lilab.comm_signal.line_scale import line_scale
 
 usv_pkl_folder = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/00_BehaviorAnalysis-seq2seq/SexAge/DayAll20230828/usv_label/SexualDevelopD35D55D75_USV_recon'
 pklfile_latent = osp.join(usv_pkl_folder, 'usv_latent.usvpkl')
 pklfile_evt    = osp.join(usv_pkl_folder, 'usv_evt.usvpkl')
 usv_img_folder = usv_pkl_folder
-nbin = 20
+nbin = 18
 mosaic_size = (128, 128)
+no_auto_crop = False
+t_winlen = 0.26 #sec
+freq_band = [20, 100]
 
 #%%
+def get_img_data(video_dir, ind_contain_xy_file):
+    video_nakes = {v_i[0]:osp.join(video_dir, f'{v_i[0]}.avi')
+                   for v_i in ind_contain_xy_file.ravel()
+                    if v_i[0] is not None}
+    video_nakes_vid = {v:mmcv.VideoReader(vfile) for v,vfile in tqdm.tqdm(video_nakes.items())}
+    img_list = np.empty(ind_contain_xy_file.shape, dtype=object)
+    for ix, iy in tqdm.tqdm(list(product(range(ind_contain_xy_file.shape[0]),
+                                         range(ind_contain_xy_file.shape[1])))):
+        video_nake, iframe = ind_contain_xy_file[ix, iy]
+        if video_nake is None: continue
+        vid = video_nakes_vid[video_nake]
+        img = vid[iframe]
+        img_mask = np.ascontiguousarray(img[:, 255:510])
+        img_list[ix, iy] = img_mask
+    return img_list
+
 def get_the_centered(usv_latent, ids):
     usv_latent_ = usv_latent[ids]
     usv_latent_centered = usv_latent_ - usv_latent_.mean(axis=0, keepdims=True)
@@ -34,6 +56,29 @@ def get_cmap():
     rgb_array = cmap(gradient)[:, None, :3][::-1]
     pil_image = Image.fromarray((rgb_array * 255).astype(np.uint8)).resize(mosaic_size)
     pil_image
+    pil_image_rgb = np.array(pil_image.convert('RGB'))
+    return pil_image, pil_image_rgb
+
+def get_cmap_white():
+    # colors = ['#180239', '#2B50C3','#009600', '#DB9800', '#DB0000', '#610000']
+    # # positions = [0,       0.32,     0.43,       0.66,      0.9,        1]  #比较好
+    # positions = [0,       0.2,     0.4,       0.5,      0.7,        1]
+    # colors = ['#0040DB', '#066F6D', '#2FA14D', '#D67921', '#971939']
+    # positions = [0,         0.4,       0.5,      0.6,        1]
+    
+    # cmap = LinearSegmentedColormap.from_list('custom_cmap', list(zip(positions, colors)))
+
+    # gradient = np.linspace(0, 1, 128)
+    # rgb_array = cmap(gradient)[:, None, :3][::-1]
+
+    # pil_image = Image.fromarray((rgb_array * 255).astype(np.uint8)).resize(mosaic_size)
+    imgmask = '/mnt/liying.cibr.ac.cn_Xiong/decoder_layer/SexualDevelopD35D55D75_USV/tsne_usv_frequency_mask_whitebg_src.jpg'
+    pil_image = Image.open(imgmask).resize(mosaic_size)
+    from PIL import ImageEnhance
+    enhancer = ImageEnhance.Color(pil_image)
+    # pil_image = enhancer.enhance(1.4)
+    enhancer = ImageEnhance.Brightness(pil_image)
+    pil_image = enhancer.enhance(0.8)
     pil_image_rgb = np.array(pil_image.convert('RGB'))
     return pil_image, pil_image_rgb
 
@@ -80,34 +125,64 @@ def show(pklfile_latent, pklfile_evt, usv_img_folder):
         else:
             ind_contain_xy_file[ix, iy] =  pkldata_evt['df_usv_evt'].iloc[int(idx_in_all)][['video_nake', 'idx_in_file']].to_list()
 
+    img_contain = get_img_data(usv_img_folder, ind_contain_xy_file)
+
     target_res = [nbin, nbin]
     imgblack = np.zeros((*mosaic_size, 3), dtype=np.uint8)
     imblack = Image.fromarray(imgblack)
+    imwhite = Image.fromarray(imgblack+255)
 
     immask, immask_rgb = get_cmap()
-    immask.save(osp.join(usv_img_folder, 'tsne_usv_frequency_mask.jpg'))
+    immask_white, immask_white_rgb = get_cmap_white()
+    outdir = osp.dirname(pklfile_latent)
+    immask.save(osp.join(outdir, 'tsne_usv_frequency_mask.jpg'))
+    immask_white.save(osp.join(outdir, 'tsne_usv_frequency_mask_whitebg.jpg'))
     from IPython.display import display
 
+    t_wincrop_ind = [40, 256-5]
+    # freq_bandcrop_ind = [20, 256-20]
+    freq_bandcrop_ind = [0, 256]
+    t_wincrop = 256 /  (t_wincrop_ind[1]-t_wincrop_ind[0]) * t_winlen
+    freq_bandcrop = [int(i) for i in line_scale([0,256], freq_band, freq_bandcrop_ind)]
     canvas = Image.new('RGB', (mosaic_size[0]*target_res[0], mosaic_size[1]*target_res[1]))
-    for ix, iy in tqdm.tqdm(product(range(target_res[0]), range(target_res[1]))):
-        video_nake, idx_in_file = ind_contain_xy_file[ix, iy]
-        if video_nake is None:
+    for ix, iy in tqdm.tqdm(list(product(range(target_res[0]),
+                                         range(target_res[1])))):
+        img0 = img_contain[ix, iy]
+        if img0 is None:
             im = imblack
         else:
-            imgfile = osp.join(usv_img_folder, video_nake, f'{idx_in_file+1:06d}.png') #start from 1
-            # im1 = Image.open(imgfile).crop((100, 50, 160, 200)).resize(mosaic_size)
-            im1 = Image.open(imgfile).crop((50, 50, 200, 250)).resize(mosaic_size)
-            img_rgb = np.array(im1.convert('RGB')) > 10
-            im = Image.fromarray(img_rgb * immask_rgb)
-            # print(imgfile)
+            img1 = img0 if no_auto_crop else img0[slice(*freq_bandcrop_ind), slice(*t_wincrop_ind)]
+            img2 = cv2.resize(img1, mosaic_size, interpolation=cv2.INTER_AREA)
+            img3 = np.clip(img2[..., [0]]/255 * 2, 0, 1) * immask_rgb
+            img3[:,0] = img3[0,:] = img3[:,-1] = img3[-1,:] = 255
+            im = Image.fromarray(img3.astype(np.uint8))
             # display(im)
 
+        x, y = ix*mosaic_size[0], canvas.size[1] - iy*mosaic_size[1]
+        canvas.paste(im, (x,y))
+    canvas.save(osp.join(outdir, f'tsne_usv_shape_nbin{nbin}_freq{freq_bandcrop[0]}-{freq_bandcrop[1]}.png'))
 
+    canvas = Image.new('RGB', (mosaic_size[0]*target_res[0], mosaic_size[1]*target_res[1]), color='white')
+    for ix, iy in tqdm.tqdm(list(product(range(target_res[0]),
+                                         range(target_res[1])))):
+        img0 = img_contain[ix, iy]
+        if img0 is None:
+            im = imwhite
+        else:
+            img1 = img0 if no_auto_crop else img0[slice(*freq_bandcrop_ind), slice(*t_wincrop_ind)]
+            img2 = cv2.resize(img1, mosaic_size, interpolation=cv2.INTER_AREA)
+            img_rgb = img2 > 10
+            img_fg = img_rgb * immask_white_rgb
+            img_fg[~img_rgb] = 255
+            im = Image.fromarray(img_fg)
+            # print(imgfile)
+            # display(im)
 
         x, y = ix*mosaic_size[0], canvas.size[1] - iy*mosaic_size[1]
         canvas.paste(im, (x,y))
     canvas
-    canvas.save(osp.join(usv_img_folder, f'tsne_usv_shape_nbin{nbin}.png'))
+    canvas.save(osp.join(outdir, f'tsne_usv_shape_nbin{nbin}_freq{freq_bandcrop[0]}-{freq_bandcrop[1]}_whitebg.png'))
+
     return canvas
 
 
@@ -115,9 +190,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('usv_pkl_folder', type=str,
                         help='Folder containing pkl files of usv latent')
+    parser.add_argument('--usv_image_folder', type=str, default=None)
     args = parser.parse_args()
     usv_pkl_folder = args.usv_pkl_folder
     pklfile_latent = osp.join(usv_pkl_folder, 'usv_latent.usvpkl')
     pklfile_evt    = osp.join(usv_pkl_folder, 'usv_evt.usvpkl')
-    usv_img_folder = usv_pkl_folder
+    if args.usv_image_folder is None:
+        usv_img_folder = usv_pkl_folder
+    else:
+        usv_img_folder = args.usv_image_folder
     show(pklfile_latent, pklfile_evt, usv_img_folder)

@@ -13,7 +13,6 @@ import random
 import multiprocessing as mp
 import re
 import matplotlib.pyplot as plt
-from lilab.mmpose_dev.a3_ego_align import KptEgoAligner
 from matplotlib.patches import Polygon
 import argparse
 from lilab.openlabcluster_postprocess.s4_moseq_like_motif_plot import parsename

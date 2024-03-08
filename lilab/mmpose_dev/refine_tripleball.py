@@ -88,3 +88,4 @@ def get_max_preds_triple(heatmaps:torch.Tensor):
     preds = peaks[..., :2]
     maxvals = peaks[..., [2]]
     return preds, maxvals
+

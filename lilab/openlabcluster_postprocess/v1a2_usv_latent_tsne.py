@@ -13,7 +13,7 @@ import glob
 pklfile = '/mnt/liying.cibr.ac.cn_Xiong/USV_MP4-toXiongweiGroup/Shank3_USV/usv_label/usv_latent.usvpkl'
 
 def main(usv_pkl_folder):
-    usv_pkl_files = glob.glob(osp.join(usv_pkl_folder, '*usv_latent.usvpkl'))
+    usv_pkl_files = glob.glob(osp.join(usv_pkl_folder, '*usv_latent*.usvpkl'))
     assert len(usv_pkl_files) == 1
     pklfile = usv_pkl_files[0]
     pkldata = pickle.load(open(pklfile, 'rb'))

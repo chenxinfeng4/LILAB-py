@@ -7,7 +7,9 @@ import cv2
 from lilab.cameras_setup import get_ballglobal_cm, get_json_wrapper
 
 second_based = True
-pthr = 0.62
+pthr = 0.7
+# pthr = 0.62
+nchoose = 1000
 matfile = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/ball/2022-04-29_17-58-45_ball.matpkl'
 
 
@@ -18,9 +20,12 @@ def load_mat(matfile):
     vfile = data['info']['vfile']
     views_xywh = data['views_xywh']
 
-    assert keypoint.ndim == 4 and keypoint.shape[2] == 1, "Only one class and one instance is supported"
-    assert keypoint.shape[-1] == 3, "xyp is expected"
-    keypoint = keypoint[:,:,0,:]
+    nclass = keypoint.shape[2]
+    assert keypoint.ndim == 4 and keypoint.shape[-1] == 3, "xyp is expected"
+    if nclass==1:
+        keypoint = keypoint[:,:,0,:]
+    else:
+        keypoint = np.concatenate([keypoint[:,:,i,:] for i in range(nclass)], axis=1)
     return keypoint, fps, vfile, views_xywh
 
 
@@ -68,16 +73,15 @@ def get_background_img(global_iframe, vfile, views_xywh):
 
 
 def downsampe_keypoint(keypoint_xy_move):
-    ind_notnan = np.isnan(keypoint_xy_move[:,:,0]) #(nview, nframe)
-    ind_3notnan = np.sum(ind_notnan, axis=1) >=4
-    # ind_3notnan = np.sum(ind_notnan, axis=1) >=2
+    ind_notnan = ~np.isnan(keypoint_xy_move[:,:,0]) #(nview, nframe)
+    ind_3notnan = np.sum(ind_notnan, axis=0) >= keypoint_xy_move.shape[0]//2
 
-    keypoint_xy_move = keypoint_xy_move[ind_3notnan]
+    nframe = keypoint_xy_move.shape[1]
+    keypoint_xy_move = keypoint_xy_move[:,ind_3notnan]
     ind_notnan = np.isnan(keypoint_xy_move[:,:,0]) #(nview, nframe)
 
     mycase=1
-    nchoose=1000
-    if mycase==0:
+    if mycase==0 or nframe<nchoose:
         keypoint_xy_move_downsample = keypoint_xy_move
     elif mycase==1:
         keypoint_xy_move_downsample = keypoint_xy_move[:,::3,:]
@@ -104,10 +108,7 @@ def convert(matfile, global_time, force_setupname:str):
     keypoint_xy_move_downsample = downsampe_keypoint(keypoint_xy_move)
     background_img = get_background_img(global_index, vfile, views_xywh)
     fitball_xyz_global =  get_ballglobal_cm()
-    if force_setupname is not None:
-        setup_json, intrinsics_json = get_json_wrapper(force_setupname)
-    else:
-        setup_json, intrinsics_json = get_json_wrapper(len(views_xywh))
+    setup_json, intrinsics_json = get_json_wrapper(force_setupname)
     
     assert len(intrinsics_json) == len(views_xywh)
     
@@ -131,6 +132,8 @@ if __name__ == '__main__':
     parser.add_argument('matfile', type=str)
     parser.add_argument('--time', type=float, nargs='+')
     parser.add_argument('--force-setupname', type=str, default=None)
+    parser.add_argument('--nchoose', type=int, default=nchoose)
     args = parser.parse_args()
+    nchoose = args.nchoose
     assert len(args.time) == 5, "global_time should be 5 elements"
     convert(args.matfile, args.time, args.force_setupname)

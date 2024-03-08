@@ -30,7 +30,7 @@ def main(usv_label_csv_folder):
     plt.ylabel('USV main frequency (kHz)')
     plt.savefig(osp.join(usv_label_csv_folder, 'usv_frequency_x_duration.jpg'))
 
-    out_dict = {'video_nakes': df_all['video_nake'].unique(),
+    out_dict = {'video_nakes': list(np.array(df_all['video_nake'].unique())),
                 'df_usv_evt': df_all}
     out_file = osp.join(usv_label_csv_folder, 'usv_evt.usvpkl')
     pickle.dump(out_dict, open(out_file, 'wb'))

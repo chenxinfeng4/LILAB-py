@@ -37,7 +37,7 @@ def load_data(project, sheet_name):
 
     k_best = clippredata['ncluster'] #label: 0,1,2...,k_best
     assert len(clippredata['cluster_names']) == k_best  #不包含nonsocial
-    lab_names2 = [f'{lab} [{i:>2}]' for i, lab in enumerate(['Non social']+clippredata['cluster_names'])]
+    lab_names2 = [f'{lab} [{i:>2}]' for i, lab in enumerate(['Far away non social']+clippredata['cluster_names'])]
     df_labnames = pd.DataFrame({'behlabel':range(k_best+1), 'lab_names':lab_names2})
     df_labreorder = pd.DataFrame({'behlabel':range(k_best+1)})
  
@@ -46,11 +46,11 @@ def load_data(project, sheet_name):
     rat_info=pd.read_excel(groupFile, sheet_name='rat_info', engine='openpyxl')
     video_info=pd.read_excel(groupFile, sheet_name=sheet_name, engine='openpyxl')
 
-    rat_info = rat_info.filter(regex=r'^((?!Unnamed).)*$')
-    video_info = video_info.filter(regex=r'^((?!Unnamed).)*$')
-
+    rat_info = rat_info.filter(regex=r'^((?!Unnamed).)*$').dropna(axis=0,how='all')
+    video_info = video_info.filter(regex=r'^((?!Unnamed).)*$').dropna(axis=0,how='all')
+    #remove all NaN row
     # 表的检查
-    assert {'animal', 'color', 'gender', 'dob'} <= set(rat_info.columns)
+    assert {'animal', 'color', 'gender', 'geno', 'dob'} <= set(rat_info.columns)
     assert {'video_nake', 'animal', 'partner', 'usv_file'} <= set(video_info.columns)
     df_merge_b = pd.merge(rat_info, video_info['animal'], on='animal', how='right')
     assert (df_merge_b['color'] == 'b').all()
@@ -62,7 +62,7 @@ def load_data(project, sheet_name):
 def define_group(rat_info, video_info, df_labnames=None):
     rats_black = rat_info[rat_info['color'] == 'b']['animal'].values
     rats_male  = rat_info[rat_info['gender'] == 'male']['animal'].values
-
+    group_geno_dict = dict(rat_info[['animal', 'geno']].values)
     rows_list = []
     for i in range(video_info.shape[0]):
         record_now = video_info.iloc[i]
@@ -73,12 +73,14 @@ def define_group(rat_info, video_info, df_labnames=None):
         black_ratid, white_ratid = (animal_ratid, partner_ratid) if is_blackfirst else (partner_ratid, animal_ratid) #first_ratid is black_rat
         groupdict = {True:'male', False:'female'}
         group_name = groupdict[black_ratid in rats_male] + groupdict[white_ratid in rats_male]
-        rows_list.append([black_ratid, white_ratid, group_name, video_nake, True])
+        group_geno_name = group_geno_dict[black_ratid] + group_geno_dict[white_ratid]
+        rows_list.append([black_ratid, white_ratid, group_name, group_geno_name, video_nake, True])
 
         group_name = groupdict[white_ratid in rats_male] + groupdict[black_ratid in rats_male]
-        rows_list.append([white_ratid, black_ratid, group_name, video_nake, False])
+        group_geno_name = group_geno_dict[white_ratid] + group_geno_dict[black_ratid]
+        rows_list.append([white_ratid, black_ratid, group_name, group_geno_name, video_nake, False])
 
-    df_group = pd.DataFrame(columns=['first_ratid', 'partner_ratid', 'group', 'video_nake', 'is_blackfirst'],
+    df_group = pd.DataFrame(columns=['first_ratid', 'partner_ratid', 'group', 'group_geno', 'video_nake', 'is_blackfirst'],
                             data=rows_list)
 
     df_group['beh_key'] = pd.Series(['fps30_' + v.replace('-','_') + '_startFrame0_' + ('blackFirst' if is_blackfirst else 'whiteFirst')
@@ -103,7 +105,7 @@ def define_group_freq(bhvSeqs, df_group, df_labnames):
     df_freq_data_list = []
     for i, freq_data_this in enumerate(freq_data):
         df_freq_data = pd.DataFrame({'behlabel':range(len(freq_data_this)), 'freq':freq_data_this})
-        df_freq_data['beh_key'] = df_group['beh_key'][i]
+        df_freq_data['beh_key'] = df_group['beh_key'].iloc[i]
         df_freq_data_list.append(df_freq_data)
 
     df_freq_data_list = pd.concat(df_freq_data_list, axis=0)
@@ -184,6 +186,80 @@ def plot_box_data(df_labnames, df_group_x_freq, hue_order, hue_legend, savefigpa
     if savefigpath:
         plt.savefig(savefigpath, bbox_inches='tight')
 
+
+def plot_diff_box_data(df_group_x_freq, hue_order):
+    assert len(hue_order) == 2
+    df_group_x_freq_A = df_group_x_freq[df_group_x_freq['group']==hue_order[0]]
+    df_group_x_freq_B = df_group_x_freq[df_group_x_freq['group']==hue_order[1]]
+    behlabel_unique = df_group_x_freq_A['behlabel'].unique()
+    lab_names_unique = df_group_x_freq_A['lab_names'].unique()
+    A = np.array([df_group_x_freq_A[df_group_x_freq_A['behlabel']==i]['freq'].mean() for i in behlabel_unique])
+    B = np.array([df_group_x_freq_B[df_group_x_freq_B['behlabel']==i]['freq'].mean() for i in behlabel_unique])
+    fold_changes = (B-A)/(A+B+0.001)
+    fc_inds=np.argsort(fold_changes)[::-1]
+    behlabel_sort = behlabel_unique[fc_inds]
+    lab_names_sort = lab_names_unique[fc_inds]
+    lab_names_sort = [i.split(' [')[0] for i in lab_names_sort]
+    freq_ratio_sort = fold_changes[fc_inds]
+    
+    xcolors=[]
+    for behlabel in behlabel_sort:
+        AB = df_group_x_freq[df_group_x_freq['behlabel']==behlabel]
+        A = AB[AB['group']==hue_order[0]]
+        B = AB[AB['group']==hue_order[1]]
+        A_freq = np.sort(A['freq'].values)
+        B_freq = np.sort(B['freq'].values)
+        t,p = stats.ttest_ind(A_freq, B_freq)
+        if p<0.05 and A_freq.mean()>B_freq.mean():
+                xcolors.append('blue')
+        elif p<0.05 and A_freq.mean()<B_freq.mean():
+                xcolors.append('brown')
+        else:
+                xcolors.append('black')
+    
+    plt.figure(figsize=(6,9))
+    plt.barh(np.arange(len(freq_ratio_sort)), 
+            freq_ratio_sort,
+            facecolor = [0.5, 0.5, 0.5])
+    plt.xlim([-0.6, 0.6])
+    plt.ylim([-1, len(freq_ratio_sort)])
+    plt.plot([0, 0], [-0.5, len(freq_ratio_sort)-0.5], 'k')
+    plt.xticks([-0.6, 0, 0.6])
+    plt.yticks(np.arange(len(freq_ratio_sort)), lab_names_sort)
+    plt.xlabel('Differential expression', fontsize=16)
+    
+    ind_in = np.array(xcolors)=='brown'
+    plt.barh(np.arange(len(freq_ratio_sort))[ind_in], 
+            freq_ratio_sort[ind_in],
+            facecolor = '#dd1c77')
+    
+    ind_in = np.array(xcolors)=='blue'
+    plt.barh(np.arange(len(freq_ratio_sort))[ind_in], 
+            freq_ratio_sort[ind_in],
+            facecolor = '#3182bd')
+    
+    plt.figure(figsize=(9,4))
+    plt.bar(np.arange(len(freq_ratio_sort)), 
+            freq_ratio_sort,
+            facecolor = [0.5, 0.5, 0.5])
+    plt.ylim([-0.8, 0.8])
+    plt.xlim([-1, len(freq_ratio_sort)])
+    plt.plot([-0.5, len(freq_ratio_sort)-0.5], [0, 0], 'k')
+    plt.yticks([-1, 0, 1])
+    plt.xticks(np.arange(len(freq_ratio_sort)), lab_names_sort, 
+            rotation=30, ha='right')
+    plt.ylabel('Differential expression', fontsize=16)
+    
+    ind_in = np.array(xcolors)=='brown'
+    plt.bar(np.arange(len(freq_ratio_sort))[ind_in], 
+            freq_ratio_sort[ind_in],
+            facecolor = '#dd1c77')
+    
+    ind_in = np.array(xcolors)=='blue'
+    plt.bar(np.arange(len(freq_ratio_sort))[ind_in], 
+            freq_ratio_sort[ind_in],
+            facecolor = '#3182bd')
+    plt.xlim(plt.xlim()[::-1])
 
 def plt_ellipse(x, y, ax, color):
     data = np.array([x, y])
@@ -308,11 +384,11 @@ def create_nodemerge_group_x_freq(df_group_x_freq, cluster_nodes_merged):
 
     return df_group_x_freq_groupmerge
 
-def get_clean_df(df_group_x_freq):
+def get_clean_df(df_group_x_freq, noutlier=1):
     df_clean_list = []
     for _, df in df_group_x_freq.groupby('group'):
         df_clean_list.append(df.groupby('behlabel').apply(
-                            lambda x: x.nsmallest(len(x)-1, 'freq').nlargest(len(x)-2, 'freq')))
+                            lambda x: x.nsmallest(len(x)-noutlier, 'freq').nlargest(len(x)-2*noutlier, 'freq')))
     df_clean = pd.concat(df_clean_list)
     return df_clean
 

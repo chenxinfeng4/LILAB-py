@@ -6,12 +6,13 @@ import os
 import os.path as osp
 import re
 import matplotlib.pyplot as plt
-from lilab.mmpose_dev.a3_ego_align import KptEgoAligner
 from matplotlib.patches import Polygon
 import tqdm
 from lilab.openlabcluster_postprocess.s4_moseq_like_motif_plot import parsename
 import argparse
-
+import logging
+logger = logging.getLogger("my_logger")
+logger.setLevel(logging.DEBUG)
 
 clippredpklfile = '/DATA/taoxianming/rat/result/openlabcluster/chenxinfeng/shank3Day36-2022-2023/feats35fs0.8s-overlapSign/Shank3Day36--2023-07-05/output/kmeans/FWPCA0.00_P100_en3_hid30_epoch523_svm2allAcc0.92_kmeansK2use-44_fromK1-20_K100.clippredpkl'
 thr = 60
@@ -37,12 +38,12 @@ def print_info(clipdata, matrix_norm):
     
     for i in range(matrix_norm.shape[0]):
         if matrix_norm[i,i] > thr:
-            print('mutual', i+1, i+1, cluster_name_mutual(i))
+            logger.info(f'mutual {i+1} {i+1} {cluster_name_mutual(i)}')
 
     for i in range(matrix_norm.shape[0]):
         for j in range(i+1, matrix_norm.shape[1]):
             if matrix_norm[i,j] > thr:
-                print('mirror',i+1, j+1, cluster_name_mirror(i, j))
+                logger.info(f'mirror {i+1} {j+1} {cluster_name_mirror(i, j)}')
 
 
 
@@ -103,6 +104,14 @@ def main(clippredpklfile):
     plt.title('Percent > 60%')
     outfig = osp.join(osp.dirname(clippredpklfile), 'cluster_mirror.jpg')
     plt.savefig(outfig)
+
+    #%%
+    file_handler = logging.FileHandler(osp.join(osp.dirname(clippredpklfile), 'cluster_mirror_stat.txt'))
+    file_handler.setLevel(logging.DEBUG)
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(logging.DEBUG)
+    logger.addHandler(file_handler)
+    logger.addHandler(stream_handler)
 
     # %%
     print_info(clipdata, matrix_norm)

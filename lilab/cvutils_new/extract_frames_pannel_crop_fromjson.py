@@ -1,4 +1,5 @@
-# python -m lilab.cvutils_new.extract_frames_fromjson out.json
+# python -m lilab.cvutils_new.extract_frames_pannel_crop_fromjson /mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zhangyuanqing/202402_scpp_behavior/conditioning_room2/errorframe/1/out_2024-01-31_17-07-24_JM3_3_and_JM1_3_paper_cotton.mp4/out.json
+#/home/liying_lab/chenxinfeng/ml-project/LILAB-py/lilab/cvutils_new/extract_frames_pannel_crop_fromjson.py
 import argparse
 import os
 import cv2
@@ -13,7 +14,7 @@ import glob
 import os.path as osp
 
 
-pannels_xywh = get_view_xywh_wrapper(9)
+pannels_xywh = get_view_xywh_wrapper('carl')
 frame_dir = "outframes_raw_2"
 
 

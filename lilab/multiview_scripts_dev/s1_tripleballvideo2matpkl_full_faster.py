@@ -1,4 +1,4 @@
-# python -m lilab.multiview_scripts_dev.s1_ballvideo2matpkl_full_faster  /mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/VPAxWT/DAY75/SOLO/
+# python -m lilab.multiview_scripts_dev.s1_tripleballvideo2matpkl_full_faster  /mnt/liying.cibr.ac.cn_Data_Temp/marmoset_camera3_cxf/2023-12-09-calib/2023-12-09_14-15-22_cam1.mp4
 # %%
 import argparse
 import numpy as np

@@ -13,8 +13,8 @@ import pickle
 from collections import defaultdict
 
 
-project='/mnt/liying.cibr.ac.cn_Xiong/USV_MP4-toXiongweiGroup/Shank3_USV/'
-sheet_name = 'treat_info'
+project='/mnt/liying.cibr.ac.cn_Xiong/SexualDevelopD35D55D75_usv_decoder_layer__'
+sheet_name = 'Dall_8816_treat_info'
 rat_info, video_info, bhvSeqs, df_labnames, k_best, cluster_nodes_merged = load_data(project, sheet_name)
 df_group = define_group(rat_info, video_info, df_labnames)
 

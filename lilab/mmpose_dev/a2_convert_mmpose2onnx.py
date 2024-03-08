@@ -1,5 +1,10 @@
-# python -m lilab.mmpose_dev.a2_convert_mmpose2onnx G:\mmpose\res50_coco_ball_512x512_ZJF.py --full --dynamic
+# python -m lilab.mmpose_dev.a2_convert_mmpose2onnx /home/liying_lab/chenxinfeng/DATA/mmpose/res50_coco_com2d_512x320_threechamber_oyy.py --full --dynamic
 # It's for top-down version of the network
+# trtexec --onnx=work_dirs/res50_coco_com2d_512x320_threechamber_oyy/latest.full.onnx \
+# --fp16 --saveEngine=work_dirs/res50_coco_com2d_512x320_threechamber_oyy/latest.full_fp16.engine \
+# --timingCacheFile=work_dirs/res50_coco_com2d_512x320_threechamber_oyy/.cache.txt \
+# --workspace=3072 --optShapes=input_1:4x3x320x512 \
+# --minShapes=input_1:1x3x320x512 --maxShapes=input_1:10x3x320x512
 import numpy as np
 import torch
 
@@ -21,8 +26,8 @@ class NormalizedModel(torch.nn.Module):
         self.module = module
         
     def forward(self, x): #x: NCHW rgb 0-255
-        if x.shape[1] == 1:
-            x = x.repeat(1,3,1,1)
+        # if x.shape[1] == 1:
+        #     x = x.repeat(1,3,1,1)
         y = (x - self.mean_value) / self.std_value
         y = self.module(y)
         return y
@@ -54,9 +59,13 @@ def _convert_batchnorm(module):
     return module_output
 
 
-def convert(config, checkpoint, full, monocolor, dynamic):
+def convert(config, checkpoint, full, monocolor, dynamic, output):
     cfg = Config.fromfile(config, checkpoint)
-    output_file = osp.splitext(checkpoint)[0] + ('.full.onnx' if full else '.onnx')
+    if output is None:
+        output_file = osp.splitext(checkpoint)[0] + ('.full.onnx' if full else '.onnx')
+    else:
+        output_file = output
+    print(f'Saving to {output_file}')
     image_size = cfg.data_cfg.image_size
     
     if isinstance(image_size, int):
@@ -93,7 +102,7 @@ def convert(config, checkpoint, full, monocolor, dynamic):
     torch.onnx.export(model, dummy_input, output_file, export_params=True,
         input_names=["input_1"], output_names=["output_1"],
         dynamic_axes = dynamic_axes,
-        keep_initializers_as_inputs=True, verbose=False, opset_version=11)
+        keep_initializers_as_inputs=True, verbose=False, opset_version=12)
     print('Saving onnx model to: {}'.format(osp.basename(output_file)))
 
     C,H,W = input_shape[1:]
@@ -121,9 +130,10 @@ if __name__ == '__main__':
     parser.add_argument('--monocolor', action='store_true', help='Use NCHW, C==1')
     parser.add_argument('--full', action='store_true', help='Use full model which integrated input normlization layer')
     parser.add_argument('--dynamic', action='store_true', help='dynamic shape')
+    parser.add_argument('--output', '-o', type=str, default=None, help='output ONNX file name')
     args = parser.parse_args()
     config = args.config
     checkpoint = args.checkpoint
     if checkpoint is None:
         checkpoint = findcheckpoint_pth(config)
-    convert(config, checkpoint, args.full, args.monocolor, args.dynamic)
+    convert(config, checkpoint, args.full, args.monocolor, args.dynamic, args.output)

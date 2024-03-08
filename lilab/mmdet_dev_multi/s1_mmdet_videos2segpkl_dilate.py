@@ -278,8 +278,8 @@ def create_segpkl(q:Queue, q2:Queue, img_metas:dict, CLASSES):
 
 
 
-class MyWorker(mmap_cuda.Worker):
-#class MyWorker():
+# class MyWorker(mmap_cuda.Worker):
+class MyWorker():
     def __init__(self, config, checkpoint, maxlen):
         super().__init__()
         self.cuda = getattr(self, "cuda", 0)
@@ -366,14 +366,15 @@ class MyWorker(mmap_cuda.Worker):
 
         return out_pkl
 
-def convert(vfile,nviews):
+def convert(vfile, setupname, delete_tmp=True):
+    views_xywh = get_view_xywh_wrapper(setupname)
+    nviews = len(views_xywh)
     pkl_files = glob.glob(osp.splitext(vfile)[0] + '_*.seg2pkl')
     p = re.compile('.*(\d+).seg2pkl$')
     views = [int(p.findall(pkl_file)[0]) for pkl_file in pkl_files]
     vinfo = get_info(vfile)
     assert len(views) == nviews
     assert len(views) == max(views)+1 and min(views) == 0 
-    views_xywh = get_view_xywh_wrapper(len(views))
 
     segdata = [[] for _ in range(len(views))]
     com2d = [[] for _ in range(len(views))]
@@ -401,8 +402,9 @@ def convert(vfile,nviews):
     outpkl  = osp.splitext(vfile)[0] + '.segpkl'
     pickle.dump(outdata, open(outpkl, 'wb'))
     print('saved to', outpkl)
-    for iviews in range(nviews):
-        os.remove(osp.splitext(vfile)[0]+f'_{iviews}.seg2pkl')
+    if delete_tmp:
+        for iviews in range(nviews):
+            os.remove(osp.splitext(vfile)[0]+f'_{iviews}.seg2pkl')
     return outpkl
       
 
@@ -410,6 +412,7 @@ def parse_args(parser:argparse.ArgumentParser):
     args = parser.parse_args()
 
     views_xywh = get_view_xywh_wrapper(args.pannels)# 分割坐标 x轴 y轴 width height
+    nviews = len(views_xywh)
     video_path = args.video_path
     assert osp.exists(video_path), "video_path not exists"
     if osp.isfile(video_path):
@@ -425,7 +428,7 @@ def parse_args(parser:argparse.ArgumentParser):
         # args.checkpoint = findcheckpoint_trt(args.config, "latest.pth")
 
     print('total vfiles:', len(videos_path))
-    num_gpus = min((torch.cuda.device_count(), len(video_path)*args.pannels))
+    num_gpus = min((torch.cuda.device_count(), len(video_path)*nviews))
     print("num_gpus:", num_gpus)
     # init the workers pool
 
@@ -447,17 +450,17 @@ if __name__ == "__main__":
     parser.add_argument(
         "video_path", type=str, default=None, help="path to video or folder"
     )
-    parser.add_argument('--pannels', type=int, default=9, help='crop views')
+    parser.add_argument('--pannels', type=str, default='carl', help='crop views')
     parser.add_argument("--config", type=str, default=config)
     parser.add_argument("--checkpoint", type=str, default=None)
     parser.add_argument("--maxlen", type=int, default=None)
 
     num_gpus, videos_path, args_iterable, args = parse_args(parser)
-    mmap_cuda.workerpool_init(range(num_gpus), MyWorker, args.config, args.checkpoint, args.maxlen)
-    detpkls = mmap_cuda.workerpool_compute_map(args_iterable)
-    #worker = MyWorker(args.config, args.checkpoint, args.maxlen)
-    #for args_ in args_iterable:
-    #    outdata = worker.compute(args_)
+    # mmap_cuda.workerpool_init(range(num_gpus), MyWorker, args.config, args.checkpoint, args.maxlen)
+    # detpkls = mmap_cuda.workerpool_compute_map(args_iterable)
+    worker = MyWorker(args.config, args.checkpoint, args.maxlen)
+    for args_ in args_iterable:
+       outdata = worker.compute(args_)
 
     for vfile in videos_path:
         convert(vfile, args.pannels)

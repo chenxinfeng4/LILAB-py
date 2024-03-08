@@ -8,7 +8,6 @@ import argparse
 import shutil
 import tqdm
 import os
-import matplotlib.pyplot as plt
 #import s0_errorframe_separate_by_keyboard
 #from google.colab.patches import cv2_imshow
 

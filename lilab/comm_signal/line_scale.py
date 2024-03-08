@@ -1,3 +1,4 @@
+# from lilab.comm_signal.line_scale import line_scale
 import numpy as np
 
 def line_scale(XR, YR, XNow):

@@ -10,12 +10,13 @@ import glob
 import ffmpegcv
 from lilab.mmdet_dev.filter_vname import filter_vname
 
-numframe_to_extract = 1
+numframe_to_extract = 50
 # numframe_to_extract = 100
 # maxlength = None #30000
 maxlength = 9000
 frame_dir = "outframes"
-frame_min_interval = 10
+frame_min_interval = 30
+resize = None #(512, 512)
 
 def extract(video_input, numframe_to_extract, maxlength):
     dirname,filename=os.path.split(video_input)
@@ -25,18 +26,20 @@ def extract(video_input, numframe_to_extract, maxlength):
     length = cap.count
     length = min([maxlength, length-1]) if maxlength else length-1
     downsample_length = length // frame_min_interval
-    np.random.seed(0)
-    idxframe_to_extract = set(np.random.permutation(downsample_length)[:numframe_to_extract]*frame_min_interval + 5)
+    np.random.seed(10)
+    idxframe_to_extract = set(np.random.permutation(downsample_length)[:numframe_to_extract]*frame_min_interval + 9)
+    # length += 9000; idxframe_to_extract=set([i+9000 for i in idxframe_to_extract])
     idxframe_max = max(idxframe_to_extract)
 
     # for i in tqdm.tqdm(range(10000)):
     #     ret, frame = cap.read()
-
+    
     for iframe in tqdm.tqdm(range(length)):
         ret, frame = cap.read()
         if not ret: break
         if iframe>idxframe_max: break
         if iframe not in idxframe_to_extract: continue
+        if resize is not None: frame = cv2.resize(frame, resize)
         filename = os.path.join(dirname, frame_dir, nakefilename + '_{0:06}.jpg'.format(iframe))
         cv2.imwrite(filename, frame, [int(cv2.IMWRITE_JPEG_QUALITY),100])
         

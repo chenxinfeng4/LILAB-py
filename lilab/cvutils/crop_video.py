@@ -43,7 +43,8 @@ def xywh2whxy(xywh, keepXeqY=True):
     whxy = (xywh[2], xywh[3], xywh[0], xywh[1])
     return whxy
 
-def convert_folder_to_mp4(folder, whxy, postfix=None):
+def convert_folder_to_mp4(folder, xywh, postfix=None):
+    whxy = xywh2whxy(xywh, keepXeqY=False)
     os.chdir(folder)
     filenamesList = glob(r'*.avi') + glob(r'*.mp4') + glob(r'*.mkv')
     filenamesList = [f for f in filenamesList if 'output' not in f]
@@ -95,7 +96,6 @@ if __name__ == '__main__':
 
     video_foldname = os.path.dirname(video_file[0])
 
-    whxy = xywh2whxy(args.xywh, keepXeqY=False)
-    convert_folder_to_mp4(video_foldname, whxy)
+    convert_folder_to_mp4(video_foldname, args.xywh)
     print("Succeed")
     

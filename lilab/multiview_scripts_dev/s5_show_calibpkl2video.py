@@ -10,13 +10,13 @@ import argparse
 from lilab.multiview_scripts_dev.s6_calibpkl_predict import CalibPredict
 
 matfile = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/ball/2022-04-29_17-58-45_ball.matcalibpkl'
-thr = 0.55
+thr = 0.55#p value threshold
 
 pred_colors = [[0,0,255],[233,195,120],[0,215,255]] #BGR
 ba_colors = [[0,255,0],[234,100,202],[255,255,0]]
 resize = (1536, 960)
 axis_length = 220  # length of axis (mm)
-
+key_xyz_str_format = '{:4.1f},{:4.1f},{:4.1f}'
 
 def load_mat(matfile):
     print("Loading {}".format(matfile))
@@ -71,7 +71,8 @@ def get_axis_line(calibPredict: CalibPredict, views_xywh:list):
 def keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data, fun_plot_axis_line, gpu=0):
     # %%
     vfile = data['info']['vfile']
-    vin = ffmpegcv.noblock(ffmpegcv.VideoCaptureNV, vfile, resize=resize, resize_keepratio=False, gpu=gpu)
+    # vin = ffmpegcv.noblock(ffmpegcv.VideoCaptureNV, vfile, resize=resize, resize_keepratio=False, gpu=gpu)
+    vin = ffmpegcv.VideoCaptureNV(vfile, resize=resize, resize_keepratio=False, gpu=gpu)
     assert len(vin) == keypoints_xy.shape[1]
     orisize = (vin.origin_width, vin.origin_height)
     scale = (resize[0]/orisize[0], resize[1]/orisize[1])
@@ -94,13 +95,15 @@ def keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data, fun
                 cv2.circle(frame, tuple(xy.astype(np.int32)), radius, color_K[k], -1)
 
     # %%
-    vout = ffmpegcv.noblock(ffmpegcv.VideoWriterNV,vfile.replace('.mp4', '_keypoints.mp4'), codec='h264', fps=vin.fps, gpu=gpu)
+    # vout = ffmpegcv.noblock(ffmpegcv.VideoWriterNV,vfile.replace('.mp4', '_keypoints.mp4'), codec='h264', fps=vin.fps, gpu=gpu)
+    vout = ffmpegcv.VideoWriterNV(vfile.replace('.mp4', '_keypoints.mp4'), codec='h264', fps=vin.fps, gpu=gpu)
     for i, frame in enumerate(tqdm.tqdm(vin)):
-        fun_plot_axis_line(frame)
+        frame = frame.copy()
+        if axis_length: fun_plot_axis_line(frame)
         draw_point_color(frame, keypoints_xy, i, pred_colors, 5)
         draw_point_color(frame, keypoints_xy_ba, i, ba_colors, 3)
-        if False:
-            frame = cv2.putText(frame, str(i), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255), 2)
+        if True:
+            cv2.putText(frame, str(i), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255), 2)
             key_xyz = keypoints_xyz_ba[i][0]
             if np.all(~np.isnan(key_xyz)):
                 key_xyz_str = '{:4.1f},{:4.1f},{:4.1f}'.format(key_xyz[0], key_xyz[1], key_xyz[2])
@@ -113,12 +116,15 @@ def main_showvideo(matcalibpkl, gpu=0, only3D=False):
     keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data, fun_plot_axis_line = load_mat(matcalibpkl)
     if only3D:
         keypoints_xy[:] = np.nan
+    xyz = keypoints_xyz_ba[:,0][~np.isnan(keypoints_xyz_ba[:,0])].ravel()
+    if len(xyz) and np.percentile(np.abs(xyz), 95) < 10:
+        global key_xyz_str_format
+        key_xyz_str_format = '{:4.2f},{:4.2f},{:4.2f}'
     # refine video path
-    vfile = data['info']['vfile']
+    vfile = osp.splitext(osp.abspath(matcalibpkl))[0] +\
+            osp.splitext(osp.abspath(data['info']['vfile']))[1]
+    data['info']['vfile'] = vfile
     print('vfile', vfile)
-    if not (osp.exists(vfile) and osp.isfile(vfile)):
-        vfile = osp.split(osp.abspath(matcalibpkl))[0] + '/' + osp.split(osp.abspath(vfile))[1]
-        data['info']['vfile'] = vfile
     keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data, fun_plot_axis_line, gpu)
 
 
@@ -127,5 +133,8 @@ if __name__ == '__main__':
     parser.add_argument('matcalib', type=str)
     parser.add_argument('--gpu', type=int, default=0)
     parser.add_argument('--only3D', action='store_true')
+    parser.add_argument('--axis-length', type=int, default=220)
+
     args = parser.parse_args()
+    axis_length = args.axis_length
     main_showvideo(args.matcalib, args.gpu, args.only3D)

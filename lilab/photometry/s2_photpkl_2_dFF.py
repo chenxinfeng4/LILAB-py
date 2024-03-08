@@ -81,6 +81,8 @@ class PhotFilter:
         f_detect2 = ndimage.convolve(self.sig_l[2][:,None], kernel[:,None], mode='nearest')[:,0]
         f_detectabs = np.abs(f_detect2)
         thr = 1
+        #thr = 0.8
+        #thr = 0.5
         if f_detectabs.max() > thr:
             print('Big motion detected')
             up_thr = f_detectabs > thr
@@ -266,7 +268,7 @@ class PhotFilter:
         self.demotioned_l = self.dfF_l
     
 # %%
-def extract_dFF_ibrainarea(Fs, data, iarea):
+def extract_dFF_ibrainarea(Fs, data, iarea, jpgfile):
     ref = data[iarea,0,0:int(Fs*15*60)]
     sigs = data[iarea,1:,0:int(Fs*15*60)]
 
@@ -304,7 +306,7 @@ def extract_dFF_ibrainarea(Fs, data, iarea):
         plt.subplot(3,2,6)
         photFilter.s5_zscore(True)
         # plt.show()
-        plt.savefig('A.jpg')
+        plt.savefig(jpgfile)
 
     if len(subs_photFilter)>=2:
         # subs_photFilter[1].s6_reset()
@@ -312,19 +314,20 @@ def extract_dFF_ibrainarea(Fs, data, iarea):
         plt.figure(figsize=(8,2))
         photFilter.s4_dfF_show()
         # plt.show()
-        plt.savefig('A.jpg')
+        plt.savefig(jpgfile)
 
     return np.array(photFilter.dfF_l)
 
 
 def convert(pklfile):
     data_dict = pickle.load(open(pklfile, 'rb'))
+    jpgfile = osp.splitext(pklfile)[0] + '_steps.jpg'
     Fs, data = data_dict['Fs'], data_dict['data']
     data[:,:,:5] = np.mean(data[:,:,5:15], axis=-1, keepdims=True)
     data[:,:,-15:] = np.mean(data[:,:,-35:-15], axis=-1, keepdims=True)
     dfF_data = []
     for iarea in range(len(data)):
-        dfF_l = extract_dFF_ibrainarea(Fs, data, iarea)
+        dfF_l = extract_dFF_ibrainarea(Fs, data, iarea, jpgfile)
         dfF_data.append(dfF_l)
 
     dfF_data = np.array(dfF_data)

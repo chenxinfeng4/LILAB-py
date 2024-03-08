@@ -32,13 +32,15 @@ config_dict = {6:'/home/liying_lab/chenxinfeng/DATA/mmpose/hrnet_w32_coco_ball_5
 #%%
 class DataSet(OldDataSet): 
     def __init__(self, vid, cfg, views_xywh, c_channel_in=1):
+    #def __init__(self, vid, views_xywh, c_channel_in):
         super().__init__(vid, cfg, views_xywh, c_channel_in)
         self.vid = vid
         self.views_xywh = views_xywh
         self.c_channel_in = c_channel_in
         
     def __iter__(self):
-        vread = {1:self.vid.read_gray, 3:self.vid.read}[self.c_channel_in]
+        #vread = {1:self.vid.read_gray, 3:self.vid.read}[self.c_channel_in]
+        vread = {3:self.vid.read}[self.c_channel_in]
         while True:
             ret, img = vread()
             if not ret: raise StopIteration
@@ -63,15 +65,17 @@ class MyWorker():
     def compute(self, args):
         config, video_file, checkpoint, views_xywh = args
         cfg = mmcv.Config.fromfile(config)
-        feature_in_wh = np.array(cfg.data_cfg['image_size'])
+        #image_size = np.array([512, 320])
+        feature_in_wh = np.array(cfg.data_cfg['image_size'])#image_size
         views_xywh_np = np.array(views_xywh)
         views_xyxy_np = np.concatenate((views_xywh_np[:,:2], views_xywh_np[:,:2]+views_xywh_np[:,2:]), axis=1)
+        #feature_in_wh = image_size#image_size
         canvas_xyxy = np.concatenate((views_xyxy_np[:,:2].min(axis=0), views_xyxy_np[:,2:].max(axis=0)))
         canvas_xywh = np.concatenate((canvas_xyxy[:2], canvas_xyxy[2:]-canvas_xyxy[:2]))
         assert canvas_xywh[:2].tolist()==[0,0], 'Views_xywh should have a view start at (x=0, y=0)'
         view_w, view_h = views_xywh_np[0,[2,3]]
-        assert (views_xywh_np[:,2:]==(view_w, view_h)).all(), 'Views_xywh should have same view size'
-        scale_shrink_w = view_w / feature_in_wh[0]
+        #assert (views_xywh_np[:,2:]==(view_w, view_h)).all(), 'Views_xywh should have same view size'
+        scale_shrink_w = view_w / feature_in_wh[0]#scale_shrink_w:feature_in_wh=[512, 320]
         scale_shrink_h = view_h / feature_in_wh[1]
         canvas_xywh_shrink = np.round(canvas_xywh / np.array([scale_shrink_w, scale_shrink_h, scale_shrink_w, scale_shrink_h])).astype(int)
         views_xywh_shrink = np.round(views_xywh_np / np.array([scale_shrink_w, scale_shrink_h, scale_shrink_w, scale_shrink_h])).astype(int)
@@ -80,6 +84,8 @@ class MyWorker():
                                       resize_keepratio=False,
                                       gpu=self.cuda)
         c_channel_in=1 if vid.pix_fmt=='nv12' else 3
+        #views_xywh = [[0, 0, 1280, 800], [1280, 0, 1280, 800], [0, 800, 1280, 800], [1280, 800, 1280, 800]]
+        #dataset = DataSet(vid, views_xywh_shrink, c_channel_in=c_channel_in)
         dataset = DataSet(vid, cfg, views_xywh_shrink, c_channel_in=c_channel_in)
         dataset.center, dataset.scale = box2cs(np.array([0,0,view_w,view_h]), feature_in_wh, keep_ratio=False)
         dataset_iter = iter(dataset)
@@ -103,6 +109,7 @@ class MyWorker():
             heatmap = mid_gpu(trt_model, img_NCHW, input_dtype)
             # img_NCHW, img_preview = pre_cpu(dataset_iter)
             keypoints_xyp = []
+            id = []
             for idx, _ in enumerate(tqdm.tqdm(count_range, 
                                               desc='worker[{}]'.format(self.id),
                                               position=int(self.id)), 
@@ -115,6 +122,7 @@ class MyWorker():
                 if idx<=-1: continue
                 kpt2d = post_cpu(None, heatmap, center, scale, views_xywh, img_preview, None) # t
                 keypoints_xyp.append(kpt2d)
+                id.append(idx)
 
             heatmap = mid_gpu(trt_model, img_NCHW, input_dtype)
             kpt2d = post_cpu(None, heatmap, center, scale, views_xywh, img_preview, None)

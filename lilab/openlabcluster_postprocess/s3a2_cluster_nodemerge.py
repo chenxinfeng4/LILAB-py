@@ -6,21 +6,14 @@ import os.path as osp
 import argparse
 
 
-clippredpklfile = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/00_BehaviorAnalysis-seq2seq/SexAge/DayAll/FWPCA0.00_P100_en3_hid30_epoch350_svm2allAcc0.95_kmeansK2use-37_fromK1-20_K100.clippredpkl'
 
 merge_names_page = """
-		15	18	Rearing when being faced way
-	42	17	22	Rearing when being faced or sniffed
-2	31	13	35	Both rearing
-		8	37	Pining
-		10	40	Approach or sniff when a rat rearing
-	1	38	9	Facing away when a rat rearing
-	28	21	23	Back to back
-		5	11	Chasing or being leaved
-		4	14	Sniffing tail or behind
-		24	32	Leaving or being sniffed
-		3	33	Mutual sniff or crossing
-		16	41	Being pinned
+2	0	15	27	32	45	23	21	Nonsocial
+4	7	38	47	30	29	26	play
+46	18	34	40	28	chase
+14	41	25	20	36	42	39	3	6	12	Sniff
+22	9	delete
+1	5	8	10	11	13	16	17	19	31	35	37	43	44	rear
 """
 
 

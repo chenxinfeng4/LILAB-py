@@ -43,7 +43,7 @@ for wave_evt in range(10, 39):
     # wave_evt = 20
     if tg_evt==wave_evt: continue
     algned_wave = BF_AlignWave2Tg(one_hot_lab_seq[:,wave_evt], tRise_l[tg_evt], *twin, fs)
-    algned_wave_meam = algned_wave.mean(axis=-1) / one_hot_lab_seq_freq[wave_evt]
+    algned_wave_meam = algned_wave.mean(axis=0) / one_hot_lab_seq_freq[wave_evt]
     # if not np.sum(algned_wave_meam>4)>3: continue
     xticks = np.linspace(*twin, len(algned_wave_meam))
     plt.plot(xticks, algned_wave_meam, label=df_labnames.iloc[wave_evt]['lab_names'])

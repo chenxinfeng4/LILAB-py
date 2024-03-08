@@ -1,4 +1,4 @@
-# python -m lilab.mmdet_dev.s1_mmdet_videos2pkl_trt  A.mp4  [CONFIG] [CHECKPOINT]
+# python -m lilab.mmdet_dev.s1_mmdet_videos2pkl_trt  /mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/liwei/tSNE.mp4  --config /home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_ratface_lw.py
 # python -m lilab.mmdet_single.s1_mmdet_videos2pkl_single  A/B/C
 import argparse
 import glob

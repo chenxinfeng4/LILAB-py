@@ -14,7 +14,8 @@ from pycocotools.coco import COCO
 reclassid = [{'rat_black':1, 'rat_white':2}, 
              {'rat_black':1, 'rat_white':2, 'rat_dot':3},
              {'rat_dot':1, 'rat_white':2},
-             {'rat':1}]
+             {'rat':1},
+             {'ratface':1}]
 
 # %% functions
 def conver_reclassid(cocojson_file, cocojson_file_out):

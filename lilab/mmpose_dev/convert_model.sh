@@ -1,6 +1,7 @@
 # model.pth -> model_full.onnx
 # ball 文件 或者com2d文件
-mfile='res50_coco_ball_512x512_ZYY.py'
+source activate mmdet
+mfile='res50_coco_ball_512x320_cam9.py'
 
 cd /home/liying_lab/chenxinfeng/DATA/mmpose
 mfile_nake=${mfile%.*}

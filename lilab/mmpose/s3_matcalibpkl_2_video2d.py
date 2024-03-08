@@ -47,7 +47,7 @@ def plot_video(video, crop_xywh, pts2d_black, pts2d_white, iview, postfix):
 def main(kptpkl, iview, postfix, maxlen=None):
     pkldata = pickle.load(open(kptpkl, 'rb'))
     video = osp.dirname(osp.abspath((kptpkl))) + '/' + osp.basename(kptpkl).split('.')[0] + '.mp4'
-    views = get_view_xywh_wrapper(len(pkldata['keypoints_xy_ba']))
+    views = get_view_xywh_wrapper('carl')
     crop_xywh = views[iview]
     kpt_rats_xy = pkldata['keypoints_xy_ba'][iview]
     pts2d_black = kpt_rats_xy[:, 0, :, :]

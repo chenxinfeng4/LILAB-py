@@ -1,4 +1,6 @@
-import os
+#folder=`w2l "\\liying.\"`
+#folder=/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zhangyuanqing/behavior/vedio/cpp-1/label_1206
+#python -m lilab.cvutils.labelme_to_cocokeypoints_com2d $folder
 import sys
 import glob
 import json

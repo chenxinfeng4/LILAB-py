@@ -29,6 +29,9 @@ def detectTTL(data_1v:np.ndarray, adjacent_type:str=None, adjacent_value:float=0
     tDown_1y = np.where(TTLdiff == -1)[0]
     tDur_1y = tDown_1y - tRise_1y
 
+    if len(tRise_1y)<=1:
+        return tRise_1y/fs, tDur_1y/fs
+
     if adjacent_type is None:
         return tRise_1y/fs, tDur_1y/fs
     
