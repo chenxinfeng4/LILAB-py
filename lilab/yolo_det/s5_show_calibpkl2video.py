@@ -10,7 +10,7 @@ import argparse
 from lilab.multiview_scripts_dev.s6_calibpkl_predict import CalibPredict
 
 matfile = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/ball/2022-04-29_17-58-45_ball.matcalibpkl'
-thr = 0.55#p value threshold
+thr = 0.3#p value threshold
 
 pred_colors = [[0,0,255],[233,195,120],[0,215,255]] #BGR
 ba_colors = [[0,255,0],[234,100,202],[255,255,0]]
@@ -23,7 +23,6 @@ def load_mat(matfile):
     data = pickle.load(open(matfile, 'rb'))
 
     views_xywh = data['views_xywh']
-    
     keypoints = data['keypoints']
     indmiss = keypoints[:, :, :, 2] < thr
     keypoints_xy = keypoints[:, :, :, :2]  # (nview, times, nkeypoints, 2)
@@ -74,7 +73,7 @@ def keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data, fun
     vfile = data['info']['vfile']
     # vin = ffmpegcv.noblock(ffmpegcv.VideoCaptureNV, vfile, resize=resize, resize_keepratio=False, gpu=gpu)
     vin = ffmpegcv.VideoCaptureNV(vfile, resize=resize, resize_keepratio=False, gpu=gpu)
-    assert len(vin) <= keypoints_xy.shape[1]
+    assert len(vin) == keypoints_xy.shape[1] == keypoints_xy.shape[1]
     orisize = (vin.origin_width, vin.origin_height)
     scale = (resize[0]/orisize[0], resize[1]/orisize[1])
 

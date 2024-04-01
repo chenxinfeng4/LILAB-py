@@ -62,21 +62,16 @@ def main(pklfile):
     # %%
     pkldata=pickle.load(open(pklfile, 'rb'))
     calibPredict=CalibPredict(pkldata)
-    X_global = pkldata['keypoints_xyz_ba']
+    X_global = pkldata['keypoints_xyz_ba'].astype(float)
     coms_3d = pkldata['extra']['coms_3d'][:, :, None, :]
     p_max = pkldata['extra']['keypoints_xyz_pmax']
     X_centored = X_global - coms_3d
-
     X_centored = X_centored[:].astype(np.float32)
     centor = coms_3d[:].astype(np.float32)
 
     # 鼠的身体长度
     ntime, nclass, npoints, nspace = X_centored.shape
-
-    body_length= np.mean(np.linalg.norm(X_centored[:, :, 0, :] - X_centored[:, :, 3, :], axis=2) 
-                        + np.linalg.norm(X_centored[:, :, 3, :] - X_centored[:, :, 4, :], axis=2)
-                        + np.linalg.norm(X_centored[:, :, 4, :] - X_centored[:, :, 5, :], axis=2), axis=0)
-
+    body_length = np.percentile(np.linalg.norm(X_global[:,:,0,:] - X_global[:,:,5], axis=-1), 95, axis=0)
     # 设定不同部位的threshold
     thresholdlist = np.zeros((npoints, nclass))
     slow_threshold = [x/50 for x in body_length]
@@ -122,9 +117,5 @@ def main(pklfile):
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('pklfile', type=str)
-    parser.add_argument('--withcheck', type=str, default='N', help='Y or N')
     args = parser.parse_args()
     outpklfile = main(args.pklfile)
-    if args.withcheck == 'Y':
-        from lilab.smoothnet.ps1_plot_smooth_dzy import main
-        main(outpklfile, savename)

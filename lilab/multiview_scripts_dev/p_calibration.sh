@@ -1,6 +1,6 @@
 #!/bin/bash
-#
-#vfile='/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zhangyuanqing/202401_natural_social_interaction_group2/0124_PHO_social/BALL____2024-01-24_14-04-22.mp4'
+#/home/liying_lab/chenxinfeng/ml-project/LILAB-py/lilab/multiview_scripts_dev/p_calibration.sh $vfile carl
+#vfile='/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zhangyuanqing/202401_natural_social_interaction_group2/ball/BALL____2024-01-22_14-34-01.mp4'
 #/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zhangyuanqing/202401_natural_social_interaction_group2/0117_PHO_social/BALL____2024-01-17_14-19-23.mp4
 #/home/liying_lab/chenxinfeng/ml-project/LILAB-py/lilab/multiview_scripts_dev/p_calibration.sh $vfile bob
 #/home/liying_lab/chenxinfeng/ml-project/LILAB-py/lilab/multiview_scripts_dev/p_calibration.sh /mnt/liying.cibr.ac.cn_Data_Temp_ZZC/2310shank3MDMA/ball/2023-10-21_13-47-08ball_room1/2023-10-21_13-47-08ball_room1.mp4 ana
@@ -15,6 +15,7 @@
 #/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zhangyuanqing/cpp_conditioning/1216/BALL___________2023-12-16_14-16-46.mp4
 #/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zhangyuanqing/cpp_conditioning/20231222_room2/2023-12-22_14-30-39ballroom2.mp4
 #/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zhangyuanqing/cpp_conditioning/20231224_room2/BALL__2023-12-24_18-14-38.mp4
+#/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zhangyuanqing/202401_natural_social_interaction_group2/ball/BALL_____2024-01-12_17-29-15.mp4
 if [ $# -lt 2 ]; then
     echo "缺少参数，请输入两个参数. 第一个为视频路径，第二个为设备名"
     exit 1

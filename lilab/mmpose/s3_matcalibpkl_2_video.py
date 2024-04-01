@@ -2,7 +2,6 @@
 import os.path as osp
 import pickle
 import argparse
-from lilab.multiview_scripts.rat2d_kptvideo import cv_plot_skeleton_aframe
 from lilab.multiview_scripts.ratpoint3d_to_video import plot_skeleton_aframe, animation, animate, init_3d_plot_350 as init_3d_plot
 
 

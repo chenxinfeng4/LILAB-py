@@ -18,7 +18,7 @@ python -m lilab.multiview_scripts_dev.s5_show_calibpkl2video $vfile.matpkl
 # python -m lilab.multiview_scripts_dev.s2_matpkl_filter $vfile.matpkl --iview 7 --iframe 2532 
 # 4. 检测小球的5个位置定标
 python -m lilab.multiview_scripts_dev.s2_matpkl2ballpkl $vfile.matpkl  --time $tball --force-setupname $setupname
-
+#'/mnt/liying.cibr.ac.cn_Data_Temp/marmoset_camera3_cxf/2024-2-21_marmosettracking/2024-02-21_15-07-36.matpkl'
 python -m lilab.multiview_scripts_dev.s3_ballpkl2calibpkl $vfile.ballpkl 
 
 python -m lilab.multiview_scripts_dev.s4_matpkl2matcalibpkl $vfile.matpkl $vfile.calibpkl

@@ -79,9 +79,9 @@ echo "$vfiles" | sed 's/.segpkl/.matcalibpkl/' |
 # echo "$vfiles" | sed 's/.segpkl/.smoothed_w16.matcalibpkl/' | xargs -P 4 -l -r bash -c 'python -m lilab.mmpose.s3_matcalibpkl_2_video2d $0 --iview 1 --postfix smoothed_w16 --maxlen 9000'
 
 # 4B. Smooth foot_w16, body_w64, one hit
-vfiles=$(ls /home/liying_lab/chenxinfeng/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/Shank3HETxWT_202210/2022-10-10/*.segpkl)
+vfiles=$(ls /home/liying_lab/chenxinfeng/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/Shank3HETxWT_202210/2022-10-10/*.smoothed_foot.matcalibpkl)
 echo "$vfiles" | sed 's/.segpkl/.matcalibpkl/' | xargs -l -P 6 -r python -m lilab.smoothnet.s1_matcalibpkl2smooth_foot_cxf
-echo "$vfiles" | sed 's/.segpkl/.smoothed_foot_cxf.matcalibpkl/' | xargs -P 6 -l -r bash -c 'python -m lilab.mmpose.s3_matcalibpkl_2_video2d $0 --iview 1 --postfix smoothed_foot --maxlen 9000'
+echo "$vfiles" | sed 's/.segpkl/.smoothed_foot.matcalibpkl/' | xargs -P 6 -l -r bash -c 'python -m lilab.mmpose.s3_matcalibpkl_2_video2d $0 --iview 1 --postfix smoothed_foot '
 echo "$vfiles" | sed 's/.segpkl/.matcalibpkl/' | xargs -l -P 6 -r python -m lilab.smoothnet.s1_matcalibpkl2smooth_foot_dzy
 # 4B optional
 echo "$vfiles" | sed 's/.segpkl/.smoothed_foot.matcalibpkl/' | xargs -P 8 -l -r bash -c 'python -m lilab.mmpose.s3_matcalibpkl_2_video2d_2view $0 --postfix smoothed_foot'

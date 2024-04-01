@@ -22,12 +22,12 @@ def init_3d_plot_350():
     ax.grid()
     ax.tick_params(length=0)
     # set the xlim and ylim of the plot
-    ax.set_xlim(-50, 300)
-    ax.set_ylim(-50, 300)
+    ax.set_xlim(-300, 300)
+    ax.set_ylim(-300, 300)
     ax.set_zlim(0, 200)
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    ax.set_zticklabels([])
+    # ax.set_xticklabels([])
+    # ax.set_yticklabels([])
+    # ax.set_zticklabels([])
 
     ## create a circal plane by meshgrid
     radius = 240
@@ -36,8 +36,8 @@ def init_3d_plot_350():
     ind_in = np.sqrt(X**2 + Y**2) < radius
     Z = np.zeros_like(X)
     Z[np.invert(ind_in)] = np.nan
-    X_offset = 120
-    Y_offset = 120
+    X_offset = Y_offset = 120
+    X_offset = Y_offset = 0
     ax.plot3D(X.flatten() - X_offset, Y.flatten() - Y_offset, Z.flatten(), color='#13beb8', linewidth=0.5)
     ax.plot3D(X.T.flatten() - X_offset , Y.T.flatten() - Y_offset, Z.flatten(), color='#13beb8', linewidth=0.5)
     ax.azim = -124

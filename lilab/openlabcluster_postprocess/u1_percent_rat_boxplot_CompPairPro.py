@@ -29,7 +29,7 @@ sheet_name = '熊组合作D35_treat_info'
 def load_data(project, sheet_name):
     bhv_seqFile = get_assert_1_file(osp.join(project,'*_svm2all*_sequences.pkl'))
     bhvSeqs = pkl.load(open(bhv_seqFile,'rb'))
-    print(list(bhvSeqs.keys()))  #label: 0,1,2...,k_best
+    #print(list(bhvSeqs.keys()))  #label: 0,1,2...,k_best
 
     clippredpkl = get_assert_1_file(osp.join(project,'*.clippredpkl'))
     clippredata = pkl.load(open(clippredpkl,'rb'))
@@ -48,6 +48,7 @@ def load_data(project, sheet_name):
 
     rat_info = rat_info.filter(regex=r'^((?!Unnamed).)*$').dropna(axis=0,how='all')
     video_info = video_info.filter(regex=r'^((?!Unnamed).)*$').dropna(axis=0,how='all')
+    print(video_info)
     #remove all NaN row
     # 表的检查
     assert {'animal', 'color', 'gender', 'geno', 'dob'} <= set(rat_info.columns)

@@ -5,14 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial.distance import pdist
 from scipy.cluster.hierarchy import dendrogram, linkage
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
 import os.path as osp
 import argparse
-from lilab.openlabcluster_postprocess.s1_merge_3_file import get_assert_1_file
-import radialtree as rt
-from lilab.openlabcluster_postprocess.v2b_usv_tsne_masic_shape import get_the_centered, get_cmap
-from PIL import Image
 import pandas as pd
 import seaborn as sns
 import scipy

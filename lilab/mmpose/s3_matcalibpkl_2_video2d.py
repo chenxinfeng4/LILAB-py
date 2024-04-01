@@ -18,7 +18,7 @@ ngpu = 4
 def plot_video(video, crop_xywh, pts2d_black, pts2d_white, iview, postfix):
     gpu, s = get_gpu()
     # vid = ffmpegcv.VideoCaptureNV(video, crop_xywh=crop_xywh, gpu=gpu)
-    vid = ffmpegcv.noblock(ffmpegcv.VideoCaptureNV, video, crop_xywh=crop_xywh, gpu=gpu)
+    vid = ffmpegcv.noblock(ffmpegcv.VideoCaptureNV, video, crop_xywh=crop_xywh,gpu=gpu)
     assert len(pts2d_black) == len(pts2d_white), 'len(pts2d_black) != len(pts2d_white)'
     maxlen = len(pts2d_black)
     if len(vid) == maxlen:
@@ -30,7 +30,8 @@ def plot_video(video, crop_xywh, pts2d_black, pts2d_white, iview, postfix):
     postfix = f'_{postfix}' if postfix else ''
     output_file = osp.splitext(video)[0] + f'_{iview}_sktdraw{postfix}.mp4'
     # vidout = ffmpegcv.VideoWriterNV(output_file, codec='h264', fps=vid.fps, gpu=gpu)
-    vidout = ffmpegcv.noblock(ffmpegcv.VideoWriterNV, output_file, codec='h264', fps=vid.fps, gpu=gpu)
+    #vidout = ffmpegcv.noblock(ffmpegcv.VideoWriterNV, output_file, codec='h264', fps=vid.fps, gpu=gpu)
+    vidout = ffmpegcv.noblock(ffmpegcv.VideoWriterNV, output_file, codec='h264', fps=vid.fps,gpu=gpu)
     for i, frame, pts2d_b_now, pts2d_w_now in zip(tqdm.tqdm(range(maxlen)), vid, pts2d_black, pts2d_white):
         if not np.all(np.isnan(pts2d_b_now)):
             frame = cv_plot_skeleton_aframe(frame, pts2d_b_now, name = 'black')

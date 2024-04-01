@@ -1,0 +1,1 @@
+nc -q 1 localhost 8091 < <(echo com3d)

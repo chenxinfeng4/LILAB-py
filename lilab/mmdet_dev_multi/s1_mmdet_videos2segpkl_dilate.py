@@ -278,8 +278,8 @@ def create_segpkl(q:Queue, q2:Queue, img_metas:dict, CLASSES):
 
 
 
-# class MyWorker(mmap_cuda.Worker):
-class MyWorker():
+class MyWorker(mmap_cuda.Worker):
+# class MyWorker():
     def __init__(self, config, checkpoint, maxlen):
         super().__init__()
         self.cuda = getattr(self, "cuda", 0)
@@ -456,11 +456,11 @@ if __name__ == "__main__":
     parser.add_argument("--maxlen", type=int, default=None)
 
     num_gpus, videos_path, args_iterable, args = parse_args(parser)
-    # mmap_cuda.workerpool_init(range(num_gpus), MyWorker, args.config, args.checkpoint, args.maxlen)
-    # detpkls = mmap_cuda.workerpool_compute_map(args_iterable)
-    worker = MyWorker(args.config, args.checkpoint, args.maxlen)
-    for args_ in args_iterable:
-       outdata = worker.compute(args_)
+    mmap_cuda.workerpool_init(range(num_gpus), MyWorker, args.config, args.checkpoint, args.maxlen)
+    detpkls = mmap_cuda.workerpool_compute_map(args_iterable)
+    # worker = MyWorker(args.config, args.checkpoint, args.maxlen)
+    # for args_ in args_iterable:
+    #    outdata = worker.compute(args_)
 
     for vfile in videos_path:
         convert(vfile, args.pannels)

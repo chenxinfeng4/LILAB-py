@@ -109,6 +109,7 @@ class MyWorker():
         for i in tqdm(range(min(len(vid), maxlen)), position=int(self.id), 
                                         desc='worker[{}]'.format(self.id)):
             ret, frame = vid.read()
+            frame = frame.copy()
             for iclass in range(nclass):
                 # draw coms center
                 keypoints_xy = coms_2d[:, i, iclass, :]  # (nview, 2)

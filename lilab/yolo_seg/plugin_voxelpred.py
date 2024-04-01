@@ -177,32 +177,48 @@ class DataGenerator_3Dconv_torch_video_canvas_multivoxel(DataGenerator_3Dconv_to
 
 def infer_dannce_max_trt(
     generator: DataGenerator_3Dconv_torch_video_canvas_multivoxel,
-    model,
-    device: Text,
+    model_l,
+    device_l: Text,
     calibPredict: CalibPredict
 ):
     from torch2trt.torch2trt import torch_dtype_from_trt
     
     vidout = ffmpegcv.VideoWriter('/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/out.mkv', codec='h264', fps=30)
     # vidout = ffmpegcv.VideoWriterStreamRT('rtmp://localhost:1935/mystream2')
-    with torch.cuda.device(device):
-        # model warmup
-        idx = model.engine.get_binding_index(model.input_names[0])
-        dtype = torch_dtype_from_trt(model.engine.get_binding_dtype(idx))
-        shape = tuple(model.context.get_binding_shape(idx))
-        if shape[0]==-1: shape = (1, *shape[1:])
-        input = torch.empty(size=shape, dtype=dtype).cuda()
-        output = model(input)
-        dtype = output.dtype
-        X, X_grid = input.cpu().numpy(), np.zeros((*shape[:-1], 2), dtype='float16')
-        pannel_preview = None
-        for iframe in tqdm.tqdm(itertools.count(-1), position=2, desc='VoxelPrediction'):
-            pred_wait = mid_gpu(X, dtype, model)
-            X_next, X_grid_next, pannel_preview_next = pre_cpu(generator, iframe)
-            torch.cuda.current_stream().synchronize()
-            pred = pred_wait
-            post_cpu(pred, X_grid, iframe, pannel_preview, calibPredict, vidout)
-            X, X_grid, pannel_preview = X_next, X_grid_next, pannel_preview_next
+    device, model = device_l[0], model_l[0]
+
+    pannel_preview = None
+    #warm up
+    for device, model in zip(device_l, model_l):
+        with torch.cuda.device(device):
+            # model warmup
+            idx = model.engine.get_binding_index(model.input_names[0])
+            dtype = torch_dtype_from_trt(model.engine.get_binding_dtype(idx))
+            shape = tuple(model.context.get_binding_shape(idx))
+            if shape[0]==-1: shape = (1, *shape[1:])
+            input = torch.empty(size=shape, dtype=dtype).cuda()
+            output = model(input)
+            dtype = output.dtype
+            X, X_grid = input.cpu().numpy(), np.zeros((*shape[:-1], 2), dtype='float16')
+            
+    for iframe in tqdm.tqdm(itertools.count(-1), position=2, desc='VoxelPrediction'):
+        X, X_grid, pannel_preview = pre_cpu(generator, iframe)
+        pred_l = [None] * len(device_l)
+        for i, (device, model) in enumerate(zip(device_l, model_l)):
+            with torch.cuda.device(device):
+                pred_l[i] = mid_gpu(X[[i]], dtype, model)
+
+        for device in device_l:
+            with torch.cuda.device(device):
+                torch.cuda.current_stream().synchronize()
+
+        pred_np = np.concatenate([pred.cpu().numpy() for pred in pred_l]) #2_by_14
+
+        for i, device in enumerate(device_l):
+            with torch.cuda.device(device):
+                torch.cuda.current_stream().synchronize()
+                post_cpu(pred, X_grid, iframe, pannel_preview, calibPredict, vidout)
+                X, X_grid, pannel_preview = X_next, X_grid_next, pannel_preview_next
 
 
 def pre_cpu(generator, i):
@@ -255,7 +271,7 @@ def dannce_predict_video_trt(params:Dict, ba_poses:Dict, model_file:AnyStr,
     params["depth"] = False
     n_views = int(params["n_views"])
     gpu_id = 1
-    device = f'cuda:{gpu_id}'
+    device_l = [f'cuda:{gpu_id}', f'cuda:{gpu_id+1}'] #double instances
     params["base_exp_folder"] = '.'
     datadict = {}      #label:= filenames
     datadict_3d = {}   #3d xyz
@@ -349,16 +365,18 @@ def dannce_predict_video_trt(params:Dict, ba_poses:Dict, model_file:AnyStr,
     print("Loading model from " + mdl_file)
     assert os.path.exists(mdl_file), f"Model file {mdl_file} not found"
 
-    
-    with torch.cuda.device(device):
-        trt_model = TRTModule()
-        trt_model.load_from_engine(mdl_file)
+    trt_model_l = []
+    for device in device_l:
+        with torch.cuda.device(device):
+            trt_model = TRTModule()
+            trt_model.load_from_engine(mdl_file)
+            trt_model_l.append(trt_model)
 
     assert not params["expval"]
 
     infer_dannce_max_trt(
         valid_generator,
-        trt_model,
-        device,
+        trt_model_l,
+        device_l,
         calibPredict
     )
