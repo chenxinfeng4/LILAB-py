@@ -201,7 +201,7 @@ def infer_dannce_max_trt(
             dtype = output.dtype
             X, X_grid = input.cpu().numpy(), np.zeros((*shape[:-1], 2), dtype='float16')
             
-    for iframe in tqdm.tqdm(itertools.count(-1), position=2, desc='VoxelPrediction'):
+    for iframe in tqdm.tqdm(itertools.count(0), position=2, desc='VoxelPrediction'):
         X, X_grid, pannel_preview = pre_cpu(generator, iframe)
         pred_l = [None] * len(device_l)
         for i, (device, model) in enumerate(zip(device_l, model_l)):
@@ -212,13 +212,8 @@ def infer_dannce_max_trt(
             with torch.cuda.device(device):
                 torch.cuda.current_stream().synchronize()
 
-        pred_np = np.concatenate([pred.cpu().numpy() for pred in pred_l]) #2_by_14
-
-        for i, device in enumerate(device_l):
-            with torch.cuda.device(device):
-                torch.cuda.current_stream().synchronize()
-                post_cpu(pred, X_grid, iframe, pannel_preview, calibPredict, vidout)
-                X, X_grid, pannel_preview = X_next, X_grid_next, pannel_preview_next
+        ind_max = np.concatenate([pred.cpu().numpy() for pred in pred_l]) #2_by_14
+        post_cpu(ind_max, X_grid, iframe, pannel_preview, calibPredict, vidout)
 
 
 def pre_cpu(generator, i):
@@ -226,14 +221,11 @@ def pre_cpu(generator, i):
     return X, X_grid, pannel_preview
 
 
-def post_cpu(pred, X_grid, iframe, pannel_preview, calibPredict:CalibPredict, vidout):
+def post_cpu(ind_max, X_grid, iframe, pannel_preview, calibPredict:CalibPredict, vidout):
     if iframe<0: return
-    nclass,n1,n2,n3, k = pred.shape
-    ind_max = torch.reshape(pred, (nclass, n1*n2*n3, k)).argmax(axis=1).cpu().numpy()
-    # ind_max = pred.cpu().numpy()
     com_3d_l = X_grid[:,[0,-1], [0,-1], [0,-1]].mean(axis=1)    #(nclass, 3)
-    p3d[:] = np.take_along_axis(X_grid.reshape(nclass, n1*n2*n3, 1, 3), 
-                             ind_max[:,None,None:,None], axis=1)[:,0,:] #(nclass, k, 3)
+    p3d[:] = np.take_along_axis(X_grid.reshape(X_grid.shape[0], -1, 1, X_grid.shape[-1]), 
+                             ind_max[:,None,:,None], axis=1)[:,0,:] #(nclass, k, 3)
     ipannel = 1
     com_2d_l = calibPredict.p3d_to_p2d(com_3d_l)[ipannel].astype(np.int32)
     p2d[:] = calibPredict.p3d_to_p2d(p3d).astype(int)
@@ -262,7 +254,7 @@ def dannce_predict_video_trt(params:Dict, ba_poses:Dict, model_file:AnyStr,
     from dannce.utils_cxf.cameraIntrinsics_OpenCV import cv2_pose_to_matlab_pose
     from collections import OrderedDict
     from torch2trt import TRTModule
-    # Save 
+    # Save
     
     params['crop_width'] = np.array(params['crop_width']).tolist()
     params['crop_height'] = np.array(params['crop_height']).tolist()
@@ -361,7 +353,7 @@ def dannce_predict_video_trt(params:Dict, ba_poses:Dict, model_file:AnyStr,
     assert not params["expval"]
 
     mdl_file = params["dannce_predict_model"]
-    mdl_file = mdl_file.replace('.hdf5', '.engine')
+    mdl_file = mdl_file.replace('.hdf5', '.idx.engine')
     print("Loading model from " + mdl_file)
     assert os.path.exists(mdl_file), f"Model file {mdl_file} not found"
 

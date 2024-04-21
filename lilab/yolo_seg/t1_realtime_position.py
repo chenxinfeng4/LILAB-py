@@ -104,7 +104,8 @@ def main(shared_array_imgNNHW:SynchronizedArray,
             numpy_imgNNHW[idx] = img_NNHW
             numpy_com2d[idx] = coms_real_2d
             numpy_previ[idx] = frame_HW[:800,1280:1280*2]
-            if q.full(): q.get()
+            # if q.full(): q.get()
+            
             # frame_HWC = cv2.cvtColor(numpy_previ[idx], cv2.COLOR_BGR2RGB)
             # colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255)] #b,g,r
             # for ianimal, (x,y) in enumerate(coms_real_2d[1]):

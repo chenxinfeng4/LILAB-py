@@ -13,9 +13,9 @@ from dannce.interface_cxf import build_params
 from dannce.engine import processing_cxf as processing
 
 
-CALIBPKL = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/WTxWT_231029/ball/ball_____2023-10-31_16-46-32.calibpkl'
-dannce_project ='/home/liying_lab/chenxinfeng/DATA/dannce/demo/rat14_1280x800x9_mono_young'
-model_smooth_matcalibpkl = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/WTxWT_231029/2023-10-29_16-19-31AbxBw.smoothed_foot.matcalibpkl'
+CALIBPKL = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/test/2022-10-13_15-08-49AWxCB.maskrcnn.matcalibpkl'
+dannce_project ='/home/liying_lab/chenxinfeng/DATA/dannce/demo/rat14_1280x800x9_rat_yolo_metric'
+model_smooth_matcalibpkl = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/test/2022-10-13_15-08-49AWxCB.maskrcnn.matcalibpkl'
 
 
 if __name__ == '__main__':
@@ -28,12 +28,9 @@ if __name__ == '__main__':
 
     # seg_main(shared_array_imgNNHW, shared_array_com2d, shared_array_previ, q, lock)
     # while True: time.sleep(100)
-    if True:
-        seg_main(shared_array_imgNNHW, shared_array_com2d, shared_array_previ, q, lock)
-    exit()
+
     process = ctx.Process(target=seg_main, args=(shared_array_imgNNHW, shared_array_com2d, shared_array_previ, q, lock))
     process.start()
-    process.join()
     start_socketserver_background()
 
     os.chdir(dannce_project)
@@ -43,7 +40,8 @@ if __name__ == '__main__':
     params = processing.infer_params_img(params, dannce_net=True, prediction=True)
     ba_poses = pickle.load(open(CALIBPKL, 'rb'))['ba_poses']
 
-    dannce_main(params, ba_poses, model_smooth_matcalibpkl,
+    dannce_main(params, ba_poses,
+                model_smooth_matcalibpkl,
                 shared_array_imgNNHW,
                 shared_array_com2d,
                 shared_array_previ,
