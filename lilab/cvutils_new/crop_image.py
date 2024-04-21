@@ -1,4 +1,4 @@
-# python -m lilab.cvutils_new.crop_image a/b/
+# python -m lilab.cvutils_new.crop_image a/b/ --setupname carl
 # python -m lilab.cvutils_new.crop_image a/b/c.png
 import os.path as osp
 import os
@@ -16,18 +16,9 @@ def xywh2whxy(xywh, keepXeqY=False):
     return whxy
 
 
-def convert(filename):
+def convert(filename, setupname):
     im = cv2.imread(filename)
-    if im.shape == (800 * 4, 1280 * 3, 3):
-        views = get_view_xywh_wrapper(10)
-    elif im.shape == (1440, 2560, 3):
-        views = get_view_xywh_wrapper(6)
-    elif im.shape == (800 * 3, 1280 * 3, 3):
-        views = get_view_xywh_wrapper(9)
-    elif im.shape == (800 * 2, 1280 * 2, 3):
-        views = get_view_xywh_wrapper(4)
-    else:
-        raise ValueError("Unknown image shape: {}".format(im.shape))
+    views = get_view_xywh_wrapper(setupname)
     outdir = osp.join(osp.dirname(filename), "crop")
     os.makedirs(outdir, exist_ok=True)
     for postfix, crop_xywh in enumerate(views):
@@ -45,7 +36,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "image_path", type=str, default=None, help="path to image or folder"
     )
-
+    parser.add_argument(
+        '--setupname', type=str, default='carl'
+    )
     args = parser.parse_args()
 
     image_path = args.image_path
@@ -61,5 +54,5 @@ if __name__ == "__main__":
         raise ValueError("image_path is not a file or folder")
 
     for filename in image_path:
-        convert(filename)
+        convert(filename, args.setupname)
     print("Succeed")

@@ -24,7 +24,7 @@ iclass = 0
 nins = 2
 
 #%%
-def post_cpu(outputs, center, scale, feature_in_wh):
+def post_cpu(outputs, center, scale, feature_in_wh, iclass, nins):
     boxes, scores, nums = nms(outputs)
     boxes, scores, nums = boxes[:,iclass], scores[:,iclass], nums[:,iclass]
     nview = len(boxes)
@@ -42,7 +42,7 @@ def post_cpu(outputs, center, scale, feature_in_wh):
     return keypoints_xyp
 
 
-def main(video_file, checkpoint, setupname):
+def main(video_file, checkpoint, setupname, iclass, nins):
     views_xywh = get_view_xywh_wrapper(setupname)
     nview = len(views_xywh)
     if '_cam' in osp.splitext(osp.basename(video_file))[0]:
@@ -72,11 +72,11 @@ def main(video_file, checkpoint, setupname):
         torch.cuda.current_stream().synchronize()                # t
         outputs = outputs_wait                                   # t
         if idx<=-1: continue
-        kpt2d = post_cpu(outputs, center, scale, feature_in_wh)  # t
+        kpt2d = post_cpu(outputs, center, scale, feature_in_wh, iclass, nins)  # t
         keypoints_xyp.append(kpt2d)
 
     outputs = mid_gpu(trt_model, img_NCHW)
-    kpt2d = post_cpu(outputs, center, scale, feature_in_wh)
+    kpt2d = post_cpu(outputs, center, scale, feature_in_wh, iclass, nins)
     keypoints_xyp.append(kpt2d)
 
     keypoints_xyp = np.array(keypoints_xyp).transpose(1,0,2,3)#(nview, T, K, 3)
@@ -95,19 +95,16 @@ def main(video_file, checkpoint, setupname):
     pickle.dump(outdict, open(outpkl, 'wb'))
 
 
-# video_file = '/mnt/liying.cibr.ac.cn_Data_Temp/marmoset_camera3_cxf/2024-3-29/marmoset/twomarmoset.mp4'
-# setupname = 'frank2'
-# checkpoint = '/home/liying_lab/chenxinfeng/DATA/ultralytics/work_dirs/yolov8_det_640x640_marmoset/weights/last.singleton.engine'
-# main(video_file, checkpoint, setupname)
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('video_path', type=str, help='path to video or folder')
     parser.add_argument('--setupname', default='frank', type=str, help='number views')
     parser.add_argument('--checkpoint', type=str, default=checkpoint)
+    parser.add_argument('--ninstance', type=int, default=2)
+    parser.add_argument('--iclass', type=int, default=0)
     arg = parser.parse_args()
 
     video_path, checkpoint = arg.video_path, arg.checkpoint
     print("checkpoint:", checkpoint)
     assert osp.isfile(video_path), 'video_path not exists'
-    main(video_path, checkpoint, arg.setupname)
+    main(video_path, checkpoint, arg.setupname, arg.iclass, arg.ninstance)

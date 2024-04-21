@@ -13,10 +13,10 @@ import random
 
 numframe_to_extract = 100
 # numframe_to_extract = 100
-maxlength = 3000 #30000
+maxlength = 3000 #前3000zhen
 # maxlength = 1000
 frame_dir = "outframes"
-frame_min_interval = 1
+frame_min_interval = 1  #间隔多少zhen
 
 
 

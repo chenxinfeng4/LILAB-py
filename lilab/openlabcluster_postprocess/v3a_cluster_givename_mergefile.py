@@ -5,49 +5,49 @@ import os.path as osp
 import argparse
 
 
-cluster_names_page = """high mid trill/dots/dispersion
-mid low flat/inv-U
-mid long flat/trill/split
-mid low short ramp/dots
-mid high ramp
-high mid trill
-mid high ramp/jitter/split
-mid jump/split
-mid dots
-mid high jump/trill
-low shot/dots
-bottom long flat/split
-mid high long trill w/o step
-mid ramp/inv-U
-mid trill w/o step
-mid flat step rill/long flat
-mid dots/flat/dispersion mixed
-low flat/ramp/int-U
-low short/dot/jump
-mid dot/dots
-low long flat
-mid high short trill/jump dots
-mid inv-U/ramp/jitter
-mid high trill w/o jump
-mid low long flat/split/step trill
-mid flat/inv-U
-mid low dot/short
-mid dot/short ramp
-mid trill/jitter
-mid step trill/jump dots
-mid null/jump dots/split
-mid jump/split/step short trill
-mid slow ramp with jitter
-mid dot/jump/trill/split mixed
-low dot/jump/split mixed
-bottom long flat/split/dispersion
-bottom dot/jump/split
-high dot/dots/jump
-high dots/jump
-mid high short trill/dots
-mid long flat/jitter/trill
-bottom long flat/split
-mid inv-U/ramp/step short trill
+cluster_names_page = """
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
 """
 
 

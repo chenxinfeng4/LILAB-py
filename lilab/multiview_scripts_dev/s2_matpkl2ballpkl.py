@@ -54,21 +54,25 @@ def split_keypoint(keypoint, fps, global_time):
 
 
 def get_background_img(global_iframe, vfile, views_xywh):
-    background_img = None
     img_stack = []
-    vin = cv2.VideoCapture(vfile)
-    for i in global_iframe:
-        vin.set(cv2.CAP_PROP_POS_FRAMES, i)
-        ret, img = vin.read()
-        assert ret, "Failed to read frame {}".format(i)
-        img_stack.append(img)
-    vin.release()
-    img_stack = np.stack(img_stack, axis=0)
-    background_canvas = np.median(img_stack, axis=0).astype(np.uint8) #HxWx3
     background_img = []
-    for crop_xywh in views_xywh:
-        x, y, w, h = crop_xywh
-        background_img.append(background_canvas[y:y+h, x:x+w])
+    if osp.exists(vfile):
+        vin = cv2.VideoCapture(vfile)
+        for i in global_iframe:
+            vin.set(cv2.CAP_PROP_POS_FRAMES, i)
+            ret, img = vin.read()
+            assert ret, "Failed to read frame {}".format(i)
+            img_stack.append(img)
+        vin.release()
+        img_stack = np.stack(img_stack, axis=0)
+        background_canvas = np.median(img_stack, axis=0).astype(np.uint8) #HxWx3
+        for crop_xywh in views_xywh:
+            x, y, w, h = crop_xywh
+            background_img.append(background_canvas[y:y+h, x:x+w])
+    else:
+        for crop_xywh in views_xywh:
+            x, y, w, h = crop_xywh
+            background_img.append(np.zeros((h, w, 3), dtype=np.uint8))
     return background_img
 
 

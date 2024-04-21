@@ -19,12 +19,11 @@ matdata=pickle.load(open(matpkl,'rb'))
 ba_poses = ball['ba_poses']
 
 #%%
-# remove dist
+# remove distortion
 for v in ba_poses.values(): v['dist'] *= 0
 calibobj = CalibPredict({'ba_poses':ba_poses})
 
 
-#%%
 def polor_ray(view_from, view_to):
     R0 = ba_poses[view_from]['R']
     t0 = ba_poses[view_from]['t'].reshape(3,1)
@@ -44,12 +43,10 @@ def polor_ray(view_from, view_to):
         return uv2.T #nsamplex2
     return fun
 
-
 nview = len(ba_poses)
 get_ray_dict = {(i_src,i_dst): polor_ray(i_src, i_dst) for i_src,i_dst
                 in itertools.product(range(nview), range(nview))} #装饰器函数: view_from, view_to
 
-#%%
 def get_dist(p2d_src, p2d_dst, view_from, view_to):
     get_ray = get_ray_dict[view_from, view_to]
     uv2_ray = np.array([get_ray(p2d) for p2d in p2d_src]) #nsrc, 端点2，xy
@@ -81,7 +78,7 @@ def show(uv2_ray, p2d_dst_match):
 # uv2_ray, p2d_dst_match = get_dist(p2d_src, p2d_dst)
 # show(uv2_ray, p2d_dst_match)
 
-#%%
+#%% all frames
 view_from = 2
 view_to =3
 keypoints_xy = matdata['keypoints'][...,:2]
@@ -94,9 +91,8 @@ p2d_dst_nt_match = np.array([get_dist(p2d_src, p2d_dst, view_from, view_to)[1]
 
 assert np.all(np.isclose(p2d_dst_nt_match, p2d_dst_nt, equal_nan=True))
 
-#%%
 
-#%%
+#%% example frame
 view_from = 1
 view_to = 3
 keypoints_xy = matdata['keypoints'][...,:2]
@@ -136,17 +132,3 @@ for view_to in range(nview):
     plt.scatter(B[0], B[1])
     plt.xlim([-100,640])
     plt.ylim([480,-100])
-
-#%%
-import mmcv
-vfile='/mnt/liying.cibr.ac.cn_Data_Temp/marmoset_camera3_cxf/2024-3-29/marmoset/twomarmoset.mp4'
-vid = mmcv.VideoReader(vfile)
-frame = vid[iframe]
-views_xy = np.array(matdata['views_xywh'])[:,:2]
-
-p2d_canvas = p2d_reproj + views_xy[:,None,:]
-plt.figure(figsize=(20,14))
-plt.imshow(frame[...,::-1])
-plt.scatter(p2d_canvas[:,0,0], p2d_canvas[:,0,1], color='r')
-plt.scatter(p2d_canvas[:,1,0], p2d_canvas[:,1,1], color='C0')
-plt.axis('off')

@@ -8,46 +8,54 @@ import argparse
 
 
 merge_names_page = """
-0	Far Nonsocial
-1	Being attacked
-2	Head to head contact
-3	Attack
-4	Rearing  when being sniffed
-5	Face to face approaching
-6	Being sniffed at anogenital-1
-7	Pouncing-1
-8	Walking away from each other 
-9	Rearing up when being faced away
-10	Sniffing  anogenital
-11	Being sniffed at anogenital-2
-12	Being pounced
-13	Sniffing a rearing rat-1
-14	Circling nose to anogenital
-15	Pinning
-16	Both rearing and co-attention-1
-17	Being chased
-18	Being pinned and flipping back over-1
-19	Rearing when being faced away-1
-20	Being contacted
-21	Being pinned and flipping back over-2
-22	Being pinned and flipping back over-3
-23	Both rearing and co-attention-2
-24	Pouncing-2
-25	Rearing when being faced away-2
-26	Approaching a rearing rat
-27	Contact side by side same way
-28	Rearing up with a rat at the bottom
-29	Facing away a rearing rat
-30	Rearing when being sniffed
-31	Pouncing a rat that is flipping back over 
-32	At the bottom of a rearing rat
-33	In the social range of a rearing rat
-34	Chasing 
-35	Both rearing facing away
-36	Rearing when being sniffed on tha back
-37	Sniffing the back of a rearing rat
-38	Sniffing a rearing rat-2
-39	Face to face crossing and moving away
+1	Mutual contact opposite way side by side
+2	Rearing up when a rat researching opposite way
+3	Rearing up when being faced away
+4	Sniffing tail of a rearing rat
+5	Being sniffed from side
+6	Sniffing tail of a rearing-up rat
+7	Sniffing tail from behind
+8	Facing away and turing back to a rearing rat
+9	Sniffing and contact a rearing-up rat
+10	Following and sniffing tail
+11	Being sniffed tail side by side
+12	Pouncing or pinning
+13	Leaving from interaction
+14	Contact beside and head up
+15	Pouncing
+16	Sniffing tail and approaching of a rearing rat
+17	Rearing when a still rat facing away
+18	Being approached
+19	Being chased or pounced
+20	Mutual rearing with co-attention
+21	Chasing
+22	Being chased
+23	Mutual leaving back to back
+24	Facing away in front of a rat
+25	Being pounced
+26	Contact same way side by side
+27	Pinning
+28	Sniffing neck or contact a rearing rat
+29	Head contact face to face
+30	Facing away back to fack
+31	Being pounced
+32	Being pinned
+33	Rearing when being approached or sniffed tail
+34	Leaving or in front of a rat
+35	Mutual rearing
+36	Moving opposite way side by side
+37	Mutual contact head to head
+38	Mutual contact and rearing
+39	Rearing up when being approached or sniffed tail
+40	Sniffing tail side by side
+41	Sniffing and approaching of a rearing rat
+42	Rearing when being sniffed tail
+43	Facing away and back to a rearing-up rat
+44	Approaching
+45	Rearing when be sniffed back
+46	Mutual rearing and facing opposite way
+47	Facing away when a rat rearing
+48	Rearing when a rat facing away or leaving
 
 """
 

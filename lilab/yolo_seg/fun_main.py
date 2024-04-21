@@ -3,12 +3,11 @@ import os.path as osp
 import numpy as np
 import multiprocessing
 import pickle
-import time
 from lilab.yolo_seg.t1_realtime_position import main as seg_main
 from lilab.yolo_seg.plugin_voxelpred import dannce_predict_video_trt as dannce_main
 from lilab.yolo_seg.sockerServer import start_socketserver_background
 from lilab.yolo_seg.common_variable import (
-    NFRAME, out_numpy_imgNNHW_shape, out_numpy_com2d_shape, out_numpy_previ_shape)
+    NFRAME, out_numpy_imgNKHW_shape, out_numpy_com2d_shape, out_numpy_previ_shape)
 from dannce import _param_defaults_dannce, _param_defaults_shared
 from dannce.interface_cxf import build_params
 from dannce.engine import processing_cxf as processing
@@ -23,15 +22,18 @@ if __name__ == '__main__':
     ctx = multiprocessing.get_context('spawn')
     q = ctx.Queue(maxsize=(NFRAME-4))
     lock = ctx.Lock()
-    shared_array_imgNNHW = multiprocessing.Array('b', int(NFRAME*np.prod(out_numpy_imgNNHW_shape)))
+    shared_array_imgNNHW = multiprocessing.Array('b', int(NFRAME*np.prod(out_numpy_imgNKHW_shape)))
     shared_array_com2d = multiprocessing.Array('d', int(NFRAME*np.prod(out_numpy_com2d_shape)))
     shared_array_previ = multiprocessing.Array('b', int(NFRAME*np.prod(out_numpy_previ_shape)))
 
     # seg_main(shared_array_imgNNHW, shared_array_com2d, shared_array_previ, q, lock)
     # while True: time.sleep(100)
+    if True:
+        seg_main(shared_array_imgNNHW, shared_array_com2d, shared_array_previ, q, lock)
+    exit()
     process = ctx.Process(target=seg_main, args=(shared_array_imgNNHW, shared_array_com2d, shared_array_previ, q, lock))
     process.start()
-
+    process.join()
     start_socketserver_background()
 
     os.chdir(dannce_project)

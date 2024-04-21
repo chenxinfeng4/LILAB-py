@@ -1,4 +1,4 @@
-# python -m lilab.multiview_scripts_dev.s5_show_calibpkl2video ../data/carliball/2022-04-29_17-58-45_ball.matcalibpkl
+# python -m lilab.yolo_det.s5_show_calibpkl2video ../data/carliball/2022-04-29_17-58-45_ball.matcalibpkl
 # %%
 import pickle
 import numpy as np
@@ -13,7 +13,7 @@ matfile = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/ball/20
 thr = 0.3#p value threshold
 
 pred_colors = [[0,0,255],[233,195,120],[0,215,255]] #BGR
-ba_colors = [[0,255,0],[234,100,202],[255,255,0]]
+ba_colors = [[0,255,0],[0,255,255],[255,255,0]]
 resize = (1536, 960)
 axis_length = 220  # length of axis (mm)
 key_xyz_str_format = '{:4.1f},{:4.1f},{:4.1f}'
@@ -82,7 +82,7 @@ def keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data, fun
     keypoints_xy_ba[..., 0] *= scale[0]
     keypoints_xy_ba[..., 1] *= scale[1]
 
-    def draw_point_color(frame, keypoints_xy, i, color_list, radius=3):
+    def draw_point_color(frame, keypoints_xy, i, color_list, radius=3, iscircle=True):
         keypoint_i_xy = keypoints_xy[:, i, ...] # (NVIEW,K,xy).reshape(-1, 2)
         K = keypoint_i_xy.shape[1]
         NC = len(color_list)
@@ -92,16 +92,19 @@ def keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data, fun
             keypoint_i_xy_k = keypoint_i_xy[:, k, :]
             keypoint_i_xy_k = keypoint_i_xy_k[~np.isnan(keypoint_i_xy_k[:,0])]
             for xy in keypoint_i_xy_k:
-                cv2.circle(frame, tuple(xy.astype(np.int32)), radius, color_K[k], -1)
+                if iscircle:
+                    cv2.circle(frame, tuple(xy.astype(np.int32)), radius, color_K[k], -1)
+                else:
+                    cv2.rectangle(frame, tuple(xy.astype(np.int32)-10), tuple(xy.astype(np.int32)+10), color_K[k], 2)
 
     # %%
     # vout = ffmpegcv.noblock(ffmpegcv.VideoWriterNV,vfile.replace('.mp4', '_keypoints.mp4'), codec='h264', fps=vin.fps, gpu=gpu)
-    vout = ffmpegcv.VideoWriterNV(vfile.replace('.mp4', '_keypoints.mp4'), codec='h264', fps=vin.fps, gpu=gpu)
+    vout = ffmpegcv.VideoWriterNV(vfile.replace('.mp4', '_all_keypoints.mp4'), codec='h264', fps=vin.fps, gpu=gpu)
     for i, frame in enumerate(tqdm.tqdm(vin)):
         frame = frame.copy()
         if axis_length: fun_plot_axis_line(frame)
-        draw_point_color(frame, keypoints_xy, i, pred_colors, 5)
-        draw_point_color(frame, keypoints_xy_ba, i, ba_colors, 3)
+        draw_point_color(frame, keypoints_xy, i, pred_colors, 5, iscircle=False)
+        draw_point_color(frame, keypoints_xy_ba, i, ba_colors, 5)
         if True:
             cv2.putText(frame, str(i), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255), 2)
             key_xyz = keypoints_xyz_ba[i][0]
@@ -134,7 +137,11 @@ if __name__ == '__main__':
     parser.add_argument('--gpu', type=int, default=0)
     parser.add_argument('--only3D', action='store_true')
     parser.add_argument('--axis-length', type=int, default=220)
+    parser.add_argument('--samecolor', action='store_true', default=False)
 
     args = parser.parse_args()
+    if args.samecolor:
+        pred_colors = [pred_colors[0]] * len(pred_colors)
+        # ba_colors = [ba_colors[0]] * len(pred_colors)
     axis_length = args.axis_length
     main_showvideo(args.matcalib, args.gpu, args.only3D)

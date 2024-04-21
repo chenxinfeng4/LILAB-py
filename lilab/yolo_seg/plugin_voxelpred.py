@@ -18,7 +18,7 @@ from multiprocessing.sharedctypes import SynchronizedArray
 from multiprocessing import Queue
 from multiprocessing.synchronize import Lock
 from lilab.yolo_seg.common_variable import (
-    NFRAME, out_numpy_imgNNHW_shape, out_numpy_com2d_shape, out_numpy_previ_shape)
+    NFRAME, out_numpy_imgNKHW_shape, out_numpy_com2d_shape, out_numpy_previ_shape)
 from lilab.yolo_seg.sockerServer import p3d, p2d
 
 ballfile = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/carl/2023-10-14-/ball_2023-10-23_13-18-10.calibpkl'
@@ -32,7 +32,7 @@ class DataGenerator_3Dconv_torch_video_canvas_multivoxel(DataGenerator_3Dconv_to
                   shared_array_previ:SynchronizedArray,
                   q:Queue, lock:Lock):
         
-        self.numpy_imgNNHW = np.frombuffer(shared_array_imgNNHW.get_obj(), dtype=np.uint8).reshape((NFRAME,*out_numpy_imgNNHW_shape))
+        self.numpy_imgNNHW = np.frombuffer(shared_array_imgNNHW.get_obj(), dtype=np.uint8).reshape((NFRAME,*out_numpy_imgNKHW_shape))
         self.numpy_com2d = np.frombuffer(shared_array_com2d.get_obj(), dtype=np.float64).reshape((NFRAME, *out_numpy_com2d_shape))
         self.numpy_previ = np.frombuffer(shared_array_previ.get_obj(), dtype=np.uint8).reshape((NFRAME, *out_numpy_previ_shape))
         self.calibobj = calibobj
@@ -42,8 +42,8 @@ class DataGenerator_3Dconv_torch_video_canvas_multivoxel(DataGenerator_3Dconv_to
         assert self.batch_size == 1, "Batch size must be 1 for video data"
 
         # assert tuple(self.canvas_hw) == (ch, cw)
-        self.ncam = out_numpy_imgNNHW_shape[0]
-        self.image_hw = out_numpy_imgNNHW_shape[-2:]
+        self.ncam = out_numpy_imgNKHW_shape[0]
+        self.image_hw = out_numpy_imgNKHW_shape[-2:]
         self.batch_size = nclass
         self.n_channels_in = 1 #gray
 

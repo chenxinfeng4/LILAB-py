@@ -47,6 +47,7 @@ def ready_to_extract(video_input, idxframe_to_extract, dirname, ipannels):
         if not ret: break
         if iframe>idxframe_max: break
         if iframe not in idxframe_to_extract: continue
+        if iframe not in idxframe_to_extract: continue
         frame_name = nakefilename + '_' + str(iframe) + '.jpg'
         x,y,w,h = pannels_xywh[ipannels]
         imgDataCrop = frame[y:y+h,x:x+w]

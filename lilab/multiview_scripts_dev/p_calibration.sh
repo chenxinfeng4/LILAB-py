@@ -31,7 +31,6 @@ tball=" 0 0 0 0 10 " # 没有用，只是占位
 
 # 2A. 设置棋盘格，全局定标X、Y、Z轴
 python -m lilab.multiview_scripts_dev.p1_checkboard_global $vfile.mp4 --setupname $setupname --board_size 11 8 --square_size 20 &
-
 # 2B. 每个视角单独预测小球,绘制2D轨迹视频
 python -m lilab.multiview_scripts_dev.s1_ballvideo2matpkl_full_faster $vfile.mp4 --pannels $setupname  #<深度学习>
 

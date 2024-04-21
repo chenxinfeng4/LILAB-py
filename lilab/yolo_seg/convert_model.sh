@@ -1,17 +1,16 @@
 #!/bin/bash
-project_file=/home/liying_lab/chenxinfeng/DATA/ultralytics/runs/segment/train7/weights/last
+project_file=/home/liying_lab/chenxinfeng/DATA/ultralytics/work_dirs/yolov8n_seg_640_ratbw/weights/last
 
 # 1 to ONNX
 source activate open-mmlab
-python /home/liying_lab/chenxinfeng/ml-project/LILAB-py/lilab/yolo_seg/convert_pt2onnx.py ${project_file}.pt
+python /home/liying_lab/chenxinfeng/ml-project/LILAB-py/lilab/yolo_seg/convert_pt2onnx.py --weights ${project_file}.pt --input-HW 1200 1920
 
-source activate mmdet
-polygraphy inspect model ${project_file}.full.onnx
+siinn inspect ${project_file}.full.onnx
 
 # 2A
 source activate mmdet
 trtexec --onnx=${project_file}.full.onnx --fp16 --saveEngine=${project_file}.full.engine --timingCacheFile=${project_file}.full.cache
-trtexec --onnx=${project_file}.full.onnx --saveEngine=${project_file}.full.fp32.engine --timingCacheFile=${project_file}.fp32.full.cache
+#trtexec --onnx=${project_file}.full.onnx --saveEngine=${project_file}.full.fp32.engine --timingCacheFile=${project_file}.fp32.full.cache
 
 # 2B RKNN
 source activate rknn

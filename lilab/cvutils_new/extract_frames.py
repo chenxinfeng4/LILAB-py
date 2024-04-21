@@ -46,10 +46,10 @@ def extract(video_input, numframe_to_extract, maxlength):
     cap.release()
     
 
-def extract_iview(video_input, iview, numframe_to_extract, maxlength):
-    from lilab.cameras_setup import get_view_xywh_1280x800x10 as get_view_xywh
+def extract_iview(video_input, setupname, iview, numframe_to_extract, maxlength):
+    from lilab.cameras_setup import get_view_xywh_wrapper
     import ffmpegcv
-    crop_xywh = get_view_xywh()[iview]
+    crop_xywh = get_view_xywh_wrapper(setupname)[iview]
     dirname,filename=os.path.split(video_input)
     nakefilename = os.path.splitext(filename)[0]
     cap = ffmpegcv.VideoCaptureNV(video_input, crop_xywh=crop_xywh)
@@ -75,6 +75,7 @@ def extract_iview(video_input, iview, numframe_to_extract, maxlength):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Extract image')
     parser.add_argument('video_path', type=str, default=None, help='path to image or folder')
+    parser.add_argument('--setupname', type=str, default='carl')
     parser.add_argument('--iview', type=int, default=None)
     parser.add_argument('--npick', type=int, default=numframe_to_extract)
     args = parser.parse_args()
@@ -96,6 +97,6 @@ if __name__ == '__main__':
         if args.iview is None:
             extract(video_input, args.npick, maxlength)
         else:
-            extract_iview(video_input, args.iview, args.npick, maxlength)
+            extract_iview(video_input, args.setupname, args.iview, args.npick, maxlength)
     
     print("Succeed")

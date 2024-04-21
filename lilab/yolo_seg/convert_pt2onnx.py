@@ -96,10 +96,10 @@ class NormalizedModel(torch.nn.Module):
 
         if True:
             pad_value = 0.5
-            input_shape = np.asarray(patches3.shape[-2:])
-            innerHW_full = np.ceil(input_shape/32).astype(int)*32
+            input_HW = np.asarray(patches3.shape[-2:])
+            innerHW_full = np.ceil(input_HW/32).astype(int)*32
             mask_HW = innerHW_full // 4
-            pad_height, pad_width = (innerHW_full - input_shape) // 2
+            pad_height, pad_width = (innerHW_full - input_HW) // 2
             mask_pad_width = pad_width // 4
             mask_pad_height = pad_height // 4
             slice_pad_height = slice(mask_pad_height, mask_HW[0]-mask_pad_height)
@@ -128,10 +128,10 @@ def main(args):
         m.to(device)
     model.to(device)
 
-    model = NormalizedModel((args.input_shape[0]//3, args.input_shape[1]//3), model)
+    model = NormalizedModel((args.input_HW[0]//3, args.input_HW[1]//3), model)
     model.eval()
 
-    fake_input = torch.randn(args.input_shape)
+    fake_input = torch.randn(args.input_HW)
     output =  model(fake_input)
     save_path = args.weights.replace('.pt', '.full.onnx')
     with BytesIO() as f:
@@ -161,13 +161,13 @@ if __name__ == '__main__':
                         # required=True,
                         default=MODEL,
                         help='PyTorch yolov8 weights')
-    parser.add_argument('--input-shape',
+    parser.add_argument('--input-HW',
                         nargs='+',
                         type=int,
                         default=[400*3, 640*3],  #[640*3, 640*3]
                         help='Model input shape only for api builder')
     args = parser.parse_args()
-    assert len(args.input_shape) == 2
+    assert len(args.input_HW) == 2
 
     main(args)
 

@@ -57,7 +57,7 @@ def get_sub_ba_poses(subviews, setup, intrinsics, landmarks_move_xy, background_
     extrinsics = a2_concatenate_relative_poses(setup, relative_poses)
     poses = intri_extrin_to_ba_poses(intrinsics, extrinsics)
     config = {'th_outliers_early':100, "th_outliers":20}
-    config = {'th_outliers_early':500, "th_outliers":100}
+    # config = {'th_outliers_early':500, "th_outliers":100}
     ba_poses, ba_points = a3_bundle_ajustment(setup, poses, landmarks_move_xy, background_img,
                                               config = config, iter1=100, iter2=300)
     return setup, ba_poses, ba_points

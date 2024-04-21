@@ -7,6 +7,8 @@ from mmpose.core.post_processing.temporal_filters import build_filter
 from lilab.multiview_scripts_dev.s6_calibpkl_predict import CalibPredict
 import numpy as np
 import argparse
+from scipy.signal import medfilt
+import itertools
 
 # %%
 pklfile='/home/liying_lab/chenxinfeng/liying.cibr.ac.cn_Data_Temp/multiview_9/dzytemp/2023-03-20_14-35-51_MA3B1.matcalibpkl'
@@ -29,11 +31,8 @@ def linear_smooth(data, window_size=3):
     """
     smoothed_data = data.copy()
     ntime, nclass, npoints, nspace = data.shape
-    for iclass in range(nclass):
-        for ispace in range(nspace):
-            for ipoint in range(npoints):
-                for itime in range(window_size,ntime-window_size):
-                    smoothed_data[itime, iclass, ipoint, ispace] = np.median(data[itime-window_size:itime+window_size, iclass, ipoint, ispace])
+    for iclass, ispace, ipoint in itertools.product(range(nclass), range(nspace), range(npoints)):
+        smoothed_data[:, iclass, ipoint, ispace] = medfilt(data[:, iclass, ipoint, ispace], kernel_size=window_size*2+1)
     return smoothed_data
 
 def main(pklfile):

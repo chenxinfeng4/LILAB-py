@@ -12,6 +12,6 @@ polygraphy run /home/liying_lab/chenxinfeng/ml-project/LILAB-py/lilab/tensorrt/c
     --precision-constraints obey \
     --input-shapes input_1:[2,64,64,64,9]\
     --trt-min-shapes input_1:[1,64,64,64,9] \
-    --trt-max-shapes input_1:[4,64,64,64,9] \
+    --trt-max-shapes input_1:[2,64,64,64,9] \
     --trt-opt-shapes input_1:[2,64,64,64,9] \
     --trt --fp16 --save-engine latest_dynamic.engine

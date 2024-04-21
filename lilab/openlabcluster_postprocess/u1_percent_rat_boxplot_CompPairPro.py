@@ -48,14 +48,17 @@ def load_data(project, sheet_name):
 
     rat_info = rat_info.filter(regex=r'^((?!Unnamed).)*$').dropna(axis=0,how='all')
     video_info = video_info.filter(regex=r'^((?!Unnamed).)*$').dropna(axis=0,how='all')
-    print(video_info)
     #remove all NaN row
     # 表的检查
     assert {'animal', 'color', 'gender', 'geno', 'dob'} <= set(rat_info.columns)
     assert {'video_nake', 'animal', 'partner', 'usv_file'} <= set(video_info.columns)
     df_merge_b = pd.merge(rat_info, video_info['animal'], on='animal', how='right')
+    print(df_merge_b['color'].unique())
+    print(df_merge_b[df_merge_b['color'].isna()].index)
     assert (df_merge_b['color'] == 'b').all()
     df_merge_w = pd.merge(rat_info, video_info['partner'], left_on='animal', right_on='partner', how='right')
+    print(df_merge_w['color'].unique())
+    print(df_merge_w[df_merge_w['color']=='b'].index)
     assert (df_merge_w['color'] == 'w').all()
     return rat_info, video_info, bhvSeqs, df_labnames, k_best, cluster_nodes_merged
 
@@ -147,18 +150,20 @@ def plot_box_data(df_labnames, df_group_x_freq, hue_order, hue_legend, savefigpa
     plt.ylabel('Label', fontsize=20)
     leg = plt.legend(fontsize=14)
     for i, text in enumerate(hue_legend): leg.get_texts()[i].set_text(text)
+    #进行anova检验
     # plt.savefig(osp.join(project,'DAY55_boxplot_MM_vs_FF2.pdf'), bbox_inches='tight')
-    pairs = [[(label, hue_order[0]), (label, hue_order[1])] for label in lab_names_sort]
-    annot = Annotator(plt.gca(), pairs, plot='barplot',
-                    x='freq', y='lab_names', hue='group', 
-                    hue_order=hue_order, 
-                    orient='h', hide_non_significant=True,
-                    order=lab_names_sort,
-                    data=df_group_x_freq)
+    # pairs = [[(label, hue_order[0]), (label, hue_order[1])] for label in lab_names_sort]
+    # annot = Annotator(plt.gca(), pairs, plot='barplot',
+    #                 x='freq', y='lab_names', hue='group', 
+    #                 hue_order=hue_order, 
+    #                 # orient='h', 
+    #                 hide_non_significant=True,
+    #                 order=lab_names_sort,
+    #                 data=df_group_x_freq)
 
-    annot.configure(test='t-test_ind')
-    annot.apply_test()
-    annot.annotate()
+    # annot.configure(test='t-test_ind')
+    # annot.apply_test()
+    # annot.annotate()
 
     xcolors=[]
     for behlabel in behlabel_sort:
