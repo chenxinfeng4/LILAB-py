@@ -12,18 +12,25 @@ import ffmpegcv
 import torch
 import tqdm
 import itertools
+import ctypes
 from lilab.multiview_scripts.rat2d_kptvideo import cv_plot_skeleton_aframe
 import os
+import multiprocessing
 from multiprocessing.sharedctypes import SynchronizedArray
 from multiprocessing import Queue
 from multiprocessing.synchronize import Lock
 from lilab.yolo_seg.common_variable import (
-    NFRAME, out_numpy_imgNKHW_shape, out_numpy_com2d_shape, out_numpy_previ_shape)
-from lilab.yolo_seg.sockerServer import p3d, p2d
+    NFRAME, out_numpy_imgNKHW_shape, out_numpy_com2d_shape, out_numpy_previ_shape,
+    dannce_numpy_X_shape, dannce_numpy_Xgrid_shape)
+from lilab.yolo_seg.p3d_cluster import cluster_main
 
 ballfile = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/carl/2023-10-14-/ball_2023-10-23_13-18-10.calibpkl'
 nclass = 2
 
+def get_vidout():
+    # vidout = ffmpegcv.VideoWriter('/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/out.mkv', codec='h264', fps=30)
+    vidout = ffmpegcv.VideoWriterStreamRT('rtsp://10.50.60.6:8554/mystream_behaviorlabel_result')
+    return vidout
 
 class DataGenerator_3Dconv_torch_video_canvas_multivoxel(DataGenerator_3Dconv_torch):
     def set_video(self, coms_3d:np.ndarray, calibobj:CalibPredict,
@@ -58,6 +65,8 @@ class DataGenerator_3Dconv_torch_video_canvas_multivoxel(DataGenerator_3Dconv_to
 
     def decode_array(self):
         data_id = self.q.get()
+        if data_id is None:
+            return None, None, None
         with self.lock:
             img_NNHW = self.numpy_imgNNHW[data_id]
             com2d = self.numpy_com2d[data_id]
@@ -77,6 +86,7 @@ class DataGenerator_3Dconv_torch_video_canvas_multivoxel(DataGenerator_3Dconv_to
         list_IDs_temp = [f'0_{i}' for i in indexes]
         self.batch_size = nclass
         img_NBHW, img_HW, coms_3d_nclass = self.decode_array()
+        if img_NBHW is None: return [None, None], None, None
         coms_3d_nclass[np.isnan(coms_3d_nclass)] = 0
         coms_3d_nclass = np.clip(self.com3d_minmax[0], self.com3d_minmax[1], coms_3d_nclass)
         im_pannels_nclass = img_NBHW[...,None] #NBHWC
@@ -95,7 +105,7 @@ class DataGenerator_3Dconv_torch_video_canvas_multivoxel(DataGenerator_3Dconv_to
             y_3d.append(y_3d_each)
 
         self.iframe += 1
-        iview_preview = cv2.cvtColor(img_HW, cv2.COLOR_GRAY2BGR) 
+        iview_preview = img_HW
         return [X, xgrid_roi], y_3d, iview_preview
 
     def init_grids_one(self, com_3ds):
@@ -144,7 +154,7 @@ class DataGenerator_3Dconv_torch_video_canvas_multivoxel(DataGenerator_3Dconv_to
 
         self.grid_1d = (xgrid, ygrid, zgrid)
         self.grid_coord_3d = np.stack([x_coord_3d, y_coord_3d, z_coord_3d], axis=-1).astype('float16')  #(nvox_y, nvox_x, nvox_z, 3)
-            
+        
         for voxel_size in self.voxel_size_list:
             self.grid_1d_l.append(self.grid_1d)
             self.grid_coord_3d_l.append(self.grid_coord_3d)
@@ -175,60 +185,19 @@ class DataGenerator_3Dconv_torch_video_canvas_multivoxel(DataGenerator_3Dconv_to
         return [X, xgrid_roi], y_3d
 
 
-def infer_dannce_max_trt(
-    generator: DataGenerator_3Dconv_torch_video_canvas_multivoxel,
-    model_l,
-    device_l: Text,
-    calibPredict: CalibPredict
-):
-    from torch2trt.torch2trt import torch_dtype_from_trt
-    
-    vidout = ffmpegcv.VideoWriter('/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/out.mkv', codec='h264', fps=30)
-    # vidout = ffmpegcv.VideoWriterStreamRT('rtmp://localhost:1935/mystream2')
-    device, model = device_l[0], model_l[0]
-
-    pannel_preview = None
-    #warm up
-    for device, model in zip(device_l, model_l):
-        with torch.cuda.device(device):
-            # model warmup
-            idx = model.engine.get_binding_index(model.input_names[0])
-            dtype = torch_dtype_from_trt(model.engine.get_binding_dtype(idx))
-            shape = tuple(model.context.get_binding_shape(idx))
-            if shape[0]==-1: shape = (1, *shape[1:])
-            input = torch.empty(size=shape, dtype=dtype).cuda()
-            output = model(input)
-            dtype = output.dtype
-            X, X_grid = input.cpu().numpy(), np.zeros((*shape[:-1], 2), dtype='float16')
-            
-    for iframe in tqdm.tqdm(itertools.count(0), position=2, desc='VoxelPrediction'):
-        X, X_grid, pannel_preview = pre_cpu(generator, iframe)
-        pred_l = [None] * len(device_l)
-        for i, (device, model) in enumerate(zip(device_l, model_l)):
-            with torch.cuda.device(device):
-                pred_l[i] = mid_gpu(X[[i]], dtype, model)
-
-        for device in device_l:
-            with torch.cuda.device(device):
-                torch.cuda.current_stream().synchronize()
-
-        ind_max = np.concatenate([pred.cpu().numpy() for pred in pred_l]) #2_by_14
-        post_cpu(ind_max, X_grid, iframe, pannel_preview, calibPredict, vidout)
-
-
 def pre_cpu(generator, i):
     [X, X_grid], y, pannel_preview  = generator[i]
     return X, X_grid, pannel_preview
 
 
-def post_cpu(ind_max, X_grid, iframe, pannel_preview, calibPredict:CalibPredict, vidout):
+def post_cpu(rpc_client, ind_max, X_grid, iframe, pannel_preview, calibPredict:CalibPredict, vidout):
     if iframe<0: return
     com_3d_l = X_grid[:,[0,-1], [0,-1], [0,-1]].mean(axis=1)    #(nclass, 3)
-    p3d[:] = np.take_along_axis(X_grid.reshape(X_grid.shape[0], -1, 1, X_grid.shape[-1]), 
+    p3d = np.take_along_axis(X_grid.reshape(X_grid.shape[0], -1, 1, X_grid.shape[-1]), 
                              ind_max[:,None,:,None], axis=1)[:,0,:] #(nclass, k, 3)
     ipannel = 1
     com_2d_l = calibPredict.p3d_to_p2d(com_3d_l)[ipannel].astype(np.int32)
-    p2d[:] = calibPredict.p3d_to_p2d(p3d).astype(int)
+    p2d = calibPredict.p3d_to_p2d(p3d).astype(int)
     coord_2d = p2d[ipannel]
     pts2d_b_now, pts2d_w_now = coord_2d[0], coord_2d[1]
     frame = pannel_preview
@@ -238,28 +207,47 @@ def post_cpu(ind_max, X_grid, iframe, pannel_preview, calibPredict:CalibPredict,
 
     frame = cv_plot_skeleton_aframe(frame, pts2d_b_now, name = 'black')
     frame = cv_plot_skeleton_aframe(frame, pts2d_w_now, name = 'white')
+
+    if True:
+        label_str = rpc_client.label_str()
+        font, font_scale, font_thickness = cv2.FONT_HERSHEY_SIMPLEX, 2, 2
+        text_size, _ = cv2.getTextSize(label_str, font, font_scale, font_thickness)
+        image_height, image_width = frame.shape[:2]
+        text_x, text_y = (image_width - text_size[0]) // 2, (image_height - text_size[1]) - 20
+        cv2.putText(frame, label_str, (text_x, text_y), font, font_scale, (0, 255, 255), font_thickness, cv2.LINE_AA)
+
+    # if ifshow:
+    #     cv2.imshow('frame', frame)
+    #     cv2.waitKey(0)
     vidout.write(frame)
+    return p3d
 
 
-def dannce_predict_video_trt(params:Dict, ba_poses:Dict, model_file:AnyStr,
-                             shared_array_imgNNHW:SynchronizedArray,
-                             shared_array_com2d:SynchronizedArray,
-                             shared_array_previ:SynchronizedArray,
-                             q:Queue, lock:Lock):
-    """Predict with dannce network
-
-    Args:
-        params (Dict): Paremeters dictionary.
-    """
+def video_generator_main(params:Dict, ba_poses:Dict, model_file:AnyStr,
+                        shared_array_imgNNHW:SynchronizedArray,
+                        shared_array_com2d:SynchronizedArray,
+                        shared_array_previ:SynchronizedArray,
+                        q:Queue, lock:Lock,
+                        share_dannce_X:SynchronizedArray,
+                        share_dannce_Xgrid:SynchronizedArray,
+                        share_dannce_imgpreview:SynchronizedArray,
+                        q_dannce:Queue):
     from dannce.utils_cxf.cameraIntrinsics_OpenCV import cv2_pose_to_matlab_pose
     from collections import OrderedDict
-    from torch2trt import TRTModule
-    # Save
-    
+
+    # share array buffer
+    numpy_dannce_X = np.frombuffer(share_dannce_X.get_obj(), dtype=np.float32).reshape(NFRAME, *dannce_numpy_X_shape)
+    numpy_dannce_Xgrid = np.frombuffer(share_dannce_Xgrid.get_obj(), dtype=np.float16).reshape(NFRAME, *dannce_numpy_Xgrid_shape)
+    numpy_dannce_imgpreview = np.frombuffer(share_dannce_imgpreview.get_obj(), dtype=np.uint8).reshape(NFRAME, *out_numpy_previ_shape)
+
+    # init video
     params['crop_width'] = np.array(params['crop_width']).tolist()
     params['crop_height'] = np.array(params['crop_height']).tolist()
 
     # Depth disabled until next release.
+    assert params["predict_mode"] == "torch"
+    assert not params["expval"]
+
     params["depth"] = False
     n_views = int(params["n_views"])
     gpu_id = 1
@@ -346,29 +334,104 @@ def dannce_predict_video_trt(params:Dict, ba_poses:Dict, model_file:AnyStr,
                               shared_array_imgNNHW, shared_array_com2d,
                               shared_array_previ,
                               q, lock)
+    for iframe in tqdm.tqdm(itertools.count(), position=2):
+        idx = iframe % NFRAME
+        [X, X_grid], y, pannel_preview  = valid_generator[iframe]
+        if X is None: break
+        numpy_dannce_X[idx] = X
+        numpy_dannce_Xgrid[idx] = X_grid
+        numpy_dannce_imgpreview[idx] = pannel_preview
+        q_dannce.put(iframe)
+    q_dannce.put(None)
+
+
+def dannce_predict_video_trt(params:Dict, ba_poses:Dict, model_file:AnyStr,
+                             shared_array_imgNNHW:SynchronizedArray,
+                             shared_array_com2d:SynchronizedArray,
+                             shared_array_previ:SynchronizedArray,
+                             q:Queue, lock:Lock):
+    """Predict with dannce network
+
+    Args:
+        params (Dict): Paremeters dictionary.
+    """
+    from torch2trt import TRTModule
+    from lilab.yolo_seg.sockerServer import port
+    import picklerpc
+    rpc_client = picklerpc.Client(('127.0.0.1', port))
+    # Save
+    share_dannce_X = multiprocessing.Array(ctypes.c_int32, int(NFRAME*np.prod(dannce_numpy_X_shape))) #np.float32
+    share_dannce_Xgrid = multiprocessing.Array(ctypes.c_int16, int(NFRAME*np.prod(dannce_numpy_Xgrid_shape))) #np.float16
+    share_dannce_imgpreview = multiprocessing.Array(ctypes.c_ubyte, int(NFRAME*np.prod(out_numpy_previ_shape))) #np.uint8
+    numpy_dannce_X = np.frombuffer(share_dannce_X.get_obj(), dtype=np.float32).reshape(NFRAME, *dannce_numpy_X_shape)
+    numpy_dannce_Xgrid = np.frombuffer(share_dannce_Xgrid.get_obj(), dtype=np.float16).reshape(NFRAME, *dannce_numpy_Xgrid_shape)
+    numpy_dannce_imgpreview = np.frombuffer(share_dannce_imgpreview.get_obj(), dtype=np.uint8).reshape(NFRAME, *out_numpy_previ_shape)
+
+    ctx = multiprocessing.get_context('spawn')
+    q_p3d = ctx.Queue(maxsize=(NFRAME-4))
+    process = ctx.Process(target=cluster_main, args=(
+        q_p3d, model_file
+    ))
+    process.start()
+
+    q_dannce = ctx.Queue(maxsize=(NFRAME-4))
+    process = ctx.Process(target=video_generator_main, args=(
+        params, ba_poses, model_file,
+        shared_array_imgNNHW,
+        shared_array_com2d,
+        shared_array_previ,
+        q, lock,
+        share_dannce_X,
+        share_dannce_Xgrid,
+        share_dannce_imgpreview,
+        q_dannce
+    ))
+    process.start()
 
     # Load model from tensorrt
     assert params["dannce_predict_model"] is not None
-    assert params["predict_mode"] == "torch"
-    assert not params["expval"]
-
-    mdl_file = params["dannce_predict_model"]
-    mdl_file = mdl_file.replace('.hdf5', '.idx.engine')
+    mdl_file = params["dannce_predict_model"].replace('.hdf5', '.idx.engine')
     print("Loading model from " + mdl_file)
     assert os.path.exists(mdl_file), f"Model file {mdl_file} not found"
+    calibPredict = CalibPredict({'ba_poses':ba_poses})
 
-    trt_model_l = []
+    model_l = []
+    device_l = ['cuda:1', 'cuda:2']
     for device in device_l:
         with torch.cuda.device(device):
-            trt_model = TRTModule()
-            trt_model.load_from_engine(mdl_file)
-            trt_model_l.append(trt_model)
+            model = TRTModule()
+            model.load_from_engine(mdl_file)
+            model_l.append(model)
 
-    assert not params["expval"]
+            # warm up
+            idx = model.engine.get_binding_index(model.input_names[0])
+            shape = tuple(model.context.get_binding_shape(idx))
+            if shape[0]==-1: shape = (2, *shape[1:])
+            input = torch.empty(size=shape).cuda()
+            output = model(input)
 
-    infer_dannce_max_trt(
-        valid_generator,
-        trt_model_l,
-        device_l,
-        calibPredict
-    )
+    vidout = get_vidout()
+
+    for iframe in itertools.count():
+        idx = q_dannce.get()
+        if idx is None: break
+        idx = idx % NFRAME
+        X = numpy_dannce_X[idx]
+        X_grid = numpy_dannce_Xgrid[idx]
+        pannel_preview = numpy_dannce_imgpreview[idx]
+
+        pred_l = [None] * len(device_l)
+        for i, (device, model) in enumerate(zip(device_l, model_l)):
+            with torch.cuda.device(device):
+                pred_l[i] = model(torch.from_numpy(X[[i]]).cuda().float())
+        
+        for device in device_l:
+            with torch.cuda.device(device):
+                torch.cuda.current_stream().synchronize()
+        ind_max = np.concatenate([pred.cpu().numpy() for pred in pred_l])
+        p3d = post_cpu(rpc_client, ind_max, X_grid, iframe, pannel_preview, calibPredict, vidout)
+        q_p3d.put(p3d)
+
+    q_p3d.put(None)
+    print('[2] Pose reconstruction done')
+    vidout.release()

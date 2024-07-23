@@ -4,7 +4,7 @@ from typing import Tuple
 import cv2
 from itertools import product
 import pycocotools.mask as mask_util
-
+from torch2trt import TRTModule
 
 kernel_np = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(7,7)) #832
 kernel_np = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5)) #640
@@ -48,7 +48,7 @@ def singleton_gpu(outputs) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     scores_ : shape = (nbatch,nclass)
     mask_   : shape = (nbatch,nclass,H,W)
     """
-    maskcoeff, boxes, scores, proto = outputs
+    boxes, scores, maskcoeff, proto = outputs
     max_inds = torch.argmax(scores, axis=1) #(nbatch,nclass)
     scores = torch.take_along_dim(scores, max_inds[...,None,:], dim=1)[:,0] #(nbatch,nclass)
     boxes = torch.take_along_dim(boxes[:,:,None,:], max_inds[:,None,:,None], dim=1)[:,0] #(nbatch,nclass,4)
@@ -66,7 +66,7 @@ def singleton_gpu(outputs) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     scores_ : shape = (nbatch,nclass)
     mask_   : shape = (nbatch,nclass,H,W)
     """
-    maskcoeff, boxes, scores, proto = outputs
+    boxes, scores, maskcoeff, proto = outputs
     max_inds = torch.argmax(scores, axis=1) #(nbatch,nclass)
     scores = torch.take_along_dim(scores, max_inds[...,None,:], dim=1)[:,0] #(nbatch,nclass)
     boxes = torch.take_along_dim(boxes[:,:,None,:], max_inds[:,None,:,None], dim=1)[:,0] #(nbatch,nclass,4)
@@ -75,6 +75,17 @@ def singleton_gpu(outputs) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     boxes, scores, mask = [o.cpu().numpy() for o in [boxes, scores, mask]]
     # mask = np.sum(maskcoeff[...,None,None] * proto[:,None,...], axis=2)
     return boxes, scores, mask
+
+
+def singleton_gpu_factory(trt_model:TRTModule) -> callable:
+    orders = ['bboxes', 'scores', 'maskcoeff', 'proto']
+    idx_l = [trt_model.engine.get_binding_index(o)-1 for o in orders]
+
+    def call(outputs:list):
+        outputs_reorder = [outputs[i] for i in idx_l]
+        return singleton_gpu(outputs_reorder)
+    return call
+
 
 def center_of_mass_cxf(input):
     a_x, a_y = np.sum(input, axis=0, keepdims=True), np.sum(input, axis=1, keepdims=True)
@@ -147,8 +158,8 @@ def refine_mask(outputs:Tuple[np.ndarray, np.ndarray, np.ndarray]) -> \
     mask = mask>mask_thr
 
     # boxes: box_xyxy in feature input size
-    boxes[...,[0,1]] -= 20
-    boxes[...,[2,3]] += 20
+    boxes[...,[0,1]] -= 15
+    boxes[...,[2,3]] += 15
     boxes[...,[0,2]] = np.clip(boxes[...,[0,2]], 0, mask_HW[1]*4, dtype=boxes.dtype)
     boxes[...,[1,3]] = np.clip(boxes[...,[1,3]], 0, mask_HW[0]*4, dtype=boxes.dtype)
     box_for_mask = (boxes // 4).astype(int)
@@ -195,8 +206,8 @@ def refine_mask2(outputs:Tuple[np.ndarray, np.ndarray, np.ndarray]) -> \
     mask = mask>mask_thr
 
     # boxes: box_xyxy in feature input size
-    boxes[...,[0,1]] -= 18
-    boxes[...,[2,3]] += 18
+    boxes[...,[0,1]] -= 15
+    boxes[...,[2,3]] += 15
     boxes[...,[0,2]] = np.clip(boxes[...,[0,2]], 0, mask_HW[1]*4, dtype=boxes.dtype)
     boxes[...,[1,3]] = np.clip(boxes[...,[1,3]], 0, mask_HW[0]*4, dtype=boxes.dtype)
 
@@ -254,8 +265,8 @@ def refine_mask3(outputs:Tuple[np.ndarray, np.ndarray, np.ndarray]) -> \
     mask = mask>mask_thr
 
     # boxes: box_xyxy in feature input size
-    boxes[...,[0,1]] -= 20
-    boxes[...,[2,3]] += 20
+    boxes[...,[0,1]] -= 15
+    boxes[...,[2,3]] += 15
     boxes[...,[0,2]] = np.clip(boxes[...,[0,2]], 0, mask_HW[1]*4, dtype=boxes.dtype)
     boxes[...,[1,3]] = np.clip(boxes[...,[1,3]], 0, mask_HW[0]*4, dtype=boxes.dtype)
     box_for_mask = (boxes // 4).astype(int)

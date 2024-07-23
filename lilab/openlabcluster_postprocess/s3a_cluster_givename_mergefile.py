@@ -6,54 +6,49 @@ import argparse
 
 
 cluster_names_page = """
-Mutual contact opposite way side by side
-Rearing up when a rat researching opposite way
-Rearing up when being faced away
-Sniffing tail of a rearing rat
-Being sniffed from side
-Sniffing tail of a rearing-up rat
-Sniffing tail from behind
-Facing away and turing back to a rearing rat
-Sniffing and contact a rearing-up rat
-Following and sniffing tail
-Being sniffed tail side by side
-Pouncing or pinning
-Leaving from interaction
-Contact beside and head up
-Pouncing
-Sniffing tail and approaching of a rearing rat
-Rearing when a still rat facing away
-Being approached
-Being chased or pounced
-Mutual rearing with co-attention
-Chasing
-Being chased
-Mutual leaving back to back
-Facing away in front of a rat
-Being pounced
-Contact same way side by side
-Pinning
-Sniffing neck or contact a rearing rat
-Head contact face to face
-Facing away back to fack
-Being pounced
-Being pinned
-Rearing when being approached or sniffed tail
-Leaving or in front of a rat
-Mutual rearing
-Moving opposite way side by side
-Mutual contact head to head
-Mutual contact and rearing
-Rearing up when being approached or sniffed tail
-Sniffing tail side by side
-Sniffing and approaching of a rearing rat
-Rearing when being sniffed tail
-Facing away and back to a rearing-up rat
-Approaching
-Rearing when be sniffed back
-Mutual rearing and facing opposite way
-Facing away when a rat rearing
-Rearing when a rat facing away or leaving
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
 
 """
 

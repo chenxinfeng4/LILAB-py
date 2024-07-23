@@ -25,8 +25,8 @@ mask_colors = torch.Tensor(get_mask_colors())
 nclass = 2
 
 
-# class MyWorker(mmap_cuda.Worker):
-class MyWorker():
+class MyWorker(mmap_cuda.Worker):
+# class MyWorker():
     def compute(self, args):
         video_in, enable_dilate, maxlen = args
         self.cuda = getattr(self, 'cuda', 0)
@@ -74,7 +74,7 @@ if __name__ == '__main__':
     args_iterable = list(itertools.product(video_path, [enable_dilate], [args.maxlen]))
     num_gpus = min([torch.cuda.device_count()*2, len(args_iterable)])
     # init the workers pool
-    if False:
+    if True:
         mmap_cuda.workerpool_init(range(num_gpus), MyWorker)
         mmap_cuda.workerpool_compute_map(args_iterable)
     else:

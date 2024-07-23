@@ -14,6 +14,7 @@ import os
 dir = r'\\liying.cibr.ac.cn\Data_Temp\Chenxinfeng\multiview-large\TPH2KOxWT\tmp_video\frames_overlap'
 maximgsize = [1280, 800]
 
+# %%
 #maximgsize = [2400, 2400]
 # use cv2 to read the , image and then imshow
 def label(dir):

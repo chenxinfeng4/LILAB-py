@@ -88,7 +88,7 @@ def main(clippredpkl_file):
     rt.plot(dendrogram_result)
     plt.savefig(osp.join(osp.dirname(clippredpkl_file), "usv_dendrogram_circle.pdf"))
 
-    if False:
+    if True:
         # get the most center samples
         center_ids = np.array([get_the_centered(feat_data, np.where(kmeans_label==i)[0])
                                 for i in range(n_kmeans)])

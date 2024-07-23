@@ -103,4 +103,4 @@ if __name__ == "__main__":
     parser.add_argument("segpkl", type=str)
     parser.add_argument("--calibpkl", type=str, default=calibpkl)
     args = parser.parse_args()
-    convert(args.segpkl, calibpkl)
+    convert(args.segpkl, args.calibpkl)

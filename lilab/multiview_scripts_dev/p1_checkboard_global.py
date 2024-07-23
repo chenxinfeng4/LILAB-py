@@ -42,7 +42,7 @@ def convert(vfile, setupname, board_size, square_size):
     keypoint_xy = np.ones((len(img_crop_l), board_size[0]*board_size[1], 2), float) * np.nan
 
     for i, image in enumerate(img_crop_l):
-        dist = np.float64(intrinces_dict[str(i)]['dist']).flatten()
+        dist = np.float64(intrinces_dict[str(i)]['dist']).flatten() 
         mtx = np.float64(intrinces_dict[str(i)]['K'])
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         ret, corners = cv2.findChessboardCorners(gray, board_size, None)

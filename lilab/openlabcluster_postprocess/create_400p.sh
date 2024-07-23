@@ -14,11 +14,40 @@ total_rows=$(wc -l < .tmp)
 rows_per_variable=$(echo "scale=0; ($total_rows + 3) / 4" | bc)
 split -l "$rows_per_variable" .tmp files_
 
-cat files_ad | xargs -n 1 -P 2 -I {} ffmpeg -hwaccel_device 0 -hwaccel cuda -vcodec h264_cuvid -resize 400x400 -i {} {}.400p.mp4 -y &
-cat files_ab | xargs -n 1 -P 2 -I {} ffmpeg -hwaccel_device 1 -hwaccel cuda -vcodec h264_cuvid -resize 400x400 -i {} {}.400p.mp4 -y &
-cat files_ac | xargs -n 1 -P 2 -I {} ffmpeg -hwaccel_device 2 -hwaccel cuda -vcodec h264_cuvid -resize 400x400 -i {} {}.400p.mp4 -y &
-cat files_aa | xargs -n 1 -P 2 -I {} ffmpeg -hwaccel_device 3 -hwaccel cuda -vcodec h264_cuvid -resize 400x400 -i {} {}.400p.mp4 -y &
+cat files_ad | xargs -n 1 -P 2 -I {} ffmpeg -hwaccel_device 0 -hwaccel cuda -vcodec h264_cuvid -resize 400x400  -i {} {}.400p.mp4 -y &
+cat files_ab | xargs -n 1 -P 2 -I {} ffmpeg -hwaccel_device 1 -hwaccel cuda -vcodec h264_cuvid -resize 400x400  -i {} {}.400p.mp4 -y &
+cat files_ac | xargs -n 1 -P 2 -I {} ffmpeg -hwaccel_device 2 -hwaccel cuda -vcodec h264_cuvid -resize 400x400  -i {} {}.400p.mp4 -y &
+cat files_aa | xargs -n 1 -P 2 -I {} ffmpeg -hwaccel_device 3 -hwaccel cuda -vcodec h264_cuvid -resize 400x400  -i {} {}.400p.mp4 -y &
+#cat files_aa | xargs -n 1 -P 2 -I {} ffmpeg -hwaccel_device 3 -hwaccel cuda -vcodec h264_cuvid -resize 400x400 -b:v 500k -i {} {}.400p.mp4 -y &
 
 wait
 rename -f -E 's/(_[0-9])?_sktdraw_smoothed_foot.mp4./_1_/' *.400p.mp4
 rm .tmp files_a*
+
+# ls *sktdraw_smoothed_foot.mp4 > .tmp
+# total_rows=$(wc -l < .tmp)
+# rows_per_variable=$(echo "scale=0; ($total_rows + 3) / 4" | bc)
+# split -l "$rows_per_variable" .tmp files_
+
+# cat files_ad | xargs -n 1 -P 2 -I {} ffmpeg -hwaccel_device 0 -hwaccel cuda -vcodec h264_cuvid -resize 400x400 -b:v 500k -i {} -y {}.400p.mp4 &
+# cat files_ab | xargs -n 1 -P 2 -I {} ffmpeg -hwaccel_device 1 -hwaccel cuda -vcodec h264_cuvid -resize 400x400 -b:v 500k -i {} -y {}.400p.mp4 &
+# cat files_ac | xargs -n 1 -P 2 -I {} ffmpeg -hwaccel_device 2 -hwaccel cuda -vcodec h264_cuvid -resize 400x400 -b:v 500k -i {} -y {}.400p.mp4 &
+# cat files_aa | xargs -n 1 -P 2 -I {} ffmpeg -hwaccel_device 3 -hwaccel cuda -vcodec h264_cuvid -resize 400x400 -b:v 500k -i {} -y {}.400p.mp4 &
+
+# wait
+# rename -f -E 's/(_[0-9])?_sktdraw_smoothed_foot.mp4./_1_/' *.400p.mp4
+# rm .tmp files_a*
+
+# ls *sktdraw_smoothed_foot.mp4 > .tmp
+# total_rows=$(wc -l < .tmp)
+# rows_per_variable=$(echo "scale=0; ($total_rows + 3) / 4" | bc)
+# split -l "$rows_per_variable" .tmp files_
+
+# cat files_ad | xargs -n 1 -P 2 -I {} ffmpeg -hwaccel_device 0 -hwaccel cuda -vcodec h264_cuvid -resize 400x400 -y -b:v 500k -i {} {}.400p.mp4 &
+# cat files_ab | xargs -n 1 -P 2 -I {} ffmpeg -hwaccel_device 1 -hwaccel cuda -vcodec h264_cuvid -resize 400x400 -y -b:v 500k -i {} {}.400p.mp4 &
+# cat files_ac | xargs -n 1 -P 2 -I {} ffmpeg -hwaccel_device 2 -hwaccel cuda -vcodec h264_cuvid -resize 400x400 -y -b:v 500k -i {} {}.400p.mp4 &
+# cat files_aa | xargs -n 1 -P 2 -I {} ffmpeg -hwaccel_device 3 -hwaccel cuda -vcodec h264_cuvid -resize 400x400 -y -b:v 500k -i {} {}.400p.mp4 &
+
+# wait
+# rename -f -E 's/(_[0-9])?_sktdraw_smoothed_foot.mp4./_1_/' *.400p.mp4
+# rm .tmp files_a*

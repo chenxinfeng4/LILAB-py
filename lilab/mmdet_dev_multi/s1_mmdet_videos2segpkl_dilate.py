@@ -457,7 +457,6 @@ if __name__ == "__main__":
 
     num_gpus, videos_path, args_iterable, args = parse_args(parser)
     mmap_cuda.workerpool_init(range(num_gpus), MyWorker, args.config, args.checkpoint, args.maxlen)
-    
     detpkls = mmap_cuda.workerpool_compute_map(args_iterable)
     # worker = MyWorker(args.config, args.checkpoint, args.maxlen)
     # for args_ in args_iterable:

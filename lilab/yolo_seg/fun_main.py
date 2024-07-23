@@ -1,3 +1,4 @@
+# conda activate mmdet; python /home/liying_lab/chenxf/ml-project/LILAB-py/lilab/yolo_seg/fun_main.py
 import os
 import os.path as osp
 import numpy as np
@@ -8,10 +9,10 @@ from lilab.yolo_seg.plugin_voxelpred import dannce_predict_video_trt as dannce_m
 from lilab.yolo_seg.sockerServer import start_socketserver_background
 from lilab.yolo_seg.common_variable import (
     NFRAME, out_numpy_imgNKHW_shape, out_numpy_com2d_shape, out_numpy_previ_shape)
+
 from dannce import _param_defaults_dannce, _param_defaults_shared
 from dannce.interface_cxf import build_params
 from dannce.engine import processing_cxf as processing
-
 
 CALIBPKL = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/test/2022-10-13_15-08-49AWxCB.maskrcnn.matcalibpkl'
 dannce_project ='/home/liying_lab/chenxinfeng/DATA/dannce/demo/rat14_1280x800x9_rat_yolo_metric'
@@ -22,12 +23,9 @@ if __name__ == '__main__':
     ctx = multiprocessing.get_context('spawn')
     q = ctx.Queue(maxsize=(NFRAME-4))
     lock = ctx.Lock()
-    shared_array_imgNNHW = multiprocessing.Array('b', int(NFRAME*np.prod(out_numpy_imgNKHW_shape)))
-    shared_array_com2d = multiprocessing.Array('d', int(NFRAME*np.prod(out_numpy_com2d_shape)))
-    shared_array_previ = multiprocessing.Array('b', int(NFRAME*np.prod(out_numpy_previ_shape)))
-
-    # seg_main(shared_array_imgNNHW, shared_array_com2d, shared_array_previ, q, lock)
-    # while True: time.sleep(100)
+    shared_array_imgNNHW = multiprocessing.Array('b', int(NFRAME*np.prod(out_numpy_imgNKHW_shape)))  #np.uint8
+    shared_array_com2d = multiprocessing.Array('d', int(NFRAME*np.prod(out_numpy_com2d_shape)))      #np.float64
+    shared_array_previ = multiprocessing.Array('b', int(NFRAME*np.prod(out_numpy_previ_shape)))      #np.uint8
 
     process = ctx.Process(target=seg_main, args=(shared_array_imgNNHW, shared_array_com2d, shared_array_previ, q, lock))
     process.start()
@@ -46,11 +44,3 @@ if __name__ == '__main__':
                 shared_array_com2d,
                 shared_array_previ,
                 q, lock)
-
-    # process = ctx.Process(target=dannce_main, args=(params, ba_poses, model_smooth_matcalibpkl,
-    #             shared_array_imgNNHW,
-    #             shared_array_com2d,
-    #             shared_array_previ,
-    #             q, lock))
-    # process.start()
-    # process.join()

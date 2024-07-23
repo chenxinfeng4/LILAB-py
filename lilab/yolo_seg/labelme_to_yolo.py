@@ -12,10 +12,8 @@ from collections import OrderedDict
 
 import json
 import cv2
-import PIL.Image
   
 from sklearn.model_selection import train_test_split
-from labelme import utils
 
 
 class Labelme2YOLO(object):
@@ -53,6 +51,7 @@ class Labelme2YOLO(object):
                 for shape in data['shapes']:
                     label_set.add(shape['label'])
         
+        label_set = sorted(list(label_set))
         return OrderedDict([(label, label_id) \
                             for label_id, label in enumerate(label_set)])
     
@@ -236,12 +235,12 @@ class Labelme2YOLO(object):
                 f.write(yolo_obj_line)
 
     def _save_yolo_image(self, json_data, json_name, image_dir_path, target_dir):
-        img_name = json_name.replace('.json', '.png')
+        img_name = json_data['imagePath']
+        img_src = os.path.join(self._json_dir, img_name)
         img_path = os.path.join(image_dir_path, target_dir,img_name)
         
         if not os.path.exists(img_path):
-            img = utils.img_b64_to_arr(json_data['imageData'])
-            PIL.Image.fromarray(img).save(img_path)
+            shutil.copy(img_src, img_path)
         
         return img_path
     

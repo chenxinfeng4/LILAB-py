@@ -1,4 +1,5 @@
 #!/bin/bash
+#/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zhangyuanqing/ball/20231116/2023-11-16_17-14-23ball.mp4
 #/home/liying_lab/chenxinfeng/ml-project/LILAB-py/lilab/multiview_scripts_dev/p_calibration.sh $vfile carl
 #vfile='/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zhangyuanqing/202401_natural_social_interaction_group2/ball/BALL____2024-01-22_14-34-01.mp4'
 #/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zhangyuanqing/202401_natural_social_interaction_group2/0117_PHO_social/BALL____2024-01-17_14-19-23.mp4

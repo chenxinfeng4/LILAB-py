@@ -5,8 +5,7 @@ project_file=/home/liying_lab/chenxinfeng/DATA/ultralytics/work_dirs/yolov8n_seg
 source activate open-mmlab
 python /home/liying_lab/chenxinfeng/ml-project/LILAB-py/lilab/yolo_seg/convert_pt2onnx.py --weights ${project_file}.pt --input-HW 1632 2496
 
-source activate mmdet
-polygraphy inspect model ${project_file}.full.onnx
+siinn inspect ${project_file}.full.onnx
 
 # 2A
 source activate mmdet
