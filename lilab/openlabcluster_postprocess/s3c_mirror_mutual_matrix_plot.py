@@ -8,7 +8,8 @@ import re
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 import tqdm
-from lilab.openlabcluster_postprocess.s4_moseq_like_motif_plot import parsename
+from lilab.openlabcluster_postprocess.s1a_clipNames_inplace_parse import parse_name
+
 import argparse
 import logging
 logger = logging.getLogger("my_logger")
@@ -54,11 +55,10 @@ def main(clippredpklfile):
 
     ratblack_clip_parse = dict()
     ratwhite_clip_parse = dict()
-
-    for cluster_label, clipName in zip(cluster_labels, clipdata['clipNames']):
-        ratid = int('whiteFirst' in clipName)  #0=black, 1=white
-        vname, frameid = parsename(clipName)
-        if 'blackFirst' in clipName:
+    df_clipNames = parse_name(clipdata['clipNames'])
+    vnames, isBlacks, startFrames = df_clipNames['vnake'].values, df_clipNames['isBlack'].values, df_clipNames['startFrame'].values
+    for cluster_label, vname, isBlack, frameid in zip(cluster_labels, vnames, isBlacks, startFrames):
+        if isBlack:
             ratblack_clip_parse[(vname, frameid)] = cluster_label
         else:
             ratwhite_clip_parse[(vname, frameid)] = cluster_label

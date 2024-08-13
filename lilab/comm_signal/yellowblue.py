@@ -23,3 +23,17 @@ def yellowblue():
               (0.5, [0, 0, 0]), (1, [1, 0.8, 0.3])]
     cmap = LinearSegmentedColormap.from_list('my_cmap', colors)
     return cmap
+
+def yellowwhiteblue():
+    colors = [(0, [0, 0.75, 1]), 
+              (0.5, [1, 1, 1]), (1, [1, 0.8, 0.3])]
+    cmap = LinearSegmentedColormap.from_list('my_cmap', colors)
+    return cmap
+
+def yellowwhiteblue(): #(0.0, [0, 0.19, 0.25]),
+    colors = [ (0.0, [0, 0.37, 0.5]), (0.3, [0, 0.75, 1]), 
+              (0.45, [1, 1, 1]), (0.55, [1, 1, 1]),
+               (0.7, [1, 0.8, 0.3]), (0.95, [0.5, 0.4, 0.15]), (1, [0.25, 0.20, 0.07])]
+    cmap = LinearSegmentedColormap.from_list('my_cmap', colors)
+    cmap
+    return cmap

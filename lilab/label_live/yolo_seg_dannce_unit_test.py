@@ -4,12 +4,11 @@ import os.path as osp
 import numpy as np
 import multiprocessing
 import pickle
-from lilab.yolo_seg.t1_realtime_position import main as seg_main
-
-from lilab.yolo_seg.plugin_voxelpred import dannce_predict_video_trt as dannce_main
+from lilab.label_live.t1_realtime_position import main as seg_main
+from lilab.label_live.plugin_voxelpred import dannce_predict_video_trt as dannce_main
 from lilab.yolo_seg.sockerServer import start_socketserver_background
 from lilab.yolo_seg.common_variable import (
-    NFRAME, out_numpy_imgNKHW_shape, out_numpy_com2d_shape, out_numpy_previ_shape)
+    NFRAME, create_shared_arrays)
 
 from dannce import _param_defaults_dannce, _param_defaults_shared
 from dannce.interface_cxf import build_params
@@ -23,13 +22,12 @@ model_smooth_matcalibpkl = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/
 if __name__ == '__main__':
     ctx = multiprocessing.get_context('spawn')
     q = ctx.Queue(maxsize=(NFRAME-4))
-    lock = ctx.Lock()
-    shared_array_imgNNHW = multiprocessing.Array('b', int(NFRAME*np.prod(out_numpy_imgNKHW_shape)))  #np.uint8
-    shared_array_com2d = multiprocessing.Array('d', int(NFRAME*np.prod(out_numpy_com2d_shape)))      #np.float64
-    shared_array_previ = multiprocessing.Array('b', int(NFRAME*np.prod(out_numpy_previ_shape)))      #np.uint8
-
-    process = ctx.Process(target=seg_main, args=(shared_array_imgNNHW, shared_array_com2d, shared_array_previ, q, lock))
+    shared_array_imgNNHW, shared_array_com2d, shared_array_previ, shared_array_timecode = create_shared_arrays()
+    process = ctx.Process(target=seg_main, args=(shared_array_imgNNHW, shared_array_com2d, shared_array_previ, shared_array_timecode, q))
     process.start()
+
+    
+    lock = ctx.Lock()
     start_socketserver_background()
 
     os.chdir(dannce_project)
@@ -44,4 +42,5 @@ if __name__ == '__main__':
                 shared_array_imgNNHW,
                 shared_array_com2d,
                 shared_array_previ,
+                shared_array_timecode,
                 q, lock)

@@ -15,6 +15,7 @@ from sklearn.decomposition import PCA
 from matplotlib.patches import Ellipse
 from numpy import linalg
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from statsmodels.stats.multitest import multipletests
 #%%
 ##path
 project='/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/00_BehaviorAnalysis-seq2seq/SexAge/Day35'
@@ -27,7 +28,7 @@ sheet_name = '熊组合作D35_treat_info'
 # sheet_name = '熊组合作D75_treat_info'
 
 def load_data(project, sheet_name):
-    bhv_seqFile = get_assert_1_file(osp.join(project,'*_svm2all*_sequences.pkl'))
+    bhv_seqFile = get_assert_1_file(osp.join(project,'*_sequences.pkl'))
     bhvSeqs = pkl.load(open(bhv_seqFile,'rb'))
     #print(list(bhvSeqs.keys()))  #label: 0,1,2...,k_best
 
@@ -118,9 +119,9 @@ def define_group_freq(bhvSeqs, df_group, df_labnames):
     return freq_data, df_group_x_freq
 
 
-def plot_box_data(df_labnames, df_group_x_freq, hue_order, hue_legend, savefigpath=None):
+def plot_box_data(df_labnames, df_group_x_freq, hue_order, hue_legend, savefigpath=None, autosort=None):
     assert len(hue_order) == 2
-    if True:
+    if autosort is None:
         df_group_x_freq_A = df_group_x_freq[df_group_x_freq['group']==hue_order[0]]
         df_group_x_freq_B = df_group_x_freq[df_group_x_freq['group']==hue_order[1]]
         behlabel_unique = df_group_x_freq_A['behlabel'].unique()
@@ -133,13 +134,13 @@ def plot_box_data(df_labnames, df_group_x_freq, hue_order, hue_legend, savefigpa
         behlabel_sort = behlabel_unique[fc_inds]
         lab_names_sort = lab_names_unique[fc_inds]
     else:
-        behlabel_sort =  np.sort(df_labnames['behlabel'].values)
-        lab_names_sort = df_group_x_freq_A['lab_names'].values
+        behlabel_sort =  autosort['behlabel'].values
+        lab_names_sort = autosort['lab_names'].values
 
     plt.figure(figsize = (15,15))
     sns.boxplot(y='lab_names', x='freq', hue='group', 
                 hue_order=hue_order,
-                data=df_group_x_freq,
+                data= df_group_x_freq,
                 width=0.45,
                 order=lab_names_sort,
                 orient='h')
@@ -150,22 +151,10 @@ def plot_box_data(df_labnames, df_group_x_freq, hue_order, hue_legend, savefigpa
     plt.ylabel('Label', fontsize=20)
     leg = plt.legend(fontsize=14)
     for i, text in enumerate(hue_legend): leg.get_texts()[i].set_text(text)
-    #进行anova检验
-    # plt.savefig(osp.join(project,'DAY55_boxplot_MM_vs_FF2.pdf'), bbox_inches='tight')
-    # pairs = [[(label, hue_order[0]), (label, hue_order[1])] for label in lab_names_sort]
-    # annot = Annotator(plt.gca(), pairs, plot='barplot',
-    #                 x='freq', y='lab_names', hue='group', 
-    #                 hue_order=hue_order, 
-    #                 # orient='h', 
-    #                 hide_non_significant=True,
-    #                 order=lab_names_sort,
-    #                 data=df_group_x_freq)
-
-    # annot.configure(test='t-test_ind')
-    # annot.apply_test()
-    # annot.annotate()
 
     xcolors=[]
+    tPs = []
+    signs = []
     for behlabel in behlabel_sort:
         # behlabel = behlabel_sort[i]
         AB = df_group_x_freq[df_group_x_freq['behlabel']==behlabel]
@@ -175,11 +164,16 @@ def plot_box_data(df_labnames, df_group_x_freq, hue_order, hue_legend, savefigpa
         B_freq = np.sort(B['freq'].values)
         # A_freq = A_freq[1:-1]
         # B_freq = B_freq[1:-1]
-        # t,p = stats.mannwhitneyu(A['freq'], B['freq'])
-        t,p = stats.ttest_ind(A_freq, B_freq)
-        if p<0.05 and A_freq.mean()>B_freq.mean():
+        t,p = stats.mannwhitneyu(A['freq'], B['freq'])
+        # t,p = stats.ttest_ind(A_freq, B_freq)
+        signs.append(A_freq.mean() - B_freq.mean())
+        tPs.append(p)
+
+    sig_ifs,tPs2,_,_=multipletests(tPs,method='fdr_bh')
+    for p, sign in zip(tPs2, signs):
+        if p<0.05 and sign>0:
             xcolors.append('blue')
-        elif p<0.05 and A_freq.mean()<B_freq.mean():
+        elif p<0.05 and sign<0:
             xcolors.append('brown')
         else:
             xcolors.append('black')
@@ -188,6 +182,77 @@ def plot_box_data(df_labnames, df_group_x_freq, hue_order, hue_legend, savefigpa
     for kbi in range(len(behlabel_sort)):
        ax.get_yticklabels()[kbi].set_color(xcolors[kbi])
 
+    plt.ylim(plt.ylim()[::-1])
+        
+    if savefigpath:
+        plt.savefig(savefigpath, bbox_inches='tight')
+
+
+
+def plot_bar_data(df_labnames, df_group_x_freq, hue_order, hue_legend, savefigpath=None, autosort=None):
+    assert len(hue_order) == 2
+    if autosort is None:
+        df_group_x_freq_A = df_group_x_freq[df_group_x_freq['group']==hue_order[0]]
+        df_group_x_freq_B = df_group_x_freq[df_group_x_freq['group']==hue_order[1]]
+        behlabel_unique = df_group_x_freq_A['behlabel'].unique()
+        lab_names_unique = df_group_x_freq_A['lab_names'].unique()
+        fold_changes = [df_group_x_freq_A[df_group_x_freq_A['behlabel']==i]['freq'].mean() /
+                        df_group_x_freq_B[df_group_x_freq_B['behlabel']==i]['freq'].mean() 
+                            for i in behlabel_unique]
+        fold_changes = np.array(fold_changes)
+        fc_inds=np.argsort(fold_changes)[::-1]
+        behlabel_sort = behlabel_unique[fc_inds]
+        lab_names_sort = lab_names_unique[fc_inds]
+    else:
+        behlabel_sort =  autosort['behlabel'].values
+        lab_names_sort = autosort['lab_names'].values
+
+    plt.figure(figsize = (15,15))
+    sns.barplot(y='lab_names', x='freq', hue='group', 
+                hue_order=hue_order,
+                data= df_group_x_freq,
+                errorbar='se',
+                width=0.6,
+                order=lab_names_sort,
+                orient='h')
+
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    plt.xlabel('Percentage', fontsize=20)
+    plt.ylabel('Label', fontsize=20)
+    leg = plt.legend(fontsize=14)
+    for i, text in enumerate(hue_legend): leg.get_texts()[i].set_text(text)
+    xcolors=[]
+    tPs = []
+    signs = []
+    for behlabel in behlabel_sort:
+        # behlabel = behlabel_sort[i]
+        AB = df_group_x_freq[df_group_x_freq['behlabel']==behlabel]
+        A = AB[AB['group']==hue_order[0]]
+        B = AB[AB['group']==hue_order[1]]
+        A_freq = np.sort(A['freq'].values)
+        B_freq = np.sort(B['freq'].values)
+        # A_freq = A_freq[1:-1]
+        # B_freq = B_freq[1:-1]
+        t,p = stats.mannwhitneyu(A['freq'], B['freq'])
+        # t,p = stats.ttest_ind(A_freq, B_freq)
+        signs.append(A_freq.mean() - B_freq.mean())
+        tPs.append(p)
+
+    sig_ifs,tPs2,_,_=multipletests(tPs,method='fdr_bh')
+    for p, sign in zip(tPs2, signs):
+        if p<0.05 and sign>0:
+            xcolors.append('blue')
+        elif p<0.05 and sign<0:
+            xcolors.append('brown')
+        else:
+            xcolors.append('black')
+    
+    ax = plt.gca()
+    for kbi in range(len(behlabel_sort)):
+       ax.get_yticklabels()[kbi].set_color(xcolors[kbi])
+
+    plt.ylim(plt.ylim()[::-1])
         
     if savefigpath:
         plt.savefig(savefigpath, bbox_inches='tight')

@@ -4,8 +4,8 @@ import pickle
 import numpy as np
 import argparse
 #calibpkl = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/ball/2022-04-29_17-58-45_ball.calibpkl'
-matpkl = '/mnt/liying.cibr.ac.cn_Data_Temp/marmoset_camera3_cxf/2024-4-12-marmoset/2024-04-12_10-14-29_EdwardxLisa.matpkl'
-
+matpkl = '/mnt/liying.cibr.ac.cn_Data_Temp/marmoset_camera3_cxf/2024-4-13-singlemarmoset/outdir/06/output.matpkl'
+#%%
 
 def convert(matpkl):  
     data=pickle.load(open(matpkl, "rb"))

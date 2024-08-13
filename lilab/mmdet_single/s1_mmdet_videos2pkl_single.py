@@ -1,5 +1,6 @@
-# python -m lilab.mmdet_dev.s1_mmdet_videos2pkl_trt  /mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/liwei/tSNE.mp4  --config /home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_ratface_lw.py
-# python -m lilab.mmdet_single.s1_mmdet_videos2pkl_single  A/B/C
+# python -m lilab.mmdet_single.s1_mmdet_videos2pkl_single  /mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/liwei/tSNE.mp4  --config /home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_ratface_lw.py
+# python -m lilab.mmdet_single.s1_mmdet_videos2pkl_single '2024-05-24 09-14-51-A2.mp4' --config /home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_onemice_816x512.py
+#   A/B/C
 import argparse
 import glob
 import os
@@ -37,7 +38,7 @@ video_path = [
 config = "/home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_onemice_816x512.py"
 # config = '/home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_bwrat_816x512_cam9_oldrat.py'
 
-iview, crop_xywh = 0, [513, 75, 790, 700]
+crop_xywh = [0, 0, 1700, 1080]
 def prefetch_img_metas(cfg, ori_wh):
     w, h = ori_wh
     cfg.data.test.pipeline[0].type = "LoadImageFromWebcam"
@@ -103,8 +104,8 @@ def create_video(q:Queue, vfile_out:str, fps, cuda):
     vid_out.release()
 
 
-# class MyWorker(mmap_cuda.Worker):
-class MyWorker():
+class MyWorker(mmap_cuda.Worker):
+# class MyWorker():
     def __init__(self, config, checkpoint, maxlen):
         super().__init__()
         self.cuda = getattr(self, "cuda", 0)
@@ -116,11 +117,6 @@ class MyWorker():
 
     def compute(self, args):
         video = args
-        
-        out_pkl = osp.splitext(video)[0] + f"_{iview}.pkl"
-        if os.path.exists(out_pkl):
-            print("Skipping:", osp.basename(out_pkl))
-            return out_pkl
         
         with torch.cuda.device(self.cuda), torch.no_grad():
             model = create_wrap_detector(self.checkpoint, self.config, "cuda")
@@ -155,8 +151,7 @@ class MyWorker():
             maxlen = min([len(vid), self.maxlen]) if self.maxlen else len(vid)
 
             for i, frame in zip(tqdm.trange(maxlen, position=self.id, desc=f"[{self.id}]"), vid):
-                if i>1000:
-                    break
+                # if i>1000:break
                 data = process_img(frame, img_metas)
                 result = model(return_loss=False, rescale=True, **data)
 
@@ -225,9 +220,9 @@ if __name__ == "__main__":
     print("num_gpus:", num_gpus)
     # init the workers pool
     
-    # mmap_cuda.workerpool_init(range(num_gpus), MyWorker, args.config, args.checkpoint, args.maxlen)
-    # detpkls = mmap_cuda.workerpool_compute_map(args_iterable)
+    mmap_cuda.workerpool_init(range(num_gpus), MyWorker, args.config, args.checkpoint, args.maxlen)
+    detpkls = mmap_cuda.workerpool_compute_map(args_iterable)
 
-    worker = MyWorker(args.config, args.checkpoint, args.maxlen)
-    for args in args_iterable:
-        worker.compute(args)
+    # worker = MyWorker(args.config, args.checkpoint, args.maxlen)
+    # for args in args_iterable:
+    #     worker.compute(args)

@@ -11,12 +11,12 @@ import ffmpegcv
 from lilab.cameras_setup import get_view_xywh_wrapper
 import random
 
-numframe_to_extract = 100
+numframe_to_extract = 200
 # numframe_to_extract = 100
-maxlength = 3000 #前3000zhen
-# maxlength = 1000
+maxlength = 10800 #前3000zhen
+# maxlength = 10800
 frame_dir = "outframes"
-frame_min_interval = 1  #间隔多少zhen
+frame_min_interval = 12  #间隔多少zhen
 
 
 

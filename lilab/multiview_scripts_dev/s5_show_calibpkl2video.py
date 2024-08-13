@@ -14,7 +14,7 @@ thr = 0.55#p value threshold
 
 pred_colors = [[0,0,255],[233,195,120],[0,215,255]] #BGR
 ba_colors = [[0,255,0],[234,100,202],[255,255,0]]
-resize = (1536, 960)
+resize = (640,640)
 axis_length = 220  # length of axis (mm)
 key_xyz_str_format = '{:4.1f},{:4.1f},{:4.1f}'
 

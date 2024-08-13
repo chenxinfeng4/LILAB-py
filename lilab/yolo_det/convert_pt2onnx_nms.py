@@ -38,7 +38,7 @@ def singleton(outputs) -> Tuple[np.ndarray, np.ndarray]:
     return boxes0, scores_max
 
 
-def nms(outputs) -> Tuple[np.ndarray, np.ndarray]:
+def nms(outputs, score_threshold=0.4) -> Tuple[np.ndarray, np.ndarray]:
     """
     Input: boxes, scores, anchors, strides_vector. type=[torch.Tensor | np.ndarray]
     Output: boxes_, scores_
@@ -62,7 +62,7 @@ def nms(outputs) -> Tuple[np.ndarray, np.ndarray]:
     boxes0 = np.empty((nbatch, nclass), dtype=object)
     scores0 = np.empty((nbatch, nclass), dtype=object)
     num_ins = np.zeros((nbatch, nclass), dtype=int)
-    score_threshold = 0.4
+    
     threshold = 0.4
 
     for i,j in itertools.product(range(nbatch), range(nclass)):

@@ -4,6 +4,7 @@ vdir='/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/zyq_to_dzy/20221116/solo'  # 
 vdir='/mnt/liying.cibr.ac_cn_Data_Temp/multiview_9/zyq_to_dzy/20221123/solo'
 vcalib=`ls /mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/dzy_oyy_ball/checked/0328-0330/solo/*.calibpkl`    # 小球矫正的文件
 volsize=210
+#vdir=/mnt/liying.cibr.ac_cn_Data_Temp/multiview_9/oyy/test_singlerat2022-11-24_17-08-23_baseline_rat1.mp4
 ##  volsize for rats
 # |         | Male | Female |
 # | ------- | ---- | ------ |

@@ -9,7 +9,7 @@ import numpy as np
 import scipy.io as sio
 from scipy.spatial.distance import pdist
 
-from lilab.mmpose.s3_voxelpkl_2_matcalibpkl import matlab_pose_to_cv2_pose
+#from lilab.mmpose.s3_voxelpkl_2_matcalibpkl import matlab_pose_to_cv2_pose
 
 # %%
 annofile = '/home/liying_lab/chenxinfeng/DATA/dannce/data/bw_rat_1280x800x9_2022-10-10_SHANK3_voxel/anno.mat'

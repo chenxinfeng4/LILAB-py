@@ -7,55 +7,15 @@ import argparse
 
 
 
+
+
 merge_names_page = """
-1	Mutual contact opposite way side by side
-2	Rearing up when a rat researching opposite way
-3	Rearing up when being faced away
-4	Sniffing tail of a rearing rat
-5	Being sniffed from side
-6	Sniffing tail of a rearing-up rat
-7	Sniffing tail from behind
-8	Facing away and turing back to a rearing rat
-9	Sniffing and contact a rearing-up rat
-10	Following and sniffing tail
-11	Being sniffed tail side by side
-12	Pouncing or pinning
-13	Leaving from interaction
-14	Contact beside and head up
-15	Pouncing
-16	Sniffing tail and approaching of a rearing rat
-17	Rearing when a still rat facing away
-18	Being approached
-19	Being chased or pounced
-20	Mutual rearing with co-attention
-21	Chasing
-22	Being chased
-23	Mutual leaving back to back
-24	Facing away in front of a rat
-25	Being pounced
-26	Contact same way side by side
-27	Pinning
-28	Sniffing neck or contact a rearing rat
-29	Head contact face to face
-30	Facing away back to fack
-31	Being pounced
-32	Being pinned
-33	Rearing when being approached or sniffed tail
-34	Leaving or in front of a rat
-35	Mutual rearing
-36	Moving opposite way side by side
-37	Mutual contact head to head
-38	Mutual contact and rearing
-39	Rearing up when being approached or sniffed tail
-40	Sniffing tail side by side
-41	Sniffing and approaching of a rearing rat
-42	Rearing when being sniffed tail
-43	Facing away and back to a rearing-up rat
-44	Approaching
-45	Rearing when be sniffed back
-46	Mutual rearing and facing opposite way
-47	Facing away when a rat rearing
-48	Rearing when a rat facing away or leaving
+1	6	10	11	12	15	16	19	28	29	31	32	33	36	38	42	CloseNon
+3	5	20	23	34	39	MutInt										
+2	13	14	40	ProHig												
+18	21	25	27	43	ProLow											
+9	17	22	30	35	41	ReaHig										
+4	7	8	24	26	37	ReaLow										
 
 """
 

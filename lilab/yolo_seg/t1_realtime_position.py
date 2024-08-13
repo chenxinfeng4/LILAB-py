@@ -6,11 +6,9 @@ from torch2trt import TRTModule
 import numpy as np
 from lilab.yolo_seg.utilities import *
 from itertools import product
-from typing import Tuple
 from lilab.cameras_setup import get_view_xywh_wrapper
 from multiprocessing.sharedctypes import SynchronizedArray
 from multiprocessing import Queue
-from multiprocessing.synchronize import Lock
 from lilab.yolo_seg.common_variable import (
     NFRAME, out_numpy_imgNKHW_shape, out_numpy_com2d_shape, out_numpy_previ_shape)
 
@@ -27,9 +25,9 @@ engine='/home/liying_lab/chenxinfeng/DATA/ultralytics/work_dirs/yolov8n_seg_640_
 
 # vid.ffmpeg_cmd = vid.ffmpeg_cmd.replace('ffmpeg ', 'ffmpeg -re ')
 def get_vidin():
-    vid = ffmpegcv.VideoCaptureNV('/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/test/2022-10-13_15-08-49AWxCB_5min.mp4',
-                            pix_fmt='gray')
-    # vid = ReadLiveLast(ffmpegcv.VideoCaptureStreamRT, 'rtsp://10.50.60.6:8554/mystream', pix_fmt='gray')
+    # vid = ffmpegcv.VideoCaptureNV('/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/test/2022-10-13_15-08-49AWxCB_5min.mp4',
+    #                         pix_fmt='gray')
+    vid = ReadLiveLast(ffmpegcv.VideoCaptureStreamRT, 'rtsp://10.50.60.6:8554/mystream_9cam', pix_fmt='gray')
     vidout = ffmpegcv.VideoWriterStreamRT('rtsp://10.50.60.6:8554/mystream_preview', pix_fmt='gray')
     return vid, vidout
 
@@ -46,8 +44,8 @@ def mid_gpu(trt_model, img_NCHW:np.ndarray):
 def main(shared_array_imgNNHW:SynchronizedArray,
          shared_array_com2d:SynchronizedArray,
          shared_array_previ:SynchronizedArray,
-         q:Queue, lock:Lock):
-    numpy_imgNNHW = np.frombuffer(shared_array_imgNNHW.get_obj(), dtype=np.uint8).reshape((NFRAME,*out_numpy_imgNKHW_shape))
+         q:Queue):
+    numpy_imgNKHW = np.frombuffer(shared_array_imgNNHW.get_obj(), dtype=np.uint8).reshape((NFRAME,*out_numpy_imgNKHW_shape))
     numpy_com2d = np.frombuffer(shared_array_com2d.get_obj(), dtype=np.float64).reshape((NFRAME, *out_numpy_com2d_shape))
     numpy_previ = np.frombuffer(shared_array_previ.get_obj(), dtype=np.uint8).reshape((NFRAME, *out_numpy_previ_shape))
 
@@ -73,13 +71,22 @@ def main(shared_array_imgNNHW:SynchronizedArray,
         count_range = range(len(vid)) if hasattr(vid, 'count') and vid.count else range(400000)
         nview, nclass = scores.shape
         crop_xy = np.array(get_view_xywh_wrapper('carl'))[:,:2]  #(nview,2)
-
         crop_xy_ = np.concatenate([crop_xy, crop_xy], axis=-1)  #(nview,4)
 
+        def pre_cpu(vid, vidout):
+            ret, frame = vid.read()
+            if not ret: exit(0)
+            frame = np.squeeze(frame)
+            frame_small = np.ascontiguousarray(frame[::2,::2])
+            img_H0W0 = frame_small.reshape(*input_shape)
+            frame_preview2 = np.ascontiguousarray(frame[0:pannelWH[1]:2, 0:pannelWH[0]*2:2])
+            # vidout.write(frame_preview2)
+            return frame, img_H0W0
+        
         # outvid = ffmpegcv.VideoWriter(outvfile, None, 30)
         def post_cpu(frame, outputs, queue_idx:int):
             idx = queue_idx % NFRAME
-            canvas = numpy_imgNNHW[idx]
+            canvas = numpy_imgNKHW[idx]  #canvas: masked image from multi cameras, (nview, nanimal, H, W)
             assert canvas.shape == (nview, nclass, *pannelWH[::-1])
             canvas[:] = 0
             coms_real_2d = numpy_com2d[idx]
@@ -99,16 +106,6 @@ def main(shared_array_imgNNHW:SynchronizedArray,
 
             q.put(idx)
             return canvas, coms_real_2d
-
-        def pre_cpu(vid, vidout):
-            ret, frame = vid.read()
-            if not ret: exit(0)
-            frame = np.squeeze(frame)
-            frame_small = np.ascontiguousarray(frame[::2,::2])
-            img_H0W0 = frame_small.reshape(*input_shape)
-            frame_preview2 = np.ascontiguousarray(frame[0:pannelWH[1]:2, 0:pannelWH[0]*2:2])
-            # vidout.write(frame_preview2)
-            return frame, img_H0W0
 
         iter_process = tqdm.tqdm(count_range, 
                                         desc='worker[{}]'.format(self_id),

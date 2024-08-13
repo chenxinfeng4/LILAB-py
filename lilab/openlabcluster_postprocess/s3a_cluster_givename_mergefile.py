@@ -6,49 +6,47 @@ import argparse
 
 
 cluster_names_page = """
-1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33
-34
-35
-36
-37
-38
-39
-40
-41
-42
-43
+Rearing and being approached_ReaLow
+Rearing and being sniffed tail or approached_ReaLow
+Sniffing back of a rearing rat_ProLow
+Slow chasing_ProHig
+Mutual rearing3_CloseNon
+Sniffing back of a rat_ProLow
+Fast chasing_ProHig
+Back to back_CloseNon
+Mutual head sniffing_MutInt
+Rearing and being left_CloseNon
+Mutual chasing and turning around_MutInt
+Being pounced from front_ReaHig
+Pouncing_ProHig
+Sniffing tail of a rearing rat_ProLow
+Mutual approahcing face to face_MutInt
+Mutual rearing face to face_CloseNon
+Being pressed_ReaHig
+Rearing and being approached or faced from behind_ReaLow
+Approaching and sniffing tail_ProLow
+Behind a rat_CloseNon
+Mutual rearing with head sniff_CloseNon
+Mutual sniffing tail side by side_MutInt
+Following a rat_ProHig
+Rearing and being sniffed_ReaLow
+Pinning from side_ProHig
+Rearing and a rat facing away_CloseNon
+Facing away side by side _CloseNon
+Being sniffed head_ReaLow
+Approaching a rearing rat_ProLow
+Being slow chased_ReaHig
+Mutual rearing2_CloseNon
+Sniffing tail and behind a rat_ProLow
+Being approached_ReaLow
+Facing away and a rat rearing_CloseNon
+Being fast chased_ReaHig
+Mutual rearing_CloseNon
+Facing away and a rat rearing2_CloseNon
+Being sniffed back_ReaLow
+Facing away and a rat rearing3_CloseNon
+Being pounced and pressed_ReaHig
+
 
 """
 

@@ -46,6 +46,10 @@ class CanvasReaderPannel(object):
             vid = ffmpegcv.VideoReaderNV(video_path,
                                             gpu = gpu,
                                             pix_fmt='gray')
+        elif len(views_xywh)==5:
+            vid = ffmpegcv.VideoReaderNV(video_path,
+                                            gpu = gpu,
+                                            pix_fmt='gray')
         else:
             raise NotImplementedError
         
@@ -56,7 +60,8 @@ class CanvasReaderPannel(object):
         self.nclass = 1
 
     def read(self):
-        ret, frame = self.vid.read_gray()
+        #ret, frame = self.vid.read_gray()
+        ret, frame = self.vid.read()
         if not ret: return ret,[]
         # frame = frame.copy()
         imgpannels = [frame[y:y+h, x:x+w] for x, y, w, h in self.views_xywh]
@@ -121,6 +126,7 @@ class CanvasReaderPannelMask(object):
         self.nview = len(views_xywh)
         self.pkl_data = pkl_data
         self.nclass = len(pkl_data['segdata'][0][0][1])
+        #self.iframe = self.iframe
         self.nframe = len(pkl_data['segdata'][0])
         self.h_w = h_w
         self.dilate = dilate

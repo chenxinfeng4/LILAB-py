@@ -11,7 +11,7 @@ from lilab.cameras_setup import get_view_xywh_wrapper
 from lilab.paralleltool.gpuquery import get_gpu
 
 pkl_file = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/clips/2022-04-25_15-44-04_bwt_wwt_00time_0.kptpkl'
-
+setupname = 'carl'
 iview = 0
 ngpu = 4
 
@@ -45,10 +45,10 @@ def plot_video(video, crop_xywh, pts2d_black, pts2d_white, iview, postfix):
     s.release()
 
 
-def main(kptpkl, iview, postfix, maxlen=None):
+def main(kptpkl, iview, postfix, maxlen=None, setupname='carl'):
     pkldata = pickle.load(open(kptpkl, 'rb'))
     video = osp.dirname(osp.abspath((kptpkl))) + '/' + osp.basename(kptpkl).split('.')[0] + '.mp4'
-    views = get_view_xywh_wrapper('carl')
+    views = get_view_xywh_wrapper(setupname)
     crop_xywh = views[iview]
     kpt_rats_xy = pkldata['keypoints_xy_ba'][iview]
     pts2d_black = kpt_rats_xy[:, 0, :, :]
@@ -66,5 +66,7 @@ if __name__ == '__main__':
     parser.add_argument('--iview', type=int, default=iview, help='view index')
     parser.add_argument('--postfix', type=str, default='', help='postfix of the output video')
     parser.add_argument('--maxlen', type=int, default=None, help='maxlen of the video')
+    parser.add_argument('--setupname', type=str, default='carl', help='setupname of the video')
+    parser.add_argument('--gpu', type=int, default=0, help='gpu index')
     args = parser.parse_args()
-    main(args.kptpkl, args.iview, args.postfix, args.maxlen)
+    main(args.kptpkl, args.iview, args.postfix, args.maxlen, args.setupname)

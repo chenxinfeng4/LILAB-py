@@ -1,6 +1,6 @@
 #!/bin/bash
 project_file=/home/liying_lab/chenxinfeng/DATA/ultralytics/work_dirs/yolov8n_seg_640_ratbw/weights/last
-
+project_file=/home/liying_lab/chenxinfeng/DATA/ultralytics/work_dirs/yolov8n_seg_640_ratbw_metric/weights/last
 # 1 to ONNX
 source activate open-mmlab
 python /home/liying_lab/chenxinfeng/ml-project/LILAB-py/lilab/yolo_seg/convert_pt2onnx.py --weights ${project_file}.pt --input-HW 1200 1920

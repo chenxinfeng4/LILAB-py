@@ -23,7 +23,7 @@ import argparse
 clippredpkl_file = "/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/00_BehaviorAnalysis-seq2seq/SexAge/DayAll20230828/All-DecSeq/FWPCA0.00_P100_en3_hid30_epoch300-decSeqPC0.9_svm2allAcc0.96_kmeansK2use-43_fromK1-20_K100.clippredpkl"
 
 umap_mask_threshold = 0.5
-nbin = 100
+nbin = 150
 
 #%%
 def center_of_mass(map2D: np.ndarray):

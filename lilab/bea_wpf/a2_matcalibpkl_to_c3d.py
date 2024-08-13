@@ -32,8 +32,11 @@ def convert_kpt_3d_to_c3d(kpt_3d_orig, out_c3d_file):
         point_labels_all = point_labels
     elif nanimal==2:
         point_labels_all = point_labels + ['W_'+l for l in point_labels]
+    elif nanimal==3:
+        point_labels_all = point_labels + ['W_'+l for l in point_labels] + ['D_'+l for l in point_labels]
+        print('Warning: nanimal=%d' % nanimal)
     else:
-        raise ValueError
+        raise 'Error: nanimal=%d' % nanimal
 
     kpt_3d_dim5 = np.zeros((kpt_3d_bea_full.shape[0], kpt_3d_bea_full.shape[1], 5), dtype=float)
     kpt_3d_dim5[...,:3] = kpt_3d_bea_full

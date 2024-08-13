@@ -14,20 +14,14 @@ matpkl = '/mnt/liying.cibr.ac.cn_Data_Temp/marmoset_camera3_cxf/2024-2-21_marmos
 calibpkl = '/mnt/liying.cibr.ac.cn_Data_Temp/marmoset_camera3_cxf/2024-1-31_sync/ballmove/ball_move_cam1.aligncalibpkl'
 
 # %%
-def triangulate_all_pairs_short(views, landmarks, camera_params):
-    
+def triangulate_all_pairs_short(views, landmarks, camera_params): 
     n_cameras = len(views)
-
-    # to speed things up
     poses = []
-    landmarks_undist_withnan = {}
     for j in range(n_cameras):
         K,R,t,dist = unpack_camera_params(camera_params[j])
         poses.append((K,R,t,dist))
         points = landmarks[views[j]]
         landmarks_undist_withnan[views[j]] = undistort_points(points, K, dist)
-    
-
     p3d_allview_withnan = []
     for j1, j2 in itertools.combinations(range(n_cameras), 2):
         K1,R1,t1,dist1 = poses[j1]
@@ -36,19 +30,13 @@ def triangulate_all_pairs_short(views, landmarks, camera_params):
         pts2 = landmarks_undist_withnan[views[j2]]
         p3d = triangulate(pts1, pts2, K1, R1, t1, None, K2, R2, t2, None)
         p3d_allview_withnan.append(p3d)
-    p3d_allview_withnan = np.array(p3d_allview_withnan) #nviewpairs_nsample_xyz
-        
+    p3d_allview_withnan = np.array(p3d_allview_withnan)       
     return p3d_allview_withnan
-
-
 def build_input_short(views, poses, landmarks):
-    # camera parameters
     camera_params = [pack_camera_params(poses[view]['K'], poses[view]['R'],
                                         poses[view]['t'], poses[view]['dist']) 
                           for view in views]
     camera_params = np.float64(camera_params)
-
-    # triangulate 3D positions from all possible pair of views
     p3d_allview_withnan = triangulate_all_pairs_short(views, landmarks, camera_params)
     p3d = np.nanmedian(p3d_allview_withnan, axis=0) #nsample_xyz
     return p3d

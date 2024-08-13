@@ -1,3 +1,4 @@
+# from lilab.comm_signal.detectTTL import detectTTL
 import numpy as np
 
 def detectTTL(data_1v:np.ndarray, adjacent_type:str=None, adjacent_value:float=0, fs=1):
@@ -51,4 +52,7 @@ def detectTTL(data_1v:np.ndarray, adjacent_type:str=None, adjacent_value:float=0
     tDown_1y = tDown_1y[~indmerge_full[1:]]
     tDur_1y = tDown_1y - tRise_1y
 
-    return tRise_1y/fs, tDur_1y/fs
+    if fs==1:
+        return tRise_1y.astype(int), tDur_1y.astype(int)
+    else:
+        return tRise_1y/fs, tDur_1y/fs

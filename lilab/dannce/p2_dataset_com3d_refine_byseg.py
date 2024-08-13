@@ -10,7 +10,7 @@ from lilab.mmpose_dev.s3_voxelpkl_2_matcalibpkl import matlab_pose_to_cv2_pose
 from lilab.multiview_scripts_dev.s6_calibpkl_predict import CalibPredict
 import argparse
 
-voxel_origin_pklfile='/home/liying_lab/chenxinfeng/DATA/dannce/data/bw_rat_1280x800x9_2022-4-25_wt_voxel_anno_dannce.pkl',
+voxel_origin_pklfile='/home/liying_lab/chenxinfeng/DATA/dannce/data/bw_rat_1280x800x9_2022-4-25_wt_voxel_anno_dannce.pkl'
 
 
 def convert(voxel_origin_pklfiles):

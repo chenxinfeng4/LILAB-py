@@ -6,48 +6,50 @@ import argparse
 
 
 cluster_names_page = """
-1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33
-34
-35
-36
-37
-38
-39
-40
-41
-42
+Behind a rat
+Chasing
+Contact when both rearing
+Being sniffed tail from back
+Mutual crossing side by side
+Behind a rearing rat
+Rearing when being sniffed tail
+Rearing up when being faced or sniffed
+Being pounced or pinned
+Facing away or leaving a rearing rat
+Rearing when a rat facing away1
+Rearing when a rat facing away2
+Pouncing2
+Pouncing
+Back to back with a distance
+Back to back close
+Being attacked
+Stay behind a rearing rat
+Both rearing3
+Mutual head contact
+Sniffing tail of a rearing rat2
+Being pinned
+Mutual contact side by side2
+Being pressed from back
+Approaching
+Being approached
+Sniffing tail of a rearing rat
+Mutual leaving back to back
+Both rearing2
+Being pounced
+Both rearing1
+Both rearing4
+Facing away of a rearing rat2
+Mutual contact side by side
+Being chased
+Rearing when a rat facing away3
+Rearing when being approached
+Facing away of a rearing rat
+Mutual head contact face to face
+Pinning
+Being pounced or pressed
+Both rearing5
+Approaching or sniffing tail of a rearing rat
+
 """
 
 

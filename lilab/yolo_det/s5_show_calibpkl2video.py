@@ -10,7 +10,7 @@ import argparse
 from lilab.multiview_scripts_dev.s6_calibpkl_predict import CalibPredict
 
 matfile = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/ball/2022-04-29_17-58-45_ball.matcalibpkl'
-thr = 0.3#p value threshold
+thr = 0.1#p value threshold
 
 pred_colors = [[0,0,255],[233,195,120],[0,215,255]] #BGR
 ba_colors = [[0,255,0],[0,255,255],[255,255,0]]

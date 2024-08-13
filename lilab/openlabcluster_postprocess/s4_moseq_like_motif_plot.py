@@ -182,8 +182,8 @@ def plot_an_axes(ax:plt.Axes, plan_theta45, kpt_twin_xyz, rot_degree=0):
     ax.add_patch(polygon_b)
     ax.add_patch(polygon_w)
     zorderobj = draw_point(kpt_xy_b_rot, kpt_xy_w_rot)
-    for axistype in ['x', 'y', 'z']:
-        plot_y_z_axis(ax, origin_pt_p, axistype, plan_theta45, length=10, zorderobj=zorderobj)
+    # for axistype in ['x', 'y', 'z']:
+    #     plot_y_z_axis(ax, origin_pt_p, axistype, plan_theta45, length=10, zorderobj=zorderobj)
 
 
 def p3d_project(p3d, plan_theta):
@@ -239,6 +239,7 @@ def main(clippredpklfile, matcalib_dir):
     outdir = osp.join(osp.dirname(clippredpklfile), 'motifshowmulti')
     os.makedirs(outdir, exist_ok=True)
     theta = [5, 20, 45, 60, 75, 85]
+    theta = [5,  45,  85]##zzc0604
     naxes = len(theta)
 
     for icluster, kpt_twin_xyz in zip(tqdm.tqdm(cluster_list), kpt_twin_xyz_list):

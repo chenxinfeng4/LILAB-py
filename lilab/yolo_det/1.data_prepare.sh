@@ -1,7 +1,7 @@
 #source activate mmdet
-labelme_dir=`w2l '\\liying.cibr.ac.cn\Data_Temp\Chenxinfeng\marmoset_camera3_cxf\2024-4-12-marmoset\outframes\marmoset2024-4-12结果'`
+labelme_dir=`w2l '\\liying.cibr.ac.cn\Data_Temp\Chenxinfeng\marmoset_camera3_cxf\2024-4-13-singlemarmoset\outframes'`
 labelme_dir=`w2l '\\liying.cibr.ac.cn\Data_Temp\Chenxinfeng\marmoset_camera3_cxf\2024-3-26\marmoset\labeled'`
-target_dir='/home/liying_lab/chenxinfeng/DATA/ultralytics/data/marmoset_bodyhead/marmoset_20240412'
+target_dir='/home/liying_lab/chenxinfeng/DATA/ultralytics/data/marmoset_bodyhead/marmoset_20240617'
 
 rm `grep -L 'points' $labelme_dir/*.json`
 rm `comm -3 <(ls -1 $labelme_dir/*.jpg | sort) <(ls -1 $labelme_dir/*.json | sed s/json/jpg/ | sort)`

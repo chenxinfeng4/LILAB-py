@@ -25,7 +25,7 @@ nins = 2
 
 #%%
 def post_cpu(outputs, center, scale, feature_in_wh, iclass, nins):
-    boxes, scores, nums = nms(outputs)
+    boxes, scores, nums = nms(outputs, score_threshold=0.2)
     boxes, scores, nums = boxes[:,iclass], scores[:,iclass], nums[:,iclass]
     nview = len(boxes)
     boxes_full = np.zeros((nview, nins, 4))+np.nan

@@ -90,7 +90,7 @@ def create_trtmodule(checkpoint, input_shape0):
 
 
 def main(video_file, checkpoint, setupname):
-    views_xywh = get_view_xywh_wrapper(setupname)
+    views_xywh = get_view_xywh_wrapper(setupname) 
     nview = len(views_xywh)
     if '_cam' in osp.splitext(osp.basename(video_file))[0]:
         feature_in_wh = [640, 480]

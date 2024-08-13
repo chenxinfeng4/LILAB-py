@@ -1,3 +1,4 @@
+# conda activate mmpose
 # python -m lilab.mmdet_dev.convert_mmdet2trt config.py
 import os.path as osp
 import subprocess

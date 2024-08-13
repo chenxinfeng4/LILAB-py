@@ -3,7 +3,7 @@ project_file=/home/liying_lab/chenxinfeng/DATA/ultralytics/work_dirs/yolov8n_seg
 
 # 1 to ONNX
 source activate open-mmlab
-python /home/liying_lab/chenxinfeng/ml-project/LILAB-py/lilab/yolo_seg/convert_pt2onnx.py --weights ${project_file}.pt --input-HW 1632 2496
+python /home/liying_lab/chenxinfeng/ml-project/LILAB-py/lilab/yolo_seg/convert_pt2onnx.py --weights ${project_file}.pt --input-HW 1200 1920 #1632 2496
 
 siinn inspect ${project_file}.full.onnx
 
