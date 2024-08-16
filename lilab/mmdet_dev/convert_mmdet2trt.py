@@ -13,22 +13,25 @@ from lilab.mmpose_dev.a2_convert_mmpose2engine import findcheckpoint_pth
 
 
 def convert(config, checkpoint):
-    output = osp.splitext(checkpoint)[0] + '.trt'
+    output = osp.splitext(checkpoint)[0] + ".trt"
     # subprocess.call(f'mmdet2trt "{config}" "{checkpoint}" "{output}" --fp16 True --enable-mask True', shell=True)
     trt_model = mmdet2trt(
         config,
         checkpoint,
         fp16_mode=True,
         enable_mask=True,
-        output_names=['num_detections', 'boxes', 'scores', 'classes', 'masks'])
-    print('Saving TRT model to: {}'.format(osp.basename(output)))
+        output_names=["num_detections", "boxes", "scores", "classes", "masks"],
+    )
+    print("Saving TRT model to: {}".format(osp.basename(output)))
     torch.save(trt_model.state_dict(), output)
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Convert mmdet model to TensorRT model')
-    parser.add_argument('config', help='Config file')
-    parser.add_argument('--checkpoint', help='Checkpoint file', default=None)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Convert mmdet model to TensorRT model"
+    )
+    parser.add_argument("config", help="Config file")
+    parser.add_argument("--checkpoint", help="Checkpoint file", default=None)
     args = parser.parse_args()
     config = args.config
     checkpoint = args.checkpoint

@@ -36,9 +36,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "image_path", type=str, default=None, help="path to image or folder"
     )
-    parser.add_argument(
-        '--setupname', type=str, default='carl'
-    )
+    parser.add_argument("--setupname", type=str, default="carl")
     args = parser.parse_args()
 
     image_path = args.image_path
@@ -48,7 +46,9 @@ if __name__ == "__main__":
     elif osp.isdir(image_path):
         # image_path = [f for f in glob.glob(osp.join(image_path, '*.jpg'))
         #                 if f[-4] not in '0123456789']
-        image_path = glob.glob(osp.join(image_path, "*.jpg"))+glob.glob(osp.join(image_path, "*.png"))
+        image_path = glob.glob(osp.join(image_path, "*.jpg")) + glob.glob(
+            osp.join(image_path, "*.png")
+        )
         assert len(image_path) > 0, "no image found"
     else:
         raise ValueError("image_path is not a file or folder")

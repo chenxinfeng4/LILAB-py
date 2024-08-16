@@ -10,6 +10,7 @@ import tqdm
 import sys
 from glob import glob
 from typing import Union
+
 try:
     from . import cxfguilib as cg
 except Exception as e:
@@ -17,57 +18,66 @@ except Exception as e:
 
 frame_dir = "outframes"
 
+
 def timestr_to_seconds(frames_time):
     frames_seconds = []
     for frame_time in frames_time:
-        if type(frame_time)==str:
-            frame_seconds = sum(x * int(t) for x, t in zip([3600, 60, 1], frame_time.split(":")))
+        if type(frame_time) == str:
+            frame_seconds = sum(
+                x * int(t) for x, t in zip([3600, 60, 1], frame_time.split(":"))
+            )
         else:
             frame_seconds = frame_time
         frames_seconds.append(frame_seconds)
-    return frames_seconds    
+    return frames_seconds
+
 
 def extract(video_input, frame_seconds):
-    dirname,filename=os.path.split(video_input)
+    dirname, filename = os.path.split(video_input)
     nakefilename = os.path.splitext(filename)[0]
     cap = cv2.VideoCapture(video_input)
     fps = cap.get(cv2.CAP_PROP_FPS)
-    os.makedirs(os.path.join(dirname, frame_dir),exist_ok=True)
+    os.makedirs(os.path.join(dirname, frame_dir), exist_ok=True)
 
     for iframe, frame_seconds in enumerate(tqdm.tqdm(frame_seconds)):
         cap.set(cv2.CAP_PROP_POS_FRAMES, int(frame_seconds * fps))
         ret, frame = cap.read()
-        if not ret: continue
-        filename = os.path.join(dirname, frame_dir, nakefilename + '_{0:05}.png'.format(iframe))
+        if not ret:
+            continue
+        filename = os.path.join(
+            dirname, frame_dir, nakefilename + "_{0:05}.png".format(iframe)
+        )
         cv2.imwrite(filename, frame)
-        
-    cap.release()
-    
 
-def extract_crop(filename: str, 
-                indexby = 'frame',
-                crop_xywh = None,
-                timestamps = None,
-                ipannel = None):
+    cap.release()
+
+
+def extract_crop(
+    filename: str, indexby="frame", crop_xywh=None, timestamps=None, ipannel=None
+):
 
     cap = cv2.VideoCapture(filename)
     fps = cap.get(cv2.CAP_PROP_FPS)
     imgname = os.path.splitext(filename)[0]
-    imgpostfix = f'_output_{ipannel}' if ipannel is not None else ''
+    imgpostfix = f"_output_{ipannel}" if ipannel is not None else ""
     ret, img = cap.read()
     for i, frame_seconds in enumerate(tqdm.tqdm(timestamps)):
-        cap.set(cv2.CAP_PROP_POS_MSEC, frame_seconds*1000)
+        cap.set(cv2.CAP_PROP_POS_MSEC, frame_seconds * 1000)
         ret, img = cap.read()
-        if not ret: raise Exception('read failed')
+        if not ret:
+            raise Exception("read failed")
         if crop_xywh is not None:
-            img = img[crop_xywh[1]:crop_xywh[1]+crop_xywh[3], crop_xywh[0]:crop_xywh[0]+crop_xywh[2]]
-        index = int(frame_seconds*fps) if indexby == 'frame' else i+1
-        imgfullname = f'{imgname}_{index:06d}{imgpostfix}.png'
+            img = img[
+                crop_xywh[1] : crop_xywh[1] + crop_xywh[3],
+                crop_xywh[0] : crop_xywh[0] + crop_xywh[2],
+            ]
+        index = int(frame_seconds * fps) if indexby == "frame" else i + 1
+        imgfullname = f"{imgname}_{index:06d}{imgpostfix}.png"
         cv2.imwrite(imgfullname, img)
     cap.release()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     n = len(sys.argv)
     if n == 1:
         folder = input("Choose video folder: >> ")
@@ -75,29 +85,29 @@ if __name__ == '__main__':
             exit()
         else:
             sys.argv.append(folder)
-            
+
     print(sys.argv[1:])
-    
+
     # check input is file or folder
     file_or_folderpath = sys.argv[1]
     if os.path.isfile(file_or_folderpath):
-        video_foldname, f =os.path.split(file_or_folderpath)
+        video_foldname, f = os.path.split(file_or_folderpath)
         os.chdir(video_foldname)
         filenamesList = [f]
     elif os.path.isdir(file_or_folderpath):
         video_foldname = file_or_folderpath
         os.chdir(video_foldname)
-        filenamesList = glob(r'*.avi') + glob(r'*.mp4') + glob(r'*.mkv')
+        filenamesList = glob(r"*.avi") + glob(r"*.mp4") + glob(r"*.mkv")
         assert len(filenamesList), "Folder contain no AVI/MP4/MKV videos!"
     else:
-        assert False, 'Input should be FILE or FOLDER'
-        
+        assert False, "Input should be FILE or FOLDER"
+
     # read config_video.py
-    config = cg.getfoldconfigpy('.')
-    frames_time = getattr(config, 'frames_time', None)
+    config = cg.getfoldconfigpy(".")
+    frames_time = getattr(config, "frames_time", None)
     frames_seconds = timestr_to_seconds(frames_time)
-    
+
     for video_input in filenamesList:
         extract(video_input, frames_seconds)
-    
+
     print("Succeed")

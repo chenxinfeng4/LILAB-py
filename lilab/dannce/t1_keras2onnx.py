@@ -37,11 +37,8 @@ def main(modelfile, batchsize):
         ]
         if batchsize > 0
         else [
-            tf.TensorSpec(
-                [None, 64, 64, 64, nchannel_fix], tf.float32, name="input_1"
-            )
+            tf.TensorSpec([None, 64, 64, 64, nchannel_fix], tf.float32, name="input_1")
         ]
-
     )
     onnx_model, _ = tf2onnx.convert.from_keras(model, input_signature=input_signature)
     onnx_file = osp.splitext(modelfile)[0] + (
@@ -58,5 +55,6 @@ if __name__ == "__main__":
     parser.add_argument("modelfile", type=str, help="Path to the model file.")
     parser.add_argument("--batch", type=int, default=-1)
     args = parser.parse_args()
-    if args.batch<=0: args.batch=-1
+    if args.batch <= 0:
+        args.batch = -1
     main(args.modelfile, args.batch)

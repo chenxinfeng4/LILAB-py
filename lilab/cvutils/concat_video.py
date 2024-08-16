@@ -3,10 +3,13 @@ import os
 import os.path as osp
 import argparse
 
+
 def concat(videopath1, videopath2):
     # concat the videos horizontally
     output_path = osp.join(osp.dirname(videopath1), "concat.mp4")
-    os.system(f'ffmpeg -hide_banner -i "{videopath1}" -i "{videopath2}" -filter_complex "[0:v][1:v]hstack=inputs=2[out]" -map "[out]" -c:v libx264  "{output_path}"')
+    os.system(
+        f'ffmpeg -hide_banner -i "{videopath1}" -i "{videopath2}" -filter_complex "[0:v][1:v]hstack=inputs=2[out]" -map "[out]" -c:v libx264  "{output_path}"'
+    )
 
 
 if __name__ == "__main__":

@@ -21,7 +21,7 @@ from lilab.mmdet_dev.s2_detpkl_to_segpkl import convert as convert_detpkl_to_seg
 from lilab.mmdet_dev.s2_segpkl_merge import convert as convert_segpkl_to_one
 from mmdet.core import encode_mask_results
 from mmdet.datasets.pipelines import Compose
-    
+
 # from lilab.mmpose_dev.a2_convert_mmpose2engine import findcheckpoint_trt
 
 video_path = [
@@ -108,7 +108,9 @@ class MyWorker(mmap_cuda.Worker):
             outputs = []
             maxlen = min([len(vid), self.maxlen]) if self.maxlen else len(vid)
 
-            for _, frame in zip(tqdm.trange(maxlen, position=self.id, desc=f"[{self.id}]"), vid):
+            for _, frame in zip(
+                tqdm.trange(maxlen, position=self.id, desc=f"[{self.id}]"), vid
+            ):
                 data = process_img(frame, img_metas)
                 result = model(return_loss=False, rescale=True, **data)
 
@@ -181,7 +183,9 @@ if __name__ == "__main__":
     num_gpus = min((torch.cuda.device_count(), len(args_iterable)))
     print("num_gpus:", num_gpus)
     # init the workers pool
-    mmap_cuda.workerpool_init(range(num_gpus), MyWorker, args.config, args.checkpoint, args.maxlen)
+    mmap_cuda.workerpool_init(
+        range(num_gpus), MyWorker, args.config, args.checkpoint, args.maxlen
+    )
     detpkls = mmap_cuda.workerpool_compute_map(args_iterable)
 
     # worker = MyWorker(args.config, args.checkpoint)

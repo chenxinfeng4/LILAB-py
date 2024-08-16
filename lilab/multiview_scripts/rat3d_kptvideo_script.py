@@ -3,9 +3,9 @@ import os.path as osp
 from multiprocessing import Pool
 from lilab.multiview_scripts.rat3d_kptvideo import pose_json, main
 
-work_folder = '/home/liying_lab/chenxinfeng/DATA/multiview-project/2021-11-02-bwrat_800x600_30fps/whiteblack/15-37-42-white-copy/dlc3d/'
+work_folder = "/home/liying_lab/chenxinfeng/DATA/multiview-project/2021-11-02-bwrat_800x600_30fps/whiteblack/15-37-42-white-copy/dlc3d/"
 
-videos = '15-37-42_output_1.mp4  15-37-42_output_2.mp4  15-37-42_output_3.mp4 15-37-42_output_4.mp4  15-37-42_output_5.mp4  15-37-42_output_6.mp4'.split()
+videos = "15-37-42_output_1.mp4  15-37-42_output_2.mp4  15-37-42_output_3.mp4 15-37-42_output_4.mp4  15-37-42_output_5.mp4  15-37-42_output_6.mp4".split()
 mat_files_white = ["rat_points3d_cm-white.mat"] * len(videos)
 mat_files_black = ["rat_points3d_cm-black.mat"] * len(videos)
 pose = [pose_json] * len(videos)

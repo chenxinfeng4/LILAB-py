@@ -17,8 +17,7 @@ ret, frame = cap.read()
 assert ret
 cap.release()
 frameHeight, frameWidth, _ = frame.shape
-scale = max([frameWidth/MAXWIDTH, frameHeight/MAXHEIGHT, 1])
-
+scale = max([frameWidth / MAXWIDTH, frameHeight / MAXHEIGHT, 1])
 
 
 # Initialize the  drag object
@@ -31,21 +30,29 @@ image = frame
 rectI = selectinwindow.DragRectangle(image, wName, frameWidth, frameHeight)
 
 cv2.namedWindow(rectI.wname)
-cv2.resizeWindow(rectI.wname, imageWidth, imageHeight);
+cv2.resizeWindow(rectI.wname, imageWidth, imageHeight)
 cv2.setMouseCallback(rectI.wname, selectinwindow.dragrect, rectI)
 
 # keep looping until rectangle finalized
 while True:
     # display the image
     cv2.imshow(rectI.wname, rectI.image)
-    if cv2.waitKey(1) in (ord('q'), 27): break
+    if cv2.waitKey(1) in (ord("q"), 27):
+        break
     # if returnflag is True, break from the loop
-    if rectI.returnflag: break
+    if rectI.returnflag:
+        break
 
 print("Dragged rectangle coordinates")
-print(str(rectI.outRect.x) + ',' + str(rectI.outRect.y) + ',' + \
-      str(rectI.outRect.w) + ',' + str(rectI.outRect.h))
+print(
+    str(rectI.outRect.x)
+    + ","
+    + str(rectI.outRect.y)
+    + ","
+    + str(rectI.outRect.w)
+    + ","
+    + str(rectI.outRect.h)
+)
 
 # close all open windows
 cv2.destroyAllWindows()
-

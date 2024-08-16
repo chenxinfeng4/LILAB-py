@@ -19,6 +19,7 @@ batchsize = 2  # [None = Dynamic, 1|2|... = Fix shape]
 
 from tensorflow.keras import layers
 
+
 class NormalizedLayer(layers.Layer):
     def __init__(self, mean_value, std_value):
         super(NormalizedLayer, self).__init__()
@@ -27,7 +28,8 @@ class NormalizedLayer(layers.Layer):
 
     def call(self, inputs):
         return (inputs - self.mean_value) / self.std_value
-    
+
+
 def main(modelfile, batchsize):
     os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # use cpu to load model
     model = load_model(
@@ -50,14 +52,11 @@ def main(modelfile, batchsize):
         ]
         if batchsize > 0
         else [
-            tf.TensorSpec(
-                [None, 64, 64, 64, nchannel_fix], tf.float32, name="input_1"
-            )
+            tf.TensorSpec([None, 64, 64, 64, nchannel_fix], tf.float32, name="input_1")
         ]
-
     )
     input_layer = Input(shape=model.input_shape[1:])
-    normalized_layer = NormalizedLayer(3,10)(input_layer)
+    normalized_layer = NormalizedLayer(3, 10)(input_layer)
     head_model = model(normalized_layer)
     output_layer_pval = GlobalMaxPooling3D()(head_model)
     reshape_layer = Reshape((-1, model.output_shape[-1]))
@@ -81,5 +80,6 @@ if __name__ == "__main__":
     parser.add_argument("modelfile", type=str, help="Path to the model file.")
     parser.add_argument("--batch", type=int, default=-1)
     args = parser.parse_args()
-    if args.batch<=0: args.batch=-1
+    if args.batch <= 0:
+        args.batch = -1
     main(args.modelfile, args.batch)
