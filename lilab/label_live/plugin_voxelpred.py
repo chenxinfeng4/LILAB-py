@@ -30,15 +30,16 @@ from lilab.yolo_seg.common_variable import (
 from lilab.label_live.biLSTM_behavior_classify import cluster_main
 from lilab.timecode_tag.netcoder import Netcoder
 from ffmpegcv.ffmpeg_writer_noblock import FFmpegWriterNoblock
+from lilab.label_live.water_timecode import water_timecode
 
-ballfile = "/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/carl/2023-10-14-/ball_2023-10-23_13-18-10.calibpkl"
+
+
 nclass = 2
 
 
 def get_vidout():
-    vidout = FFmpegWriterNoblock(
-        ffmpegcv.VideoWriterStreamRT,
-        "rtsp://10.50.60.6:8554/mystream_behaviorlabel_result",
+    vidout = ffmpegcv.VideoWriterStreamRT(
+        "rtsp://10.50.60.6:8554/mystream_behaviorlabel_result"
     )
     return vidout
 
@@ -266,6 +267,7 @@ def post_cpu(
     pannel_preview,
     calibPredict: CalibPredict,
     vidout,
+    timecode
 ):
     if iframe < 0:
         return
@@ -289,6 +291,8 @@ def post_cpu(
 
     frame = cv_plot_skeleton_aframe(frame, pts2d_b_now, name="black")
     frame = cv_plot_skeleton_aframe(frame, pts2d_w_now, name="white")
+    frame = np.ascontiguousarray(frame[::2,::2])
+    water_timecode(frame, timecode)
 
     if False:
         label_str = rpc_client.label_str()
@@ -574,7 +578,7 @@ def dannce_predict_video_trt(
                 torch.cuda.current_stream().synchronize()
         ind_max = np.concatenate([pred.cpu().numpy() for pred in pred_l])
         p3d = post_cpu(
-            rpc_client, ind_max, X_grid, iframe, pannel_preview, calibPredict, vidout
+            rpc_client, ind_max, X_grid, iframe, pannel_preview, calibPredict, vidout, timecode
         )
         q_p3d.put((p3d, timecode))
 
