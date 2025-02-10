@@ -1,11 +1,12 @@
-# conda activate mmdet; python /home/liying_lab/chenxf/ml-project/LILAB-py/lilab/yolo_seg/fun_main.py
+# conda activate mmdet; python /home/liying_lab/chenxf/ml-project/LILAB-py/lilab/label_live/yolo_seg_unit_test.py
 import numpy as np
 import multiprocessing
 from lilab.label_live.t1_realtime_position import main as seg_main
 from lilab.yolo_seg.common_variable import NFRAME, create_shared_arrays
-
+from lilab.label_live.sockerServer import start_socketserver_background
 
 if __name__ == "__main__":
+    start_socketserver_background()
     ctx = multiprocessing.get_context("spawn")
     q = ctx.Queue(maxsize=(NFRAME - 4))
     (

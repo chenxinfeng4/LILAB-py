@@ -29,6 +29,9 @@ def load_mat(matfile):
     keypoints_xy[indmiss] = np.nan
     keypoints_xy_ba = data['keypoints_xy_ba'] if len(data.get('keypoints_xy_ba', [])) else keypoints_xy+np.nan
     keypoints_xyz_ba = data['keypoints_xyz_ba'] if len(data.get('keypoints_xyz_ba', [])) else np.ones((keypoints_xy.shape[1], keypoints_xy.shape[2],3))+np.nan
+    views_wh = np.array(views_xywh)[:,2:4]
+    keypoints_xy_ba[np.any(keypoints_xy_ba < 0, axis=-1)] = np.nan
+    keypoints_xy_ba[np.any(keypoints_xy_ba > views_wh[:,None,None,:], axis=-1)] = np.nan
     for k1, k2, crop_xywh in zip(keypoints_xy, keypoints_xy_ba, views_xywh):
         k1[:] += np.array(crop_xywh[:2])
         k2[:] += np.array(crop_xywh[:2])
@@ -37,7 +40,9 @@ def load_mat(matfile):
         fun_plot_axis_line = get_axis_line(CalibPredict(data), views_xywh)
     else:
         fun_plot_axis_line = lambda x: x
-    return keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data, fun_plot_axis_line
+    views_xywh = np.array(views_xywh)
+    WH = (views_xywh[:,:2] + views_xywh[:,2:]).max(axis=0)
+    return keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data, fun_plot_axis_line, WH
 
 
 def get_axis_line(calibPredict: CalibPredict, views_xywh:list):
@@ -68,14 +73,13 @@ def get_axis_line(calibPredict: CalibPredict, views_xywh:list):
     return plot_axis_line
 
 
-def keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data, fun_plot_axis_line, gpu=0):
+def keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data, fun_plot_axis_line, canvas_WH, gpu=0):
     # %%
     vfile = data['info']['vfile']
     # vin = ffmpegcv.noblock(ffmpegcv.VideoCaptureNV, vfile, resize=resize, resize_keepratio=False, gpu=gpu)
-    vin = ffmpegcv.VideoCaptureNV(vfile, resize=resize, resize_keepratio=False, gpu=gpu)
+    vin = ffmpegcv.VideoCaptureNV(vfile, crop_xywh=[0,0, *canvas_WH], resize=resize, resize_keepratio=False, gpu=gpu)
     assert len(vin) == keypoints_xy.shape[1] == keypoints_xy.shape[1]
-    orisize = (vin.origin_width, vin.origin_height)
-    scale = (resize[0]/orisize[0], resize[1]/orisize[1])
+    scale = (resize[0]/canvas_WH[0], resize[1]/canvas_WH[1])
 
     keypoints_xy[..., 0] *= scale[0]
     keypoints_xy[..., 1] *= scale[1]
@@ -116,7 +120,7 @@ def keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data, fun
 
 
 def main_showvideo(matcalibpkl, gpu=0, only3D=False):
-    keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data, fun_plot_axis_line = load_mat(matcalibpkl)
+    keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data, fun_plot_axis_line, canvas_WH = load_mat(matcalibpkl)
     if only3D:
         keypoints_xy[:] = np.nan
     xyz = keypoints_xyz_ba[:,0][~np.isnan(keypoints_xyz_ba[:,0])].ravel()
@@ -128,7 +132,7 @@ def main_showvideo(matcalibpkl, gpu=0, only3D=False):
             osp.splitext(osp.abspath(data['info']['vfile']))[1]
     data['info']['vfile'] = vfile
     print('vfile', vfile)
-    keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data, fun_plot_axis_line, gpu)
+    keypoint_to_video(keypoints_xy, keypoints_xy_ba, keypoints_xyz_ba, data, fun_plot_axis_line, canvas_WH, gpu)
 
 
 if __name__ == '__main__':

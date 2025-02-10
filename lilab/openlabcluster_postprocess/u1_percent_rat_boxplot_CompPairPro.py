@@ -52,7 +52,7 @@ def load_data(project, sheet_name):
     #remove all NaN row
     # 表的检查
     assert {'animal', 'color', 'gender', 'geno', 'dob'} <= set(rat_info.columns)
-    assert {'video_nake', 'animal', 'partner', 'usv_file'} <= set(video_info.columns)
+    assert {'video_nake', 'animal', 'partner'} <= set(video_info.columns)
     df_merge_b = pd.merge(rat_info, video_info['animal'], on='animal', how='right')
     print(df_merge_b['color'].unique())
     print(df_merge_b[df_merge_b['color'].isna()].index)

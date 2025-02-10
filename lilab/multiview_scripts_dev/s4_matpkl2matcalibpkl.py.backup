@@ -3,14 +3,15 @@
 import os.path as osp
 import pickle
 import numpy as np
-from multiview_calib.bundle_adjustment_scipy import (pack_camera_params,
-        unpack_camera_params, undistort_points, triangulate, project_points)
+from multiview_calib.bundle_adjustment_scipy import (pack_camera_params, unpack_camera_params, undistort_points, triangulate, project_points)
 import itertools
 import argparse
 
 # %%
-matpkl = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/ball/2022-04-29_17-58-45_ball.matpkl'
-calibpkl = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/ball/2022-04-29_17-58-45_ball.calibpkl'
+#matpkl = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/ball/2022-04-29_17-58-45_ball.matpkl'
+#calibpkl = '/mnt/liying.cibr.ac.cn_Data_Temp/multiview-large/wtxwt_social/ball/2022-04-29_17-58-45_ball.calibpkl'
+matpkl = '/mnt/liying.cibr.ac.cn_Data_Temp/marmoset_camera3_cxf/2024-2-21_marmosettracking/2024-02-21_15-07-36.matpkl'
+calibpkl = '/mnt/liying.cibr.ac.cn_Data_Temp/marmoset_camera3_cxf/2024-1-31_sync/ballmove/ball_move_cam1.aligncalibpkl'
 
 # %%
 def triangulate_all_pairs_short(views, landmarks, camera_params):
@@ -94,7 +95,7 @@ def build_points_short(views, poses, keypoints_xy):
     return keypoints_xyz_baglobal
 
 # %%
-def convert(matpkl, calibpkl):
+def convert(matpkl, calibpkl, fix_camnum=False):
     mat = pickle.load(open(matpkl, 'rb'))
     calib = pickle.load(open(calibpkl, 'rb'))
     thr = 0.25
@@ -161,5 +162,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('matpkl', help='mat file')
     parser.add_argument('calibpkl', help='calib file')
+    parser.add_argument('--fix-camnum', action='store_true', help='if camnum is not equal to nviews, fix it')
     args = parser.parse_args()
-    convert(args.matpkl, args.calibpkl)
+    convert(args.matpkl, args.calibpkl, args.fix_camnum)

@@ -112,18 +112,27 @@ class DataGenerator_3Dconv_torch_video_canvas_multivoxel(DataGenerator_3Dconv_to
         assert self.mode == "3dprob"
         assert self.mono
 
-        xgrid_roi, y_3d = [], []
-        X = np.zeros((nclass, self.nvox, self.nvox, self.nvox, self.ncam))
+        xgrid_roi = []
+        X = np.zeros((nclass, self.nvox, self.nvox, self.nvox, self.ncam), dtype=np.float32)
         xgrid_roi = np.zeros(
             (nclass, self.nvox, self.nvox, self.nvox, 3), dtype=np.float16
         )
         for i in range(nclass):
             ims = im_pannels_nclass[i]
             com_3d = coms_3d_nclass[i]  # to be determined
-            [X[i], xgrid_roi[i]], y_3d_each = self.quary_gridsample_by_com3d(
+            [a, b], _ = self.quary_gridsample_by_com3d(
                 com_3d, ims, i
             )  # cxf
-            y_3d.append(y_3d_each)
+            if a.shape[1]==0 or b.shape[1]==0:
+                print('hello')
+                [a, b], _ = self.quary_gridsample_by_com3d(
+                    com_3d, ims, i)
+                pass
+            X[i] = a
+            xgrid_roi[i] = b
+            # [X[i], xgrid_roi[i]], y_3d_each = self.quary_gridsample_by_com3d(
+            #     com_3d, ims, i
+            # )  # cxf
 
         self.iframe += 1
         iview_preview = img_HW
@@ -229,11 +238,12 @@ class DataGenerator_3Dconv_torch_video_canvas_multivoxel(DataGenerator_3Dconv_to
         grid_coord_3d = self.grid_coord_3d_l[iclass]
         grid_1d = self.grid_1d_l[iclass]
         proj_grid_voxel_ncam_indravel = self.proj_grid_voxel_ncam_indravel_l[iclass]
+        nvox_half = self.nvox // 2
         com_index = np.array(
-            [np.searchsorted(grid_1d[i], com_3d[i], side="right") for i in range(3)]
+            [np.searchsorted(grid_1d[i][nvox_half:-nvox_half], com_3d[i], side="right")+nvox_half for i in range(3)]
         )  # (3,)
         com_range = np.floor(
-            com_index[:, None] + [-self.nvox / 2, self.nvox / 2]
+            com_index[:, None] + [-nvox_half, nvox_half]
         ).astype(
             int
         )  # (3,2)
@@ -313,7 +323,6 @@ def post_cpu(
             font_thickness,
             cv2.LINE_AA,
         )
-
     vidout.write(frame)
     return p3d
 
@@ -472,7 +481,7 @@ def dannce_predict_video_trt(
         params (Dict): Paremeters dictionary.
     """
     from torch2trt import TRTModule
-    from lilab.yolo_seg.sockerServer import port
+    from lilab.label_live.sockerServer import port
     import picklerpc
 
     # Save

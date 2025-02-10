@@ -46,8 +46,6 @@ Facing away and a rat rearing2_CloseNon
 Being sniffed back_ReaLow
 Facing away and a rat rearing3_CloseNon
 Being pounced and pressed_ReaHig
-
-
 """
 
 

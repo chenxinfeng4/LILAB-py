@@ -1,5 +1,5 @@
 # NFRAME = 14
-NFRAME = 6
+NFRAME = 4
 _nclass = 2
 _njoint = 14
 out_numpy_imgNKHW_shape = [9,_nclass,800,1280]

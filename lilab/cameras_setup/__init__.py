@@ -1,4 +1,4 @@
-# from lilab.cameras_setup import get_view_xywh_wraper
+# from lilab.cameras_setup import get_view_xywh_wrapper
 
 from ._get_calibinfo import *
 from typing import List

@@ -81,6 +81,11 @@ def label_str(arg=None):
     else:
         datadict['label_str'] = arg
 
+@server.register()
+def about():
+    return 'Social-seq live server'
+
+
 def start_socketserver_background():
     threading.Thread(target=server.serve_forever).start()
 

@@ -8,16 +8,22 @@ from scipy.signal import medfilt
 from lilab.timecode_tag.netcoder import Netcoder
 import tqdm
 import itertools
+from lilab.label_live.sockerServer import port
 
 
 sys.path.append("/home/liying_lab/chenxf/ml-project/论文图表/yolo_dannce_训练")
 from utilities_package_feature import package_feature, np_norm
 
 pvalue_thr = 0.9
+speed_gain = 1.3
 
-engine = "/home/liying_lab/chenxf/ml-project/论文图表/yolo_dannce_训练/lstm_behavior.engine"
-cluster_names_pkl = "/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/00_BehaviorAnalysis-seq2seq/SexAge/Day55_Mix_analysis/Day55_yolo_rt/new_cluster_name.pkl"
-
+if False:
+    engine = "/home/liying_lab/chenxf/ml-project/论文图表/yolo_dannce_训练/lstm_behavior.engine"
+    cluster_names_pkl = "/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/00_BehaviorAnalysis-seq2seq/SexAge/Day55_Mix_analysis/Day55_yolo_rt/new_cluster_name.pkl"
+else:
+    engine = '/home/liying_lab/chenxf/ml-project/论文图表/yolo_dannce_训练_k36/lstm_behavior_feat_clip_t24.engine'
+    # cluster_names_pkl = '/DATA/taoxianming/rat/data/Mix_analysis/SexAgeDay55andzzcWTinAUT_MMFF/result32_k36/semiseq2seq_iter0/output/far_ns_with_s_recluster_k36/representitive_k36_filt_perc88/Representive_K36.clippredpkl'
+    cluster_names_pkl = '/home/liying_lab/chenxf/ml-project/LILAB-py/lilab/label_live/cluster_names.pkl'
 
 class RecentClip:
     def __init__(self, clip_windowsize):
@@ -53,14 +59,11 @@ class RecentClip:
         return self.p3d_smooth[3:]
 
 
-def msg_fatory(cluster_names_pkl: str):
-    from lilab.yolo_seg.sockerServer import port
-    import picklerpc
+def msg_fatory(cluster_names_pkl: str, rpc_client):
 
-    rpc_client = picklerpc.Client(("127.0.0.1", port))
     print("[Cluster] Connect to RPC.", rpc_client.label_str())
 
-    cluster_names = pickle.load(open(cluster_names_pkl, "rb"))["new_cluster_name"]
+    cluster_names = pickle.load(open(cluster_names_pkl, "rb"))["cluster_names"]
     ncluster = len(cluster_names)
 
     def call(clusterid: int, pvalue: float):
@@ -70,6 +73,7 @@ def msg_fatory(cluster_names_pkl: str):
             return
         label_str: str = cluster_names[clusterid]
         rpc_client.label_str(label_str)
+        rpc_client.label_int(clusterid)
 
     return call
 
@@ -80,6 +84,9 @@ def softmax(x):
 
 
 def cluster_main(q: Queue, model_smooth_matcalibpkl: str):
+    import picklerpc
+    rpc_client = picklerpc.Client(("127.0.0.1", port))
+
     p3d = pickle.load(open(model_smooth_matcalibpkl, "rb"))["keypoints_xyz_ba"]
     p3d_CSK3 = p3d.transpose([1, 0, 2, 3]).astype(float)
 
@@ -101,7 +108,7 @@ def cluster_main(q: Queue, model_smooth_matcalibpkl: str):
     output = trt_model(torch.from_numpy(input_numpy).cuda().float())
 
     recentClip = RecentClip(24)
-    msg_logger = msg_fatory(cluster_names_pkl)
+    msg_logger = msg_fatory(cluster_names_pkl, rpc_client)
 
     nettimecoder = Netcoder()
     iter_process = tqdm.tqdm(itertools.count(), desc="[Bhv Lab]", position=2)
@@ -114,6 +121,7 @@ def cluster_main(q: Queue, model_smooth_matcalibpkl: str):
         out_feature = package_feature(
             p3d_clip, body_length, sniff_zoom_length
         )  # (34,24)
+        out_feature[:2] *= speed_gain #cxf
         out_feature_torch = (
             torch.from_numpy(out_feature.T[None]).cuda().float()
         )  # (1,24,34)
@@ -123,9 +131,12 @@ def cluster_main(q: Queue, model_smooth_matcalibpkl: str):
         msg_logger(ind_max, pval)
 
         dt2 = nettimecoder.getTimeDelay(timecode)
+        rpc_client.bhv_queue_put(dt2)
+        rpc_client.delay_bhv_out(dt2)
         dt_str = str(int(dt2)) if not np.isnan(dt2) else "x"
         iter_process.set_description(
             "[label] q={:>2}, i=----, delay={:>3}".format(q.qsize(), dt_str)
         )
+
 
     print("[3] Cluster done")

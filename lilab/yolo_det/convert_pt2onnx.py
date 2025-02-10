@@ -205,5 +205,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('weights', type=str, help='weights path')
     parser.add_argument('--dynamic', action='store_true', help='dynamic axes')
+    parser.add_argument('--imgHW', type=int, nargs=2, default=[480, 640], help='input image size')
     args = parser.parse_args()
+    INPUT_SHAPE = [1, 3, *args.imgHW]
     main(args)

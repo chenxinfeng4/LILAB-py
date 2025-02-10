@@ -29,12 +29,15 @@ def detectTTL(data_1v:np.ndarray, adjacent_type:str=None, adjacent_value:float=0
     tRise_1y = np.where(TTLdiff == 1)[0]
     tDown_1y = np.where(TTLdiff == -1)[0]
     tDur_1y = tDown_1y - tRise_1y
+    if fs==1:
+        tRise_1y = tRise_1y.astype(int)
+        tDown_1y = tDown_1y.astype(int)
+    else:
+        tRise_1y = tRise_1y/fs
+        tDown_1y = tDown_1y/fs
 
-    if len(tRise_1y)<=1:
-        return tRise_1y/fs, tDur_1y/fs
-
-    if adjacent_type is None:
-        return tRise_1y/fs, tDur_1y/fs
+    if len(tRise_1y)<=1 or adjacent_type is None:
+        return tRise_1y, tDur_1y
     
     elif adjacent_type == 'up-up':
         tRest = tRise_1y[1:] - tRise_1y[:-1]
@@ -46,13 +49,10 @@ def detectTTL(data_1v:np.ndarray, adjacent_type:str=None, adjacent_value:float=0
         raise ValueError('adjacent_type must be in [None, '
                          'up-up, down-up, down-down]')
     
-    indmerge = tRest < adjacent_value*fs
+    indmerge = tRest < adjacent_value
     indmerge_full = np.array([0, *indmerge, 0], dtype=bool)
     tRise_1y = tRise_1y[~indmerge_full[:-1]]
     tDown_1y = tDown_1y[~indmerge_full[1:]]
     tDur_1y = tDown_1y - tRise_1y
 
-    if fs==1:
-        return tRise_1y.astype(int), tDur_1y.astype(int)
-    else:
-        return tRise_1y/fs, tDur_1y/fs
+    return tRise_1y, tDur_1y

@@ -17,6 +17,8 @@ from lilab.timecode_tag.decoder import getDecoder
 from lilab.timecode_tag.netcoder import Netcoder
 import time
 import itertools
+from lilab.label_live.sockerServer import port
+import picklerpc
 
 engine = "/home/liying_lab/chenxinfeng/DATA/ultralytics/work_dirs/yolov8n_seg_640_ratbw_extra/weights/last.full.engine"  # train3
 
@@ -29,6 +31,7 @@ engine = "/home/liying_lab/chenxinfeng/DATA/ultralytics/work_dirs/yolov8n_seg_64
 def get_vidin():
     # vid = ffmpegcv.VideoCaptureNV('/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/test/2022-10-13_15-08-49AWxCB_5min.mp4',
     #                         pix_fmt='gray')
+    from ffmpegcv.ffmpeg_noblock import ReadLiveLastMP as ReadLiveLast
     vid = ReadLiveLast(
         ffmpegcv.VideoCaptureStreamRT,
         "rtsp://10.50.60.6:8554/mystream_9cam",
@@ -58,6 +61,7 @@ def main(
     shared_array_timecode: SynchronizedArray,
     q: Queue,
 ):
+    print('starting -segmain')
     numpy_imgNKHW, numpy_com2d, numpy_previ, numpy_timecode = get_numpy_handle(
         shared_array_imgNNHW,
         shared_array_com2d,
@@ -66,6 +70,7 @@ def main(
     )
     vid, vidout = get_vidin()
     assert (vid.width, vid.height) == (pannelWH[0] * 3, pannelWH[1] * 3)
+    rpc_client = picklerpc.Client(("127.0.0.1", port))
 
     with torch.cuda.device("cuda:0"):
         timecode_decoder = getDecoder()
@@ -100,10 +105,10 @@ def main(
             timecode, *_ = timecode_decoder(frame)
             frame_small = np.ascontiguousarray(frame[::2, ::2])
             img_H0W0 = frame_small.reshape(*input_shape)
-            frame_preview2 = np.ascontiguousarray(
-                frame[0 : pannelWH[1] : 2, 0 : pannelWH[0] : 2]
-            )
-            vidout.write(frame_preview2)
+            # frame_preview2 = np.ascontiguousarray(
+            #     frame[0 : pannelWH[1] : 2, 0 : pannelWH[0] : 2]
+            # )
+            # vidout.write(frame_preview2)
             return timecode, frame, img_H0W0
 
         def post_cpu(frame, outputs, queue_idx: int):
@@ -150,9 +155,11 @@ def main(
         iter_process = tqdm.tqdm(
             count_range, desc="worker[{}]".format(self_id), position=int(self_id)
         )
+        print('started -segmain')
         for idx, _ in enumerate(iter_process):
             timecode, frame, img_H0W0 = pre_cpu(vid, vidout)  # t
             dt1 = nettimecoder.getTimeDelay(timecode)
+            rpc_client.delay_bhv_in(dt1)
             outputs = mid_gpu(trt_model, img_H0W0)  # t
             buf_idx, canvas, coms_real_2d = post_cpu(frame, outputs, queue_idx=idx)
             dt2 = nettimecoder.getTimeDelay(timecode)

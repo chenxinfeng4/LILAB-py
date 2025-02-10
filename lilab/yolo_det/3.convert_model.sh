@@ -14,7 +14,7 @@ trtexec --onnx=${checknake}.singleton.onnx \
     --timingCacheFile=`dirname ${checknake}`/.cache.txt \
     --optShapes=input_1:5x3x480x640 \
     --minShapes=input_1:1x3x480x640 \
-    --maxShapes=input_1:9x3x480x640
+    --maxShapes=input_1:15x3x480x640
 
 
 # trtexec --onnx=${checknake}.singleton.onnx \

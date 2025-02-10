@@ -7,6 +7,7 @@ import numpy as np
 import tempfile
 import os
 import argparse
+import time
 
 
 def naughty_ffmpeg_copy(
@@ -28,23 +29,31 @@ def naughty_ffmpeg_copy(
     assert split_k_frameinvideo + vinfo_body.count == vinfo.count
 
 
-def dehead(video, num_dehead):
+def dehead(video, num_dehead, ishevc=True):
+    print('num_dehead:', num_dehead)
     video_concat = os.path.splitext(video)[0] + "_dehead.mp4"
     if num_dehead == 0:
         os.system(f"ffmpeg -loglevel warning -y -i {video} -c copy {video_concat}")
         return video_concat
 
-    _, video_out_neck = tempfile.mkstemp(suffix=".hevc")
-    _, video_out_body = tempfile.mkstemp(suffix=".hevc")
-    cmd = f"ffprobe -v quiet -select_streams v -show_entries packet=pts_time,flags -of compact -read_intervals 0%+#{num_dehead+100} {video} | cat -n | grep K__"
+    ext = '.hevc' if ishevc else '.h264'     #h264
+    _, video_out_neck = tempfile.mkstemp(suffix=ext)
+    _, video_out_body = tempfile.mkstemp(suffix=ext)
+    K_frame_guess = 100 if ishevc else 250
+    cmd = f"ffprobe -v quiet -select_streams v -show_entries packet=pts_time,flags -of compact -read_intervals 0%+#{num_dehead+K_frame_guess} {video} | cat -n | grep K_"
     result = subprocess.run(cmd, shell=True, text=True, capture_output=True)
     example_string = result.stdout
-    pts_time_pattern = re.compile(r"pts_time=(.*?)\|")
+    assert len(example_string) > 0
+    # pts_time_pattern = re.compile(r"pts_time=(.*?)\|")
+    pts_time_pattern = re.compile(r"pts_time=(\d*\.\d+)")
     pts_times = pts_time_pattern.findall(example_string)
     pts_times_np = np.array([float(t) for t in pts_times])
+    assert len(pts_times_np) > 0
     frame_pattern = re.compile(r" ([0-9]+)\tpacket")
     frame_numbers = frame_pattern.findall(example_string)
     frame_numbers_np = np.array([int(f) for f in frame_numbers]) - 1  # start from 0
+    print('frame_numbers_np:', frame_numbers_np)
+    assert len(frame_numbers_np) == len(pts_times_np)
 
     # 0---NUM_dehead----split_k_frameinvideo---video_end
     # video_out_neck: iframe = [NUM_dehead : split_k_frameinvideo]
@@ -65,7 +74,8 @@ def dehead(video, num_dehead):
     vout = ffmpegcv.VideoWriter(
         video_out_neck, codec=vinfo.codec, pix_fmt="nv12", fps=fps
     )
-    vout.target_pix_fmt = vinfo.pix_fmt + " -x265-params bframes=0 "
+    x265_ = '-x265' if ishevc else '-x264'
+    vout.target_pix_fmt = 'yuv420p' + f" {x265_}-params bframes=0 "
 
     for iframe in range(split_k_frameinvideo):
         ret, frame = vin.read()
@@ -76,6 +86,7 @@ def dehead(video, num_dehead):
 
     vin.release()
     vout.release()
+    time.sleep(2) # wait for ffmpeg to finish
     assert (
         ffmpegcv.video_info.get_info(video_out_neck).count
         == split_k_frameinvideo - num_dehead

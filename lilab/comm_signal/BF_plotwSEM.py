@@ -1,7 +1,12 @@
+# from lilab.comm_signal.BF_plotwSEM import BF_plotwSEM
 import numpy as np
 import matplotlib.pyplot as plt
+from typing import Union
+import matplotlib.lines
+import matplotlib.patches
 
-def BF_plotwSEM(x, y, yerr):
+def BF_plotwSEM(x, y, yerr, color=None) -> Union[matplotlib.lines.Line2D, matplotlib.patches.Polygon]:
+    pass
     """
     Plots the data with the standard error of the mean as a shaded area.
 
@@ -23,7 +28,7 @@ def BF_plotwSEM(x, y, yerr):
     xerror = np.concatenate([x, np.flip(x)])
     yerror = np.concatenate([(y + yerr), np.flip(y - yerr)])
 
-    h_patch, = plt.fill(xerror, yerror, 'y', alpha=0.4, linestyle='none')
-    h, = plt.plot(x, y, color=h_patch.get_facecolor())
+    h_patch = plt.fill(xerror, yerror, 'y', alpha=0.4, color=color)[0]
+    h = plt.plot(x, y, color=h_patch.get_facecolor())[0]
 
     return h, h_patch

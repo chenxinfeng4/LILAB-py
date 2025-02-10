@@ -20,12 +20,13 @@ from lilab.cameras_setup import get_view_xywh_wrapper
 
 checkpoint = '/home/liying_lab/chenxinfeng/DATA/ultralytics/work_dirs/yolov8_det_640x640_marmoset/weights/last.singleton.engine'
 
-def post_cpu(outputs, center, scale, feature_in_wh):
+def post_cpu(outputs, center=None, scale=None, feature_in_wh=None):
     boxes, scores = singleton(outputs)
     boxes_center = (boxes[...,[0,1]] + boxes[...,[2,3]])/2
-    [W, H] = feature_in_wh
-    preds = transform_preds(boxes_center, center, scale, [W, H], use_udp=False)
-    keypoints_xyp = np.concatenate((preds, scores[...,None]), axis=-1) #(N, K, xyp)
+    if not (center is None and scale is None and feature_in_wh is None):
+        [W, H] = feature_in_wh
+        boxes_center = transform_preds(boxes_center, center, scale, [W, H], use_udp=False)
+    keypoints_xyp = np.concatenate((boxes_center, scores[...,None]), axis=-1) #(N, K, xyp)
     return keypoints_xyp
 
 
@@ -89,8 +90,10 @@ def create_trtmodule(checkpoint, input_shape0):
     return trt_model, img_NCHW, outputs
 
 
-def main(video_file, checkpoint, setupname):
-    views_xywh = get_view_xywh_wrapper(setupname) 
+def main(video_file, checkpoint, setupname, headerviews):
+    views_xywh = get_view_xywh_wrapper(setupname)
+    if headerviews is not None:
+        views_xywh = views_xywh[:headerviews]
     nview = len(views_xywh)
     if '_cam' in osp.splitext(osp.basename(video_file))[0]:
         feature_in_wh = [640, 480]
@@ -100,6 +103,9 @@ def main(video_file, checkpoint, setupname):
         dataset = DataSet(vid)
         print('view_w, h', view_w, view_h)
     else:
+        if nview==1 and views_xywh[0] is None:
+            vid = ffmpegcv.VideoCapture(video_file)
+            views_xywh = [[0,0,vid.width,vid.height]]
         vid = ffmpegcv.VideoCapturePannels(video_file, pix_fmt='rgb24', crop_xywh_l=views_xywh)
         view_w, view_h = feature_in_wh = views_xywh[0][2:]
         dataset = DataSet0(vid)
@@ -146,10 +152,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('video_path', type=str, help='path to video or folder')
     parser.add_argument('--setupname', default='frank', type=str, help='number views')
+    parser.add_argument('--headerviews', default=None, type=int, help='number views to use')
     parser.add_argument('--checkpoint', type=str, default=checkpoint)
     arg = parser.parse_args()
 
     video_path, checkpoint = arg.video_path, arg.checkpoint
     print("checkpoint:", checkpoint)
     assert osp.isfile(video_path), 'video_path not exists'
-    main(video_path, checkpoint, arg.setupname)
+    main(video_path, checkpoint, arg.setupname, arg.headerviews)

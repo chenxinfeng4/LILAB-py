@@ -150,7 +150,7 @@ if __name__ == '__main__':
     vfiles = [v for v in vfiles if ('sktdraw' not in v  and
                                     'com3d' not in v and
                                     'mask' not in v and                                 
-                                    'vol210' not in v and
+                                    'vol' not in v and
                                     '400p' not in v)]
     v_name_as_project = {video_name_to_bea_name(v): v for v in vfiles}
     assert len(v_name_as_project) == len(vfiles)

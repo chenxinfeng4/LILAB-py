@@ -42,9 +42,11 @@ def post_cpu(outputs, center, scale, feature_in_wh, iclass, nins):
     return keypoints_xyp
 
 
-def main(video_file, checkpoint, setupname, iclass, nins):
+def main(video_file, checkpoint, setupname, iclass, nins, headerviews):
     views_xywh = get_view_xywh_wrapper(setupname)
     nview = len(views_xywh)
+    if headerviews is not None:
+        views_xywh = views_xywh[:headerviews]
     if '_cam' in osp.splitext(osp.basename(video_file))[0]:
         feature_in_wh = [640, 480]
         vid = VideoSetReader(video_file, nvideo=nview, pix_fmt='rgb24',
@@ -102,9 +104,10 @@ if __name__ == '__main__':
     parser.add_argument('--checkpoint', type=str, default=checkpoint)
     parser.add_argument('--ninstance', type=int, default=2)
     parser.add_argument('--iclass', type=int, default=0)
+    parser.add_argument('--headerviews', default=None, type=int, help='number views to use')
     arg = parser.parse_args()
 
     video_path, checkpoint = arg.video_path, arg.checkpoint
     print("checkpoint:", checkpoint)
     assert osp.isfile(video_path), 'video_path not exists'
-    main(video_path, checkpoint, arg.setupname, arg.iclass, arg.ninstance)
+    main(video_path, checkpoint, arg.setupname, arg.iclass, arg.ninstance, arg.headerviews)
