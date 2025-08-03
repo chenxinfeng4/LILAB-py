@@ -511,6 +511,8 @@ def a6_global_regist_short(ba_poses, landmarks_global_xy, landmarks_global_mm):
     is_sorted = lambda a: np.all(a[:-1] <= a[1:])
     assert np.all(~np.isnan(landmarks_3d))
     assert is_sorted(landmarks_global_mm['ids'])
+    print("landmarks_3d.shape:", landmarks_3d.shape)
+    print("landmarks_3d_mm.shape:", landmarks_3d_mm.shape)
     assert landmarks_3d.shape == landmarks_3d_mm.shape
     global_poses, _ = global_registration_np(ba_poses, landmarks_3d[:4], landmarks_3d_mm[:4])
     global_poses, _ = global_registration_np(ba_poses, landmarks_3d, landmarks_3d_mm)

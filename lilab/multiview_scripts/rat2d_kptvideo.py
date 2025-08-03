@@ -15,7 +15,11 @@ mat_file_black = "/home/liying_lab/chenxinfeng/DATA/multiview-project/2021-11-02
 mat_file_white = "/home/liying_lab/chenxinfeng/DATA/multiview-project/2021-11-02-bwrat_800x600_30fps/whiteblack/15-37-42-white-copy/dlc/15-37-42_output_1-white.mat"
 video = osp.join(osp.dirname(mat_file_black), "15-37-42_output_1.mp4")
 
-color_dict = {"black": (36, 173, 243), "white": (96, 30, 31), "dot": (255, 155, 54)}
+# 定义个体颜色，rgb顺序
+color_dict = {"black": (36, 173, 243), "white": (96, 30, 31), "dot": (255, 155, 54),
+              0: (36, 173, 243), 1: (96, 30, 31), 2: (255, 155, 54),
+              3: (87,20,102), 4: (178, 71, 13), 5: (133, 107, 24), 6: (87, 20, 102),
+              7: (80, 111, 211)}
 # %%
 linkbody = np.array(
     [

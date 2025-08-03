@@ -55,11 +55,9 @@ def load_data(project, sheet_name):
     assert {'video_nake', 'animal', 'partner'} <= set(video_info.columns)
     df_merge_b = pd.merge(rat_info, video_info['animal'], on='animal', how='right')
     print(df_merge_b['color'].unique())
-    print(df_merge_b[df_merge_b['color'].isna()].index)
     assert (df_merge_b['color'] == 'b').all()
     df_merge_w = pd.merge(rat_info, video_info['partner'], left_on='animal', right_on='partner', how='right')
     print(df_merge_w['color'].unique())
-    print(df_merge_w[df_merge_w['color']=='b'].index)
     assert (df_merge_w['color'] == 'w').all()
     return rat_info, video_info, bhvSeqs, df_labnames, k_best, cluster_nodes_merged
 

@@ -83,7 +83,6 @@ def extract_iview(video_input, setupname, iview, numframe_to_extract, maxlength)
             break
         if iframe not in idxframe_to_extract:
             continue
-        frame = cv2.resize(frame, None, fx=0.5, fy=0.5)
         filename = os.path.join(
             dirname,
             frame_dir,

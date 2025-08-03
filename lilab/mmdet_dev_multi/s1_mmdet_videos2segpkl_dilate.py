@@ -40,7 +40,9 @@ video_path = [
 ]
 
 config = '/home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_rat_oneclass.py'
-config = '/home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_bwdrat_816x512_cam9.py'
+# config = '/home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_bwdrat_816x512_cam9.py'
+# config = '/home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_bwdrat_4.py'
+config='/home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_bwrat_816x512_cam9_1.py'
 config = '/home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_bwrat_816x512_cam9_oldrat.py'
 img_wh = 1280, 800
 kernel_size = (21, 21)
@@ -134,7 +136,7 @@ def s2_det2seg_part_single(resultf):
 
 
 def s2_det2seg_part(resultf):
-    nclass = len(resultf[0][0])# 2 or 3
+    nclass = len(resultf[0][0])# 想满足2,3,4
     if nclass == 1:
         return s2_det2seg_part_single(resultf)
     
@@ -165,6 +167,12 @@ def s2_det2seg_part(resultf):
         if np.sum(mask) <= 4:
             # ignore this mask
             resultf[0][0][iclass] = [np.array([x, y, x + w, y + h, 0])]
+        # if np.sum(mask) <= 4:  
+            # if len(resultf) > 1 and iclass < len(resultf[-1][0]):  
+                # rev_bbox = resultf[-1][0][iclass][0][:4]  
+                # resultf[0][0][iclass] = [np.array([*prev_bbox, 0])]  
+            # else:  
+                # resultf[0][0][iclass] = [np.array([x, y, x + w, y + h, 0])]  
         else:
             # x, y, w, h = cv2.boundingRect(mask.astype(np.uint8))
             pval = pvals_dict[iclass]
@@ -254,7 +262,7 @@ def create_segpkl(q:Queue, q2:Queue, img_metas:dict, CLASSES):
     iframes = []
     outdata = dict()
     while True:
-        iframe, result = q.get()
+        iframe, result = q.get() #修改下
         if iframe is None:
             break
         # continue
@@ -305,6 +313,7 @@ class MyWorker(mmap_cuda.Worker):
             img_metas = prefetch_img_metas(model.cfg, crop_xywh[2:])
             resize_wh = img_metas["pad_shape"][1::-1]
 
+        print('===video', video)
         vid = ffmpegcv.VideoCaptureNV(
             video,
             crop_xywh=crop_xywh,

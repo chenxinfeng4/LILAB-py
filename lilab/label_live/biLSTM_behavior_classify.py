@@ -8,7 +8,7 @@ from scipy.signal import medfilt
 from lilab.timecode_tag.netcoder import Netcoder
 import tqdm
 import itertools
-from lilab.label_live.sockerServer import port
+from lilab.label_live.socketServer import port
 
 
 sys.path.append("/home/liying_lab/chenxf/ml-project/论文图表/yolo_dannce_训练")
@@ -112,10 +112,19 @@ def cluster_main(q: Queue, model_smooth_matcalibpkl: str):
 
     nettimecoder = Netcoder()
     iter_process = tqdm.tqdm(itertools.count(), desc="[Bhv Lab]", position=2)
+
     for iframe in iter_process:
         p3d, timecode = q.get()
         if p3d is None:
             break
+        
+        if iframe==0:
+            logfile = rpc_client.logfile()
+            if logfile is not None and logfile != "":
+                file_handle = open(logfile, "w")
+                print("\n[Cluster] Logfile:", logfile)
+            else:
+                file_handle = None
 
         p3d_clip = recentClip.push_getsmooth(p3d).transpose(1, 0, 2, 3)  # (2,24,14,3)
         out_feature = package_feature(
@@ -129,14 +138,18 @@ def cluster_main(q: Queue, model_smooth_matcalibpkl: str):
         ind_max = np.argmax(out_label)
         pval = softmax(out_label)[ind_max]
         msg_logger(ind_max, pval)
+        if file_handle is not None:
+            file_handle.write(f"{ind_max}\t{pval:.2f}\n")
 
         dt2 = nettimecoder.getTimeDelay(timecode)
+        # print('timecode', timecode, 'dt2', dt2)
         rpc_client.bhv_queue_put(dt2)
         rpc_client.delay_bhv_out(dt2)
-        dt_str = str(int(dt2)) if not np.isnan(dt2) else "x"
+        dt_str = str(dt2) if not np.isnan(dt2) else "x"
         iter_process.set_description(
             "[label] q={:>2}, i=----, delay={:>3}".format(q.qsize(), dt_str)
         )
 
-
+    if file_handle is not None:
+        file_handle.close()
     print("[3] Cluster done")

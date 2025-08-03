@@ -12,37 +12,34 @@ from multiprocessing.sharedctypes import SynchronizedArray
 from multiprocessing import Queue
 from lilab.yolo_seg.common_variable import NFRAME, get_numpy_handle
 
-from ffmpegcv.ffmpeg_noblock import ReadLiveLast
 from lilab.timecode_tag.decoder import getDecoder
 from lilab.timecode_tag.netcoder import Netcoder
 import time
+import os.path as osp
 import itertools
-from lilab.label_live.sockerServer import port
+from lilab.label_live.socketServer import port
 import picklerpc
+from lilab.label_live.dummy_video_input import get_vid_dummy_inputs
 
 engine = "/home/liying_lab/chenxinfeng/DATA/ultralytics/work_dirs/yolov8n_seg_640_ratbw_extra/weights/last.full.engine"  # train3
 
-# vid = ReadLiveLast(ffmpegcv.VideoCaptureStreamRT, 'rtsp://10.50.60.6:8554/mystream', pix_fmt='gray')
-# vid = ffmpegcv.VideoCaptureStreamRT('rtmp://10.50.5.83:1935/mystream', pix_fmt='gray')
-# ret, frame = vid.read()
-# vid.count = 400000
-
-
 def get_vidin():
-    # vid = ffmpegcv.VideoCaptureNV('/mnt/liying.cibr.ac.cn_Data_Temp/multiview_9/chenxf/test/2022-10-13_15-08-49AWxCB_5min.mp4',
+    # vid = ffmpegcv.VideoCaptureNV('/DATA/zhongzhenchao/2501chr2-shank3/training/2024-12-30_19-00-29_l1_sm5pm2.mp4',
     #                         pix_fmt='gray')
-    from ffmpegcv.ffmpeg_noblock import ReadLiveLastMP as ReadLiveLast
-    vid = ReadLiveLast(
+    # vid = get_vid_dummy_inputs()
+    # logfile = osp.join(osp.expanduser("~"), osp.splitext(osp.basename(vid.filename))[0] + '.log')
+    vid = ffmpegcv.ReadLiveLast(
         ffmpegcv.VideoCaptureStreamRT,
         "rtsp://10.50.60.6:8554/mystream_9cam",
         pix_fmt="gray",
     )
+    logfile = ''
     vidout = FFmpegWriterNoblock(
         ffmpegcv.VideoWriterStreamRT,
         "rtsp://10.50.60.6:8554/mystream_preview",
         pix_fmt="gray",
     )
-    return vid, vidout
+    return vid, vidout, logfile
 
 
 pannelWH = (1280, 800)
@@ -68,9 +65,10 @@ def main(
         shared_array_previ,
         shared_array_timecode,
     )
-    vid, vidout = get_vidin()
+    vid, vidout, logfile = get_vidin()
     assert (vid.width, vid.height) == (pannelWH[0] * 3, pannelWH[1] * 3)
     rpc_client = picklerpc.Client(("127.0.0.1", port))
+    rpc_client.logfile(logfile)
 
     with torch.cuda.device("cuda:0"):
         timecode_decoder = getDecoder()
@@ -121,7 +119,8 @@ def main(
             coms_real_2d = numpy_com2d[idx]
             numpy_previ[idx] = cv2.cvtColor(
                 np.ascontiguousarray(
-                    frame[: pannelWH[1], pannelWH[0] : pannelWH[0] * 2]
+                    # frame[: pannelWH[1], pannelWH[0] : pannelWH[0] * 2]
+                    frame[pannelWH[1] : pannelWH[1] * 2, 0 : pannelWH[0]]
                 ),
                 cv2.COLOR_RGB2BGR,
             )

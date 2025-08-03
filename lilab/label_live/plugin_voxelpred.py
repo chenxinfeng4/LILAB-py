@@ -289,7 +289,7 @@ def post_cpu(
     )[
         :, 0, :
     ]  # (nclass, k, 3)
-    ipannel = 1
+    ipannel = 3
     com_2d_l = calibPredict.p3d_to_p2d(com_3d_l)[ipannel].astype(np.int32)
     p2d = calibPredict.p3d_to_p2d(p3d).astype(int)
     coord_2d = p2d[ipannel]
@@ -303,27 +303,10 @@ def post_cpu(
     frame = cv_plot_skeleton_aframe(frame, pts2d_w_now, name="white")
     frame = np.ascontiguousarray(frame[::2,::2])
     water_timecode(frame, timecode)
-
-    if False:
-        label_str = rpc_client.label_str()
-        font, font_scale, font_thickness = cv2.FONT_HERSHEY_SIMPLEX, 2, 2
-        text_size, _ = cv2.getTextSize(label_str, font, font_scale, font_thickness)
-        image_height, image_width = frame.shape[:2]
-        text_x, text_y = (
-            (image_width - text_size[0]) // 2,
-            (image_height - text_size[1]) - 20,
-        )
-        cv2.putText(
-            frame,
-            label_str,
-            (text_x, text_y),
-            font,
-            font_scale,
-            (0, 255, 255),
-            font_thickness,
-            cv2.LINE_AA,
-        )
-    vidout.write(frame)
+    try:
+        vidout.write(frame)
+    except:
+        pass
     return p3d
 
 
@@ -481,7 +464,7 @@ def dannce_predict_video_trt(
         params (Dict): Paremeters dictionary.
     """
     from torch2trt import TRTModule
-    from lilab.label_live.sockerServer import port
+    from lilab.label_live.socketServer import port
     import picklerpc
 
     # Save
@@ -600,7 +583,7 @@ def dannce_predict_video_trt(
             )
         )
 
-    raise "Nerver reach here"
+    # raise "Nerver reach here"
     q_p3d.put(None)
     print("[2] Pose reconstruction done")
     vidout.release()

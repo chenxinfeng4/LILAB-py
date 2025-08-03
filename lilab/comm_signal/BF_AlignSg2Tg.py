@@ -1,3 +1,5 @@
+# from lilab.comm_signal.BF_AlignSg2Tg import BF_AlignSg2Tg
+
 import numpy as np
 
 def BF_AlignSg2Tg(Lick, Trgger, wds_L, wds_R, Fs=1):

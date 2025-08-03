@@ -10,7 +10,7 @@ import sys
 import glob
 from lilab.mmdet_dev.canvas_reader import CanvasReader, CanvasReaderCV
 
-numframe_to_extract = 20
+numframe_to_extract = 10
 maxlength = 10000
 frame_dir = "outframes"
 frame_min_interval = 100

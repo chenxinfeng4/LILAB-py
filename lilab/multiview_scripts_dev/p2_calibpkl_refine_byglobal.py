@@ -85,7 +85,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('calibpkl', type=str)
     parser.add_argument('globalrefpkl', type=str)
+    parser.add_argument('--axis-length', type=float, default=axis_length)
     args = parser.parse_args()
+    axis_length = args.axis_length
     assert osp.exists(args.calibpkl)
     assert osp.exists(args.globalrefpkl)
     main(args.calibpkl, args.globalrefpkl)

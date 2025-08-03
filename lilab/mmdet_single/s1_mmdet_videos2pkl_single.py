@@ -37,6 +37,7 @@ video_path = [
 # config = '/home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_bwrat_800x600.py'
 config = "/home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_onemice_816x512.py"
 # config = '/home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_bwrat_816x512_cam9_oldrat.py'
+# config = "/home/liying_lab/chenxinfeng/DATA/CBNetV2/mask_rcnn_r101_fpn_2x_coco_onemicehead_816x512.py"
 
 crop_xywh = [0, 0, 1700, 1080]
 def prefetch_img_metas(cfg, ori_wh):

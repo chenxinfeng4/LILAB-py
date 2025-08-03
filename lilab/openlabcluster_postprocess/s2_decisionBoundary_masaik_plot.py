@@ -81,7 +81,7 @@ def plot_knn_decision_boundary_mosaik(heatobj, X, y, clu_lab_uni, clu_lab_shuf, 
     for idsrc, idtrg in zip(clu_lab_uni, clu_lab_shuf):
         classfimap_shuf[classfimap == idsrc] = idtrg
 
-    heatobj.classfimap = classfimap
+    heatobj.classfimap = classfimap.astype(int)
     heatobj.classfimap_shuf = classfimap_shuf
 
     # heatobj.plt_heatmap("classfimap_shuf")

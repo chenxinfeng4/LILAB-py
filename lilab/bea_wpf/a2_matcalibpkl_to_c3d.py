@@ -35,6 +35,9 @@ def convert_kpt_3d_to_c3d(kpt_3d_orig, out_c3d_file):
     elif nanimal==3:
         point_labels_all = point_labels + ['W_'+l for l in point_labels] + ['D_'+l for l in point_labels]
         print('Warning: nanimal=%d' % nanimal)
+    elif nanimal==4:
+        point_labels_all = point_labels + ['W_'+l for l in point_labels] + ['D_'+l for l in point_labels] + ['R_'+l for l in point_labels]
+        print('Warning: nanimal=%d' % nanimal)
     else:
         raise 'Error: nanimal=%d' % nanimal
 
