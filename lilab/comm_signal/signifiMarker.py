@@ -1,4 +1,4 @@
-# from lilab.comm_signal.signifiMaker import signifiMaker
+# from lilab.comm_signal.signifiMarker import signifiMarker
 import numpy as np
 
 def fun_marker(p, disp_cutof):
@@ -15,7 +15,7 @@ def fun_marker(p, disp_cutof):
     return marker
 
 
-def signifiMaker(pval_l, disp_cutoff=None, disp_ns=True) -> np.ndarray:
+def signifiMarker(pval_l, disp_cutoff=None, disp_ns=True) -> np.ndarray:
     if isinstance(pval_l, float):
         pval_l = [pval_l]
     assert isinstance(pval_l, list) or isinstance(pval_l, np.ndarray)

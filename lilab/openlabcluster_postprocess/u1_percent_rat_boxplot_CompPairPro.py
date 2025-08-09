@@ -8,7 +8,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 from lilab.openlabcluster_postprocess.s1_merge_3_file import get_assert_1_file
 import pandas as pd
-from statannotations.Annotator import Annotator
 import seaborn as sns
 from scipy import stats
 from sklearn.decomposition import PCA
